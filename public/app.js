@@ -423,16 +423,16 @@ function renderProject(){
   const p=P();
   const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
   if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
-  const head=h("div",{class:"head"},
+  const head=h("div",{class:"head proj-head"},
     h("div",{style:"min-width:0"},
       h("div",{class:"row"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c)),p.archived?h("span",{class:"chip st-none"},"დასრულებული"):null),
       h("h1",{style:"margin-top:6px"},p.name),
       h("div",{class:"muted"},[p.client,p.location].filter(Boolean).join(" · "))),
-    h("div",{class:"row"},
-      S.admin?h("button",{class:"btn",type:"button",onclick:async()=>{
+    S.admin?h("div",{class:"row"},
+      h("button",{class:"btn state-btn "+(p.archived?"reopen":"finish"),type:"button",onclick:async()=>{
         if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
         try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},
-        icon(p.archived?"plus":"works"),p.archived?"აქტიურად დაბრუნება":"დასრულებულად მონიშვნა"):null));
+        icon(p.archived?"plus":"works"),h("span",{class:"two-line"},(LANG==="en"?(p.archived?["Make","active"]:["Mark as","completed"]):(p.archived?["აქტიურად","დაბრუნება"]:["დასრულებულად","მონიშვნა"])).map(t=>h("span",null,t))))):null);
   const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-label":tr(l),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;render();}},mtavruli(tr(l)))));
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
