@@ -247,9 +247,29 @@ const isMember = (p, u) => !!(p && (p.memberIds || []).includes(u.id));
 const canSee = (p, u) => !!p && (u.role === "admin" || isMember(p, u));
 const withId = (id, d) => ({ id, ...d });
 
+/* per-project summary for the dashboard: reports, last report, BoQ progress (average % done over BoQ items) */
+function projectStats(p, id) {
+  const reps = db.prepare("SELECT data FROM reports WHERE project_id=?").all(id).map((r) => JSON.parse(r.data));
+  const done = new Map();
+  for (const r of reps) for (const w of r.works || []) {
+    if (!w.code) continue;
+    const k = String(w.code).trim().replace(/\./g, ",");
+    done.set(k, (done.get(k) || 0) + (parseFloat(String(w.qty ?? "").replace(",", ".")) || 0));
+  }
+  const items = (p.boq || []).filter((it) => it.type === "პოზიცია" && parseFloat(it.qty) > 0);
+  let sum = 0, complete = 0, started = 0;
+  for (const it of items) {
+    const q = done.get(String(it.code).trim().replace(/\./g, ",")) || 0, pct = Math.min(q / parseFloat(it.qty), 1);
+    sum += pct; if (pct >= 1) complete++; if (q > 0) started++;
+  }
+  const last = reps.sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+  return { reports: reps.length, approved: reps.filter((r) => r.status === "approved").length,
+    lastDate: last ? last.date : "", lastStatus: last ? last.status : "",
+    progress: items.length ? Math.round((sum / items.length) * 1000) / 10 : 0, itemsDone: complete, itemsStarted: started };
+}
 api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
-  res.json(rows.filter((p) => canSee(p, req.user)));
+  res.json(rows.filter((p) => canSee(p, req.user)).map((p) => ({ ...p, stats: projectStats(p, p.id) })));
 });
 const PROJECT_FIELDS = ["name", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse"];
 /* HSE items every new report starts with; each project can edit its own copy */

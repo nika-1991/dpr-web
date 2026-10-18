@@ -305,20 +305,58 @@ function renderHome(){
       : h("div",{class:"empty"},h("h2",null,"ჯერ არცერთ პროექტში არ ხართ დამატებული"),h("p",{class:"muted"},"სთხოვეთ ადმინისტრატორს, დაგამატოთ პროექტის გუნდში. დამატების შემდეგ პროექტი აქ გამოჩნდება.")));
     return out;
   }
-  out.push(h("div",{class:"cards"}, list.map(([id,p])=>{
-    return h("button",{class:"pcard"+(p.archived?" archived":""),type:"button",onclick:()=>go("project",{pid:id,tab:"reports"})},
+  // dashboard: totals, search + filter, compact cards or a table
+  const pos=p=>(p.boq||[]).filter(x=>x.type==="პოზიცია").length;
+  const st=p=>p.stats||{progress:0,itemsDone:0,reports:0};
+  const all=list.map(e=>e[1]);
+  const active=all.filter(p=>!p.archived);
+  const members=new Set(all.flatMap(p=>p.memberIds||[]));
+  const avg=active.length?active.reduce((a,p)=>a+st(p).progress,0)/active.length:0;
+  const kpi=(ic,label,value,sub,bar)=>h("div",{class:"kpi"},
+    h("div",{class:"kpi-top"},h("div",null,h("div",{class:"kpi-l"},label),h("div",{class:"kpi-v"},value)),h("span",{class:"kpi-ic"},icon(ic))),
+    bar!=null?h("div",{class:"pbar"},h("span",{style:"width:"+Math.min(100,bar)+"%"})):h("div",{class:"kpi-sub"},sub));
+  out.push(h("div",{class:"kpis"},
+    kpi("folder","პროექტები",String(all.length),active.length+" აქტიური"+(all.length-active.length?" · "+(all.length-active.length)+" არქივში":"")),
+    kpi("personnel","გუნდის წევრები",String(members.size),"ყველა პროექტში"),
+    kpi("works","BoQ მუხლები",String(all.reduce((a,p)=>a+pos(p),0)),all.reduce((a,p)=>a+st(p).itemsDone,0)+" დასრულებული"),
+    kpi("chart","საშუალო პროგრესი",fmtNum(avg)+"%",null,avg)));
+  const F=S.homeF||(S.homeF={q:"",f:"active",view:(()=>{ try{ return localStorage.getItem("dpr.homeView")||"cards"; }catch(e){ return "cards"; } })()});
+  const q=F.q.trim().toLowerCase();
+  const shown=all.filter(p=>(F.f==="all"||(F.f==="archived")===!!p.archived)&&(!q||[p.name,p.client,p.location,p.companyCode,p.projectCode,p.accountingCode].some(v=>String(v||"").toLowerCase().includes(q))));
+  const search=h("input",{class:"inp",type:"search",placeholder:"ძებნა: დასახელება, დამკვეთი, კოდი…","aria-label":"ძებნა",value:F.q,oninput:e=>{ F.q=e.target.value; const pos=e.target.selectionStart; render(); const el=document.querySelector(".home-search input"); if(el){ el.focus(); el.setSelectionRange(pos,pos); } }});
+  const chip_=(k,l)=>h("button",{type:"button",class:"fchip"+(F.f===k?" on":""),onclick:()=>{F.f=k;render();}},l);
+  const viewBtn=(k,ic,l)=>h("button",{type:"button",class:"vbtn"+(F.view===k?" on":""),title:l,"aria-label":l,onclick:()=>{ F.view=k; try{ localStorage.setItem("dpr.homeView",k); }catch(e){} render(); }},icon(ic));
+  out.push(h("div",{class:"home-bar"},
+    h("label",{class:"home-search"},icon("search"),search),
+    h("div",{class:"row",style:"gap:6px"},chip_("active","აქტიური"),chip_("archived","არქივი"),chip_("all","ყველა")),
+    h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი"))));
+  const open=id=>go("project",{pid:id,tab:"reports"});
+  const prog=p=>h("div",{class:"pprog"},h("div",{class:"pbar"},h("span",{style:"width:"+Math.min(100,st(p).progress)+"%"})),h("b",null,fmtNum(st(p).progress)+"%"));
+  const last=p=>st(p).lastDate?h("span",{class:"plast"},"ბოლო: "+fmtDate(st(p).lastDate)," ",chip(st(p).lastStatus)):h("span",{class:"plast muted"},"ანგარიში არ არის");
+  if(!shown.length) out.push(h("div",{class:"empty"},h("p",{class:"muted"},"პროექტები ვერ მოიძებნა")));
+  else if(F.view==="table") out.push(h("section",{class:"panel"},h("div",{class:"tw"},h("table",{class:"rt ptable"},
+    h("thead",null,h("tr",null,["პროექტი","კოდები","გუნდი","BoQ მუხლი","პროგრესი","ბოლო ანგარიში"].map(l=>h("th",null,l)))),
+    h("tbody",null,shown.map(p=>h("tr",{tabindex:"0",onclick:()=>open(p.id),onkeydown:e=>{ if(e.key==="Enter") open(p.id); }},
+      h("td",{"data-l":"პროექტი"},h("b",null,p.name||"უსახელო"),p.archived?h("span",{class:"chip st-none",style:"margin-left:8px"},"არქივი"):null),
+      h("td",{"data-l":"კოდები"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c))),
+      h("td",{class:"num","data-l":"გუნდი"},(p.memberIds||[]).length),
+      h("td",{class:"num","data-l":"BoQ მუხლი"},pos(p)),
+      h("td",{"data-l":"პროგრესი"},prog(p)),
+      h("td",{"data-l":"ბოლო ანგარიში"},last(p)))))))));
+  else out.push(h("div",{class:"cards"},shown.map(p=>h("button",{class:"pcard"+(p.archived?" archived":""),type:"button",onclick:()=>open(p.id)},
       h("div",{class:"row"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c)),h("span",{class:"spacer"}),p.archived?h("span",{class:"chip st-none"},"არქივი"):null),
       h("h3",null,p.name||"უსახელო"),
       h("div",{class:"pcard-stats"},
-        h("span",null,h("span",{class:"muted"},"გუნდი"),h("b",null,(p.memberIds||[]).length)),
-        h("span",null,h("span",{class:"muted"},"BoQ მუხლი"),h("b",null,(p.boq||[]).filter(x=>x.type==="პოზიცია").length))));
-  })));
+        h("span",{title:"გუნდი"},icon("personnel"),h("b",null,(p.memberIds||[]).length)),
+        h("span",{title:"BoQ მუხლი"},icon("works"),h("b",null,pos(p)),h("span",{class:"muted"},"BoQ"))),
+      prog(p),
+      last(p)))));
   return out;
 }
 
 /* ---------- project form ---------- */
 async function saveProject(pid,patch,msg){
-  try{ const p=await api("PATCH","/projects/"+encodeURIComponent(pid),patch); S.projects.set(pid,p); if(msg) toast(msg); return p; }
+  try{ const p=await api("PATCH","/projects/"+encodeURIComponent(pid),patch); p.stats=(S.projects.get(pid)||{}).stats; S.projects.set(pid,p); if(msg) toast(msg); return p; }
   catch(e){ toast("ვერ შეინახა: "+errMsg(e)); throw e; }
 }
 /* create / edit form laid out like the project data page (title band, participants, codes, HSE) */
@@ -488,6 +526,11 @@ const ICONS={
   pause:'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>',
   plus:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
   pdf:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/>',
+  folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+  chart:'<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
   print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>'
 };
 function icon(name){
