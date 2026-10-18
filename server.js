@@ -268,7 +268,7 @@ api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
   res.json(rows.filter((p) => canSee(p, req.user)).map((p) => ({ ...p, stats: projectStats(p, p.id) })));
 });
-const PROJECT_FIELDS = ["name", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse"];
+const PROJECT_FIELDS = ["name", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
 /* HSE items every new report starts with; each project can edit its own copy */
 const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
 function cleanProject(body, base) {
@@ -281,6 +281,7 @@ function cleanProject(body, base) {
   p.memberIds = Array.isArray(p.memberIds) ? [...new Set(p.memberIds.filter((x) => validIds.has(x)))] : [];
   p.members = typeof p.members === "object" && p.members ? Object.fromEntries(Object.entries(p.members).filter(([k]) => p.memberIds.includes(k))) : {};
   p.archived = !!p.archived;
+  p.dprStart = Math.max(1, parseInt(p.dprStart, 10) || 1);
   p.hse = (Array.isArray(p.hse) ? p.hse : DEFAULT_HSE).slice(0, 50)
     .map((x) => ({ desc: String(x?.desc ?? "").slice(0, 2000), descEn: String(x?.descEn ?? "").slice(0, 2000) }))
     .filter((x) => x.desc || x.descEn);
@@ -299,6 +300,7 @@ api.patch("/projects/:id", auth, admin, (req, res) => {
   const p = cleanProject(req.body || {}, cur);
   if (!p.name) return res.status(400).json({ error: "პროექტის დასახელება ცარიელია" });
   db.prepare("UPDATE projects SET data=?, updated_at=? WHERE id=?").run(JSON.stringify(p), now(), req.params.id);
+  if (p.dprStart !== cur.dprStart) renumberReports(req.params.id);
   res.json(withId(req.params.id, p));
 });
 
@@ -329,6 +331,13 @@ api.delete("/additional/:id", auth, admin, (req, res) => {
 /* ---------------- reports ---------------- */
 const SECTIONS = ["conditions", "issues", "hse", "works", "expenses", "personnel", "materials", "fuel", "visitors", "photos"];
 const PRICED = ["works", "expenses"];
+/* DPR numbers follow the report dates (1, 2, 3 … with no gaps); recomputed whenever a report is added or deleted */
+function renumberReports(projectId) {
+  const start = Math.max(1, parseInt((getProject(projectId) || {}).dprStart, 10) || 1);
+  const rows = db.prepare("SELECT id,data FROM reports WHERE project_id=? ORDER BY date").all(projectId);
+  const upd = db.prepare("UPDATE reports SET data=? WHERE id=?");
+  rows.forEach((row, i) => { const r = JSON.parse(row.data); if (r.num !== start + i) { r.num = start + i; upd.run(JSON.stringify(r), row.id); } });
+}
 const getReportRow = (id) => db.prepare("SELECT * FROM reports WHERE id=?").get(id);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const REPORT_TZ = process.env.REPORT_TZ || "Asia/Tbilisi";
@@ -360,12 +369,12 @@ api.post("/reports", auth, (req, res) => {
   const id = b.projectId + "__" + b.date;
   const create = db.transaction(() => {
     if (getReportRow(id)) return null;
-    const max = db.prepare("SELECT data FROM reports WHERE project_id=?").all(b.projectId).reduce((m, r) => Math.max(m, JSON.parse(r.data).num || 0), 0);
-    const d = { projectId: b.projectId, date: b.date, num: max + 1, rev: 0, status: "draft",
+    const d = { projectId: b.projectId, date: b.date, num: 0, rev: 0, status: "draft",
       createdBy: req.user.id, createdAt: now(), updatedBy: req.user.id, updatedAt: now() };
     for (const k of SECTIONS) d[k] = cleanSection(k, b[k]);
     db.prepare("INSERT INTO reports(id,project_id,date,data,updated_at) VALUES(?,?,?,?,?)").run(id, b.projectId, b.date, JSON.stringify(d), now());
-    return d;
+    renumberReports(b.projectId);
+    return JSON.parse(getReportRow(id).data);
   });
   const d = create();
   if (!d) return res.status(409).json({ error: "ამ თარიღზე ანგარიში უკვე არსებობს" });
@@ -434,8 +443,11 @@ api.get("/reports/:id/revisions", auth, (req, res) => {
 api.delete("/reports/:id", auth, admin, (req, res) => {
   const x = loadEditable(req, res); if (!x) return;
   if (x.r.status === "approved") return res.status(400).json({ error: "დადასტურებული ანგარიში არ იშლება" });
-  db.prepare("DELETE FROM reports WHERE id=?").run(req.params.id);
-  db.prepare("DELETE FROM report_revisions WHERE report_id=?").run(req.params.id);
+  db.transaction(() => {
+    db.prepare("DELETE FROM reports WHERE id=?").run(req.params.id);
+    db.prepare("DELETE FROM report_revisions WHERE report_id=?").run(req.params.id);
+    renumberReports(x.row.project_id);
+  })();
   res.json({ ok: true });
 });
 
@@ -474,5 +486,8 @@ api.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: "სერვერის შეცდომა" });
 });
+
+/* bring DPR numbers in line with the report dates (older data was numbered in creation order) */
+for (const { id } of db.prepare("SELECT id FROM projects").all()) renumberReports(id);
 
 app.listen(PORT, () => console.log(`DPR სერვერი გაშვებულია: http://localhost:${PORT}`));

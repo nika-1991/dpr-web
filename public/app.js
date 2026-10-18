@@ -385,8 +385,8 @@ function renderProjectForm(pid){
     PARTICIPANTS.map(([k,ka,en])=>row(ka+" / "+en,inp(pf,k,(p.participants||{})[k],ka+" / "+en))));
   const codes=h("section",{class:"sh-box"},
     h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"🏷️ კოდები",h("span",{class:"en"},"Codes"))),
-    [["accountingCode","პროექტის ბუღალტრული კოდი / Accounting Code"],["companyCode","კომპანიის კოდი / Company Code"],["projectCode","პროექტის კოდი / Project Code"]]
-      .map(([k,l])=>{ const el=inp(f,k,p[k],l); el.classList.add("mono"); return row(l,el); }));
+    [["accountingCode","პროექტის ბუღალტრული კოდი / Accounting Code"],["companyCode","კომპანიის კოდი / Company Code"],["projectCode","პროექტის კოდი / Project Code"],["dprStart","პირველი DPR ნომერი / First DPR number"]]
+      .map(([k,l])=>{ const el=inp(f,k,k==="dprStart"?(p[k]||1):p[k],l); el.classList.add("mono"); if(k==="dprStart"){ el.type="number"; el.min="1"; el.step="1"; } return row(l,el); }));
   const hse=clone(p.hse||[]);
   const hseBox=h("div",{class:"hse-ed"});
   const drawHse=()=>hseBox.replaceChildren(...hse.map((x,i)=>h("div",{class:"hse-ed-row"},
@@ -507,7 +507,7 @@ async function createReport(date){
   const data={projectId:S.pid,date,
     conditions:{weather:"",tempMin:"",tempMax:"",hours:"07:00-18:00",breakHours:"13:00-14:00",overtime:""},
     issues:[],hse:hseFromProject(P()),works:[],expenses:[],personnel:[],materials:[],fuel:[],visitors:[],photos:[]};
-  try{ const r=await api("POST","/reports",data); S.creating=null; S.reports.set(r.id,r); openReport(r.id); }
+  try{ const r=await api("POST","/reports",data); S.creating=null; await loadProjectData(S.pid); openReport(r.id); }
   catch(e){ toast("ვერ შეიქმნა: "+errMsg(e)); }
 }
 
@@ -789,7 +789,7 @@ function buildPrintDoc(p,r){
 function deleteControl(){
   const wrap=h("span",{class:"confirm"});
   const ask=()=>{ wrap.replaceChildren(h("span",null,"წავშალო ანგარიში?"),
-      h("button",{class:"btn sm danger",type:"button",onclick:async()=>{ try{ clearTimeout(S.saveTimer); S.dirty.clear(); await api("DELETE","/reports/"+encodeURIComponent(S.repId)); S.reports.delete(S.repId); toast("ანგარიში წაიშალა"); go("project",{pid:S.pid,tab:"reports"}); }catch(e){ toast("ვერ წაიშალა: "+errMsg(e)); } }},"დიახ, წაშლა"),
+      h("button",{class:"btn sm danger",type:"button",onclick:async()=>{ try{ clearTimeout(S.saveTimer); S.dirty.clear(); await api("DELETE","/reports/"+encodeURIComponent(S.repId)); S.reports.delete(S.repId); await loadProjectData(S.pid).catch(()=>{}); toast("ანგარიში წაიშალა"); go("project",{pid:S.pid,tab:"reports"}); }catch(e){ toast("ვერ წაიშალა: "+errMsg(e)); } }},"დიახ, წაშლა"),
       h("button",{class:"btn sm ghost",type:"button",onclick:()=>wrap.replaceChildren(btn)}, "არა")); };
   const btn=h("button",{class:"btn ghost",type:"button",onclick:ask},"წაშლა");
   wrap.append(btn); return wrap;
@@ -810,7 +810,8 @@ function renderProjectSheet(p){
     h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"🏷️ კოდები",h("span",{class:"en"},"Codes"))),
     row("პროექტის ბუღალტრული კოდი / Accounting Code",p.accountingCode,true),
     row("კომპანიის კოდი / Company Code",p.companyCode,true),
-    row("პროექტის კოდი / Project Code",p.projectCode,true));
+    row("პროექტის კოდი / Project Code",p.projectCode,true),
+    row("პირველი DPR ნომერი / First DPR number","DPR-"+String(p.dprStart||1).padStart(3,"0"),true));
   const hse=h("section",{class:"sh-box"},
     h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"🦺 უსაფრთხოების (HSE) პუნქტები",h("span",{class:"en"},"HSE")),h("div",{class:"sh-sub"},"ყოველი ახალი ანგარიში ამ პუნქტებით იწყება.")),
     (p.hse||[]).length?h("ol",{class:"hse-list"},(p.hse||[]).map(x=>h("li",null,(LANG==="en"?x.descEn:x.desc)||x.desc||x.descEn))):h("div",{class:"muted small"},"პუნქტები არ არის."));
