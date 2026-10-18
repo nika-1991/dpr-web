@@ -251,3 +251,18 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .cond-f label{font-size:.76rem;font-weight:600;color:var(--muted)}
 .cond-c{display:flex;align-items:center;gap:6px;min-width:0}
 .cond-c .inp.t{width:64px;flex:none;text-align:center}
+/* editable cells: the control fills the whole cell, so a click anywhere in it works */
+.rt td.ed{padding:0;height:1px;border-left:1px solid var(--line)}
+.rt td.ed>input,.rt td.ed>select,.rt td.ed>textarea{display:block;height:100%;min-height:42px;border-radius:0;border-color:transparent;background:transparent;padding:8px}
+.rt td.ed>input:hover,.rt td.ed>select:hover,.rt td.ed>textarea:hover{background:var(--sunk);border-color:transparent}
+.rt td.ed>input:focus,.rt td.ed>select:focus,.rt td.ed>textarea:focus{background:var(--surface);box-shadow:inset 0 0 0 2px var(--accent);border-color:transparent}
+.rt td.ed>select{cursor:pointer}
+.rt td.chk.ed .ck-wrap{display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:42px;cursor:pointer}
+.rt td.chk.ed .ck-wrap:hover{background:var(--sunk)}
+.rt td.chk:not(.ed) .ck-wrap{display:flex;justify-content:center;padding-top:8px}
+@media (max-width:760px){
+  table.rt.stack td.ed{height:auto;border-left:0;padding:2px 0}
+  table.rt.stack td.ed>input,table.rt.stack td.ed>select,table.rt.stack td.ed>textarea{border:1px solid var(--line);border-radius:5px;background:var(--surface);min-height:40px}
+  table.rt.stack td.chk.ed .ck-wrap{justify-content:flex-start;border:1px solid var(--line);border-radius:5px;padding:0 10px}
+}
+.rt td.auto{background:var(--sunk);border-left:1px solid var(--line)}

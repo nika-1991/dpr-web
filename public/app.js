@@ -669,7 +669,7 @@ function renderRows(key,def,rows,ed){
     const active=!col.when||col.when(row);
     const val=row[col.k]??"";
     if(col.t==="check"){ const id=key+"-"+i+"-"+col.k;
-      return h("td",{"data-l":col.l,class:"chk"},h("input",{id,type:"checkbox",checked:val==="კი",disabled:!ed||!active,"aria-label":col.l,onchange:e=>{ row[col.k]=e.target.checked?"კი":""; markDirty(key); }})); }
+      return h("td",{"data-l":col.l,class:"chk"+(ed&&active?" ed":"")},h("label",{class:"ck-wrap",for:id},h("input",{id,type:"checkbox",checked:val==="კი",disabled:!ed||!active,"aria-label":col.l,onchange:e=>{ row[col.k]=e.target.checked?"კი":""; markDirty(key); }}))); }
     if(!ed||!active){ return h("td",{"data-l":col.l},h("span",{class:"ro"+(col.t==="num"?" num":"")},active?(col.t==="date"?fmtDate(val):col.t==="num"&&val!==""?fmtNum(num(val)):val):"")); }
     const id=key+"-"+i+"-"+col.k;
     const onIn=e=>{ row[col.k]=e.target.value; markDirty(key); };
@@ -679,7 +679,7 @@ function renderRows(key,def,rows,ed){
     else if(col.t==="code") el=h("input",{id,list:"boq-dl",class:"mono",value:val,autocomplete:"off",oninput:onIn,onchange:e=>{row.code=normCode(e.target.value);markDirty(key);rerender();}});
     else el=h("input",{id,type:col.t==="num"?"number":col.t==="date"?"date":col.t==="time"?"time":"text",step:col.t==="num"?"any":null,inputmode:col.t==="num"?"decimal":null,value:val,oninput:onIn});
     el.setAttribute("aria-label",col.l);
-    return h("td",{"data-l":col.l},el);
+    return h("td",{"data-l":col.l,class:"ed"},el);
   };
   const table=h("table",{class:"rt stack"},
     h("thead",null,h("tr",null,h("th",null,"#"),cols.map(col=>h("th",{style:"min-width:"+col.w},col.l)),ed?h("th",null,""):null)),
