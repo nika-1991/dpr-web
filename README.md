@@ -80,3 +80,5 @@ docker run --rm -v dpr-web_dpr-data:/data -v "$PWD":/backup alpine tar czf /back
 | `scripts/seed-sample.js` | ნიმუშის მონაცემები Excel ფაილიდან |
 
 პარამეტრები (გარემოს ცვლადები): `PORT` (3000), `DATA_DIR` (`./data`), `ADMIN_USERNAME` (admin), `ADMIN_PASSWORD`, `SESSION_DAYS` (14), `COOKIE_SECURE`, `TRUST_PROXY`, `SEED_SAMPLE` (`true`: ნიმუში ავტომატურად იტვირთება ყოველ გაშვებაზე, თუ ჯერ არ არის).
+
+ელფოსტით შესვლის მონაცემების გაგზავნა (არასავალდებულო): `SMTP_HOST`, `SMTP_PORT` (587, ან 465 SSL-ით), `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` (გამგზავნის მისამართი), `SITE_URL` (საიტის მისამართი წერილში, მაგ. `https://dpr.tesengroup.ge`). თუ `SMTP_HOST` არ არის მითითებული, საიტი წერილს არ აგზავნის და ადმინს სთავაზობს მისი ელფოსტის პროგრამიდან გაგზავნას.

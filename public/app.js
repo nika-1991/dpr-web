@@ -548,7 +548,7 @@ const ICONS={
   table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
-  sms:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
   print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>'
 };
 function icon(name){
@@ -1218,7 +1218,8 @@ function renderAnalysisDetail(d,money){
 function renderUsers(){
   if(!S.admin) return renderMissing();
   const refresh=async()=>{ try{ S.users=await api("GET","/users"); await loadNames(); }catch(e){ toast(errMsg(e)); } render(); };
-  const ids={u:uid(),n:uid(),r:uid(),p:uid(),t:uid()};
+  const ids={u:uid(),n:uid(),r:uid(),p:uid(),t:uid(),e:uid()};
+  const eIn=h("input",{id:ids.e,class:"inp",type:"email",autocomplete:"off",placeholder:"name@tesengroup.ge"});
   const tIn=h("input",{id:ids.t,class:"inp mono",type:"tel",autocomplete:"off",placeholder:"5XX XX XX XX"});
   const uIn=h("input",{id:ids.u,class:"inp",autocomplete:"off",autocapitalize:"none",placeholder:"მაგ. g.beridze"});
   const nIn=h("input",{id:ids.n,class:"inp",placeholder:"სახელი გვარი"});
@@ -1227,14 +1228,15 @@ function renderUsers(){
   const created=h("div");
   const createForm=h("form",{class:"panel-b users-form",style:"display:flex;flex-direction:column;gap:12px",onsubmit:async e=>{
     e.preventDefault();
-    const body={username:uIn.value.trim(),name:nIn.value.trim(),role:rIn.value,password:pIn.value,phone:tIn.value.trim()};
-    try{ await api("POST","/users",body); await refresh();
+    const body={username:uIn.value.trim(),name:nIn.value.trim(),role:rIn.value,password:pIn.value,phone:tIn.value.trim(),email:eIn.value.trim()};
+    try{ const res=await api("POST","/users",body); await refresh();
       toast("მომხმარებელი შეიქმნა");
-      const c=document.getElementById("created-box"); if(c) c.replaceChildren(h("div",{class:"notice info"},"გადაეცით თანამშრომელს: მომხმარებელი ",h("span",{class:"pw"},body.username)," · დროებითი პაროლი ",h("span",{class:"pw"},body.password),". პირველი შესვლისას საკუთარ პაროლს დააყენებს.",smsLink(((S.users||[]).find(x=>x.username===body.username)||{}).phone,body.username,body.password)));
+      const c=document.getElementById("created-box"); if(c) c.replaceChildren(h("div",{class:"notice info"},"გადაეცით თანამშრომელს: მომხმარებელი ",h("span",{class:"pw"},body.username)," · დროებითი პაროლი ",h("span",{class:"pw"},body.password),". პირველი შესვლისას საკუთარ პაროლს დააყენებს.",mailNotice(res,((S.users||[]).find(x=>x.username===body.username)||{}).email,body.name,body.username,body.password)));
     }catch(ex){ toast(errMsg(ex)); } }},
     h("div",{class:"fgrid"},
       h("div",{class:"field"},h("label",{for:ids.u},"მომხმარებლის სახელი (ლათინურად)"),uIn),
       h("div",{class:"field"},h("label",{for:ids.n},"სახელი და გვარი"),nIn),
+      h("div",{class:"field"},h("label",{for:ids.e},"ელფოსტა"),eIn),
       h("div",{class:"field"},h("label",{for:ids.t},"ტელეფონი"),tIn),
       h("div",{class:"field"},h("label",{for:ids.r},"როლი"),rIn),
       h("div",{class:"field"},h("label",{for:ids.p},"დროებითი პაროლი"),h("div",{class:"row",style:"flex-wrap:nowrap"},pIn,h("button",{class:"btn sm",type:"button",onclick:()=>{pIn.value=genPassword();}},"ახალი")))),
@@ -1243,16 +1245,16 @@ function renderUsers(){
     const self=u.id===S.me.id;
     const box=h("span",{class:"confirm"});
     const reset=()=>{ const pw=genPassword(); box.replaceChildren(h("span",null,"ახალი დროებითი პაროლი: "),h("span",{class:"pw"},pw),
-      h("button",{class:"btn sm primary",type:"button",onclick:async()=>{ try{ await api("PATCH","/users/"+u.id,{password:pw}); box.replaceChildren(h("span",{class:"small"},"პაროლი შეიცვალა: "),h("span",{class:"pw"},pw),smsLink(u.phone,u.username,pw)); }catch(e){ toast(errMsg(e)); } }},"დადასტურება"),
+      h("button",{class:"btn sm primary",type:"button",onclick:async()=>{ try{ const res=await api("PATCH","/users/"+u.id,{password:pw}); box.replaceChildren(h("span",{class:"small"},"პაროლი შეიცვალა: "),h("span",{class:"pw"},pw),mailNotice(res,u.email,u.name,u.username,pw,true)); }catch(e){ toast(errMsg(e)); } }},"დადასტურება"),
       h("button",{class:"btn sm ghost",type:"button",onclick:()=>box.replaceChildren()},"გაუქმება")); };
     const roleSel=h("select",{class:"inp",style:"width:auto","aria-label":"როლი",disabled:self,onchange:async e=>{ try{ await api("PATCH","/users/"+u.id,{role:e.target.value}); toast("როლი შეიცვალა"); refresh(); }catch(ex){ toast(errMsg(ex)); } }},
       h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"reviewer"},"რივიუერი"),h("option",{value:"admin"},"ადმინისტრატორი")); roleSel.value=u.role;
     const projs=[...S.projects.values()].filter(p=>(p.memberIds||[]).includes(u.id)).map(p=>p.name);
     return h("tr",null,
       h("td",{"data-l":"სახელი"},h("strong",null,u.name),h("div",{class:"small muted mono"},u.username)),
-      h("td",{"data-l":"ტელეფონი",class:"small"},h("span",{class:"mono"},u.phone||"—")," ",h("button",{class:"btn sm ghost",type:"button","aria-label":"ტელეფონის შეცვლა",title:"ტელეფონის შეცვლა",onclick:async()=>{
-        const v=prompt(tr("ტელეფონის ნომერი"),u.phone||""); if(v==null) return;
-        try{ await api("PATCH","/users/"+u.id,{phone:v.trim()}); toast("ტელეფონი შეინახა"); refresh(); }catch(e){ toast(errMsg(e)); } }},"✎")),
+      h("td",{"data-l":"კონტაქტი",class:"small contact"},
+        h("div",null,h("span",null,u.email||"—"),editBtn(u,"email","ელფოსტა")),
+        h("div",null,h("span",{class:"mono"},u.phone||"—"),editBtn(u,"phone","ტელეფონი"))),
       h("td",{"data-l":"როლი"},roleSel),
       h("td",{"data-l":"პროექტები",class:"small"},projs.length?projs.join(", "):h("span",{class:"muted"},"—")),
       h("td",{"data-l":"ბოლო შესვლა",class:"small"},u.lastLogin?fmtDateTime(u.lastLogin):"არასდროს",u.mustChange?h("div",{class:"small",style:"color:var(--signal)"},"დროებითი პაროლი"):null),
@@ -1265,14 +1267,24 @@ function renderUsers(){
   return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"ადმინისტრირება"),h("h1",null,"მომხმარებლები"))),
     h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ახალი მომხმარებელი")),createForm,h("div",{id:"created-box",class:"panel-b",style:"padding-top:0"},created)),
     h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ყველა მომხმარებელი",h("span",{class:"en cnt-sub"},S.users.length))),
-      h("div",{class:"tw"},h("table",{class:"rt stack users"},h("thead",null,h("tr",null,["სახელი","ტელეფონი","როლი","პროექტები","ბოლო შესვლა","სტატუსი",""].map(t=>h("th",null,t)))),h("tbody",null,rows))))];
+      h("div",{class:"tw"},h("table",{class:"rt stack users"},h("thead",null,h("tr",null,["სახელი","კონტაქტი","როლი","პროექტები","ბოლო შესვლა","სტატუსი",""].map(t=>h("th",null,t)))),h("tbody",null,rows))))];
 }
 
-/* opens the phone's SMS app with the login details filled in (no SMS service needed) */
-function smsLink(phone,username,password){
-  if(!phone) return null;
-  const text=tr("Tesen Group DPR")+"\n"+location.origin+"\n"+tr("მომხმარებელი")+": "+username+"\n"+tr("დროებითი პაროლი")+": "+password;
-  return h("a",{class:"btn sm primary sms-btn",href:"sms:"+phone+"?&body="+encodeURIComponent(text)},icon("sms"),"SMS-ით გაგზავნა ("+phone+")");
+/* after creating a user or resetting a password: say whether the login details went out by e-mail,
+   otherwise offer to open the admin's mail app with the message filled in */
+function mailNotice(res,email,name,username,password,reset){
+  if(res&&res.emailed) return h("span",{class:"mail-ok"},icon("mail"),"გაიგზავნა ელფოსტაზე: "+email);
+  if(!email) return null;
+  const subject="Tesen Group DPR — "+tr(reset?"ახალი დროებითი პაროლი":"შესვლის მონაცემები");
+  const body=tr("საიტი")+": "+location.origin+"\n"+tr("მომხმარებელი")+": "+username+"\n"+tr("დროებითი პაროლი")+": "+password;
+  return h("span",{class:"row",style:"gap:6px;display:inline-flex;margin-left:8px"},
+    res&&res.emailError?h("span",{class:"small",style:"color:var(--bad)"},res.emailError):null,
+    h("a",{class:"btn sm primary",href:"mailto:"+email+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body)},icon("mail"),"ელფოსტით გაგზავნა"));
+}
+function editBtn(u,field,label){
+  return h("button",{class:"btn sm ghost",type:"button","aria-label":label,title:label,onclick:async()=>{
+    const v=prompt(tr(label),u[field]||""); if(v==null) return;
+    try{ await api("PATCH","/users/"+u.id,{[field]:v.trim()}); toast("შენახულია"); S.users=await api("GET","/users"); render(); }catch(e){ toast(errMsg(e)); } }},"✎");
 }
 
 /* ---------- SETTINGS ---------- */

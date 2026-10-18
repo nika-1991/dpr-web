@@ -60,7 +60,31 @@ if (!/'reviewer'/.test(db.prepare("SELECT sql FROM sqlite_master WHERE name='use
 }
 
 /* phone number of a user (used to send the temporary password by SMS) */
-if (!db.prepare("PRAGMA table_info(users)").all().some((c) => c.name === "phone")) db.exec("ALTER TABLE users ADD COLUMN phone TEXT");
+for (const col of ["phone", "email"])
+  if (!db.prepare("PRAGMA table_info(users)").all().some((c) => c.name === col)) db.exec("ALTER TABLE users ADD COLUMN " + col + " TEXT");
+
+/* e-mail with login details, sent when SMTP is configured (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM) */
+const mailer = process.env.SMTP_HOST ? require("nodemailer").createTransport({
+  host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 587), secure: Number(process.env.SMTP_PORT) === 465,
+  auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
+}) : null;
+async function mailLogin(req, u, password, isNew) {
+  if (!mailer || !u.email) return { emailed: false };
+  const site = (process.env.SITE_URL || req.protocol + "://" + req.get("host")).replace(/\/$/, "");
+  try {
+    await mailer.sendMail({
+      from: process.env.MAIL_FROM || process.env.SMTP_USER, to: u.email,
+      subject: "Tesen Group DPR — " + (isNew ? "შესვლის მონაცემები" : "ახალი დროებითი პაროლი"),
+      text: "გამარჯობა, " + u.name + "!\n\n" + (isNew ? "თქვენთვის შეიქმნა ანგარიში" : "თქვენი პაროლი განახლდა") + " ყოველდღიური რეპორტის საიტზე.\n\n" +
+        "საიტი: " + site + "\nმომხმარებელი: " + u.username + "\nდროებითი პაროლი: " + password + "\n\n" +
+        "პირველი შესვლისას სისტემა საკუთარი პაროლის დაყენებას მოგთხოვთ.\n\nTesen Group",
+    });
+    return { emailed: true };
+  } catch (e) {
+    console.error("mail:", e.message);
+    return { emailed: false, emailError: "ელფოსტა ვერ გაიგზავნა" };
+  }
+}
 
 const now = () => new Date().toISOString();
 const newId = (n = 12) => crypto.randomBytes(n).toString("base64url");
@@ -218,9 +242,15 @@ api.get("/users/names", auth, (req, res) => {
   res.json(db.prepare("SELECT id,name,username,role,active FROM users ORDER BY name").all());
 });
 api.get("/users", auth, admin, (req, res) => {
-  res.json(db.prepare("SELECT id,username,name,phone,role,active,must_change AS mustChange,created_at AS createdAt,last_login AS lastLogin FROM users ORDER BY name").all());
+  res.json(db.prepare("SELECT id,username,name,phone,email,role,active,must_change AS mustChange,created_at AS createdAt,last_login AS lastLogin FROM users ORDER BY name").all());
 });
 const USERNAME_RE = /^[A-Za-z0-9._@-]{3,40}$/;
+/* "" for no e-mail, null when invalid */
+function cleanEmail(v) {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (!s) return "";
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 200 ? s : null;
+}
 /* "" for no phone, null when invalid; Georgian mobiles without a country code get +995 */
 function cleanPhone(v) {
   const s = String(v ?? "").replace(/[\s()-]/g, "");
@@ -228,21 +258,22 @@ function cleanPhone(v) {
   if (!/^\+?\d{9,15}$/.test(s)) return null;
   return s.startsWith("+") ? s : (s.length === 9 ? "+995" + s : "+" + s);
 }
-api.post("/users", auth, admin, (req, res) => {
+api.post("/users", auth, admin, async (req, res) => {
   const { username, name, role, password } = req.body || {};
-  const phone = cleanPhone((req.body || {}).phone);
+  const phone = cleanPhone((req.body || {}).phone), email = cleanEmail((req.body || {}).email);
   if (phone === null) return res.status(400).json({ error: "ტელეფონის ნომერი არასწორია" });
+  if (email === null) return res.status(400).json({ error: "ელფოსტა არასწორია" });
   if (!USERNAME_RE.test(username || "")) return res.status(400).json({ error: "მომხმარებლის სახელი: 3–40 ლათინური ასო, ციფრი ან . _ - @" });
   if (!name || !String(name).trim()) return res.status(400).json({ error: "მიუთითეთ სახელი და გვარი" });
   if (!ROLES.includes(role)) return res.status(400).json({ error: "არასწორი როლი" });
   if (typeof password !== "string" || !TEMP_PW_RE.test(password)) return res.status(400).json({ error: "დროებითი პაროლი 4 ციფრი უნდა იყოს" });
   if (db.prepare("SELECT 1 FROM users WHERE username=?").get(username)) return res.status(409).json({ error: "ეს მომხმარებლის სახელი დაკავებულია" });
   const id = newId();
-  db.prepare("INSERT INTO users(id,username,name,phone,password_hash,role,active,must_change,created_at) VALUES(?,?,?,?,?,?,1,1,?)")
-    .run(id, username, String(name).trim(), phone, bcrypt.hashSync(password, 10), role, now());
-  res.json({ id });
+  db.prepare("INSERT INTO users(id,username,name,phone,email,password_hash,role,active,must_change,created_at) VALUES(?,?,?,?,?,?,?,1,1,?)")
+    .run(id, username, String(name).trim(), phone, email, bcrypt.hashSync(password, 10), role, now());
+  res.json({ id, ...(await mailLogin(req, { username, name: String(name).trim(), email }, password, true)) });
 });
-api.patch("/users/:id", auth, admin, (req, res) => {
+api.patch("/users/:id", auth, admin, async (req, res) => {
   const u = db.prepare("SELECT * FROM users WHERE id=?").get(req.params.id);
   if (!u) return res.status(404).json({ error: "მომხმარებელი ვერ მოიძებნა" });
   const b = req.body || {};
@@ -250,6 +281,7 @@ api.patch("/users/:id", auth, admin, (req, res) => {
   if (self && (b.active === false || (b.role !== undefined && b.role !== "admin"))) return res.status(400).json({ error: "საკუთარ თავს ადმინის უფლებას ან წვდომას ვერ ჩამოართმევთ" });
   if (b.name !== undefined) { if (!String(b.name).trim()) return res.status(400).json({ error: "სახელი ცარიელია" }); db.prepare("UPDATE users SET name=? WHERE id=?").run(String(b.name).trim(), u.id); }
   if (b.phone !== undefined) { const ph = cleanPhone(b.phone); if (ph === null) return res.status(400).json({ error: "ტელეფონის ნომერი არასწორია" }); db.prepare("UPDATE users SET phone=? WHERE id=?").run(ph, u.id); }
+  if (b.email !== undefined) { const em = cleanEmail(b.email); if (em === null) return res.status(400).json({ error: "ელფოსტა არასწორია" }); db.prepare("UPDATE users SET email=? WHERE id=?").run(em, u.id); }
   if (b.role !== undefined) { if (!ROLES.includes(b.role)) return res.status(400).json({ error: "არასწორი როლი" }); db.prepare("UPDATE users SET role=? WHERE id=?").run(b.role, u.id); }
   if (b.active !== undefined) {
     db.prepare("UPDATE users SET active=? WHERE id=?").run(b.active ? 1 : 0, u.id);
@@ -259,12 +291,14 @@ api.patch("/users/:id", auth, admin, (req, res) => {
     if (typeof b.password !== "string" || !TEMP_PW_RE.test(b.password)) return res.status(400).json({ error: "დროებითი პაროლი 4 ციფრი უნდა იყოს" });
     db.prepare("UPDATE users SET password_hash=?, must_change=1 WHERE id=?").run(bcrypt.hashSync(b.password, 10), u.id);
     db.prepare("DELETE FROM sessions WHERE user_id=?").run(u.id);
+    return res.json({ ok: true, ...(await mailLogin(req, db.prepare("SELECT * FROM users WHERE id=?").get(u.id), b.password, false)) });
   }
   res.json({ ok: true });
 });
 
 /* ---------------- config ---------------- */
 api.get("/config/lists", auth, (req, res) => res.json(parse(db.prepare("SELECT data FROM config WHERE key='lists'").get())));
+api.get("/config/mail", auth, admin, (req, res) => res.json({ enabled: !!mailer }));
 api.get("/config/hse-default", auth, admin, (req, res) => res.json(DEFAULT_HSE));
 api.put("/config/lists", auth, admin, (req, res) => {
   const out = {};
