@@ -266,3 +266,14 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
   table.rt.stack td.chk.ed .ck-wrap{justify-content:flex-start;border:1px solid var(--line);border-radius:5px;padding:0 10px}
 }
 .rt td.auto{background:var(--sunk);border-left:1px solid var(--line)}
+.pcard-stats{display:flex;gap:18px;font-size:.85rem;margin-top:auto}
+.pcard-stats>span{display:flex;gap:6px;align-items:baseline}
+.pcard-stats b{font-family:var(--f-mono);font-weight:600}
+.rt th:first-child,.rt td.ix{text-align:center}
+.rt td.ix{vertical-align:middle;padding-top:4px}
+.hse-ed{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.hse-ed-row{display:grid;grid-template-columns:24px 1fr 1fr auto;gap:8px;align-items:start;width:100%}
+.hse-ed-row .ix{font-family:var(--f-mono);color:var(--muted);padding-top:8px;text-align:center}
+@media (max-width:760px){.hse-ed-row{grid-template-columns:24px 1fr auto}.hse-ed-row textarea:nth-of-type(2){grid-column:2}}
+.hse-list{margin:4px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:8px;font-size:.88rem}
+.hse-ed textarea{field-sizing:content;min-height:70px}

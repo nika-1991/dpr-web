@@ -248,7 +248,9 @@ api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
   res.json(rows.filter((p) => canSee(p, req.user)));
 });
-const PROJECT_FIELDS = ["name", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived"];
+const PROJECT_FIELDS = ["name", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse"];
+/* HSE items every new report starts with; each project can edit its own copy */
+const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
 function cleanProject(body, base) {
   const p = { ...base };
   for (const k of PROJECT_FIELDS) if (body[k] !== undefined) p[k] = body[k];
@@ -259,6 +261,9 @@ function cleanProject(body, base) {
   p.memberIds = Array.isArray(p.memberIds) ? [...new Set(p.memberIds.filter((x) => validIds.has(x)))] : [];
   p.members = typeof p.members === "object" && p.members ? Object.fromEntries(Object.entries(p.members).filter(([k]) => p.memberIds.includes(k))) : {};
   p.archived = !!p.archived;
+  p.hse = (Array.isArray(p.hse) ? p.hse : DEFAULT_HSE).slice(0, 50)
+    .map((x) => ({ desc: String(x?.desc ?? "").slice(0, 2000), descEn: String(x?.descEn ?? "").slice(0, 2000) }))
+    .filter((x) => x.desc || x.descEn);
   return p;
 }
 api.post("/projects", auth, admin, (req, res) => {
