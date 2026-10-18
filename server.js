@@ -72,6 +72,10 @@ if (!db.prepare("SELECT 1 FROM users LIMIT 1").get()) {
   console.log("==============================================\n");
 }
 
+/* sample data on every start (for hosts whose disk is wiped on restart) */
+if (process.env.SEED_SAMPLE === "true" && require("./scripts/seed-sample")(db))
+  console.log("ჩაიტვირთა ნიმუში: პროექტი „თბილისი ჰილსი“ და ანგარიში DPR-002.");
+
 /* ---------------- app ---------------- */
 const app = express();
 app.disable("x-powered-by");

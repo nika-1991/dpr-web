@@ -79,4 +79,4 @@ docker run --rm -v dpr-web_dpr-data:/data -v "$PWD":/backup alpine tar czf /back
 | `public/styles.css` | დიზაინი (ღია და მუქი თემა) |
 | `scripts/seed-sample.js` | ნიმუშის მონაცემები Excel ფაილიდან |
 
-პარამეტრები (გარემოს ცვლადები): `PORT` (3000), `DATA_DIR` (`./data`), `ADMIN_USERNAME` (admin), `ADMIN_PASSWORD`, `SESSION_DAYS` (14), `COOKIE_SECURE`, `TRUST_PROXY`.
+პარამეტრები (გარემოს ცვლადები): `PORT` (3000), `DATA_DIR` (`./data`), `ADMIN_USERNAME` (admin), `ADMIN_PASSWORD`, `SESSION_DAYS` (14), `COOKIE_SECURE`, `TRUST_PROXY`, `SEED_SAMPLE` (`true`: ნიმუში ავტომატურად იტვირთება ყოველ გაშვებაზე, თუ ჯერ არ არის).

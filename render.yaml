@@ -17,3 +17,5 @@ services:
         value: "true"
       - key: TRUST_PROXY
         value: "1"
+      - key: SEED_SAMPLE
+        value: "true"
