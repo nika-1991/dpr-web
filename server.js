@@ -247,8 +247,7 @@ const isMember = (p, u) => !!(p && (p.memberIds || []).includes(u.id));
 const canSee = (p, u) => !!p && (u.role === "admin" || isMember(p, u));
 const withId = (id, d) => ({ id, ...d });
 
-/* per-project summary for the dashboard: reports, last report, BoQ progress (average share done over BoQ items),
-   the progress after each report date, and progress per BoQ item */
+/* per-project summary for the dashboard: reports, last report, BoQ progress (average share done over BoQ items) */
 const codeKey = (c) => String(c ?? "").trim().replace(/\./g, ",");
 const qtyNum = (v) => parseFloat(String(v ?? "").replace(",", ".")) || 0;
 function projectStats(p, id) {
@@ -257,20 +256,13 @@ function projectStats(p, id) {
   const items = (p.boq || []).filter((it) => it.type === "პოზიცია" && qtyNum(it.qty) > 0);
   const done = new Map();
   const avg = () => items.length ? items.reduce((a, it) => a + Math.min((done.get(codeKey(it.code)) || 0) / qtyNum(it.qty), 1), 0) / items.length : 0;
-  const timeline = [];
-  for (const r of reps) {
-    for (const w of r.works || []) if (w.code) done.set(codeKey(w.code), (done.get(codeKey(w.code)) || 0) + qtyNum(w.qty));
-    timeline.push([r.date, Math.round(avg() * 1000) / 10]);
-  }
-  const perItem = items.map((it) => {
-    const q = done.get(codeKey(it.code)) || 0;
-    return { code: it.code, name: it.name, unit: it.unit, qty: qtyNum(it.qty), done: q, pct: Math.round(Math.min(q / qtyNum(it.qty), 1) * 1000) / 10 };
-  });
+  for (const r of reps) for (const w of r.works || []) if (w.code) done.set(codeKey(w.code), (done.get(codeKey(w.code)) || 0) + qtyNum(w.qty));
+  const perItem = items.map((it) => { const q = done.get(codeKey(it.code)) || 0; return { done: q, pct: Math.min(q / qtyNum(it.qty), 1) * 100 }; });
   const last = reps[reps.length - 1];
   return { reports: reps.length, approved: reps.filter((r) => r.status === "approved").length,
     lastDate: last ? last.date : "", lastStatus: last ? last.status : "",
     progress: Math.round(avg() * 1000) / 10, itemsDone: perItem.filter((x) => x.pct >= 100).length, itemsStarted: perItem.filter((x) => x.done > 0).length,
-    timeline: timeline.slice(-30), items: perItem.slice(0, 500) };
+ };
 }
 api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
