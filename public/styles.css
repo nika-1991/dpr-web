@@ -503,3 +503,8 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .state-btn.finish:hover{background:color-mix(in srgb,var(--signal) 22%,var(--surface))}
 .state-btn.reopen{background:var(--info-soft);border-color:color-mix(in srgb,var(--info) 50%,transparent);color:var(--info)}
 .rt td.ed.need{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bad) 55%,transparent);background:var(--bad-soft)}
+/* users page: fields line up at the bottom even when a label wraps */
+.users-form .fgrid{align-items:end}
+table.users th:first-child{text-align:left}
+table.users td{vertical-align:middle}
+.sms-btn{margin-left:8px;text-decoration:none}

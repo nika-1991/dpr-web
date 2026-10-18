@@ -59,6 +59,9 @@ if (!/'reviewer'/.test(db.prepare("SELECT sql FROM sqlite_master WHERE name='use
   db.pragma("foreign_keys = ON");
 }
 
+/* phone number of a user (used to send the temporary password by SMS) */
+if (!db.prepare("PRAGMA table_info(users)").all().some((c) => c.name === "phone")) db.exec("ALTER TABLE users ADD COLUMN phone TEXT");
+
 const now = () => new Date().toISOString();
 const newId = (n = 12) => crypto.randomBytes(n).toString("base64url");
 const sha = (s) => crypto.createHash("sha256").update(s).digest("hex");
@@ -209,19 +212,28 @@ api.get("/users/names", auth, (req, res) => {
   res.json(db.prepare("SELECT id,name,username,role,active FROM users ORDER BY name").all());
 });
 api.get("/users", auth, admin, (req, res) => {
-  res.json(db.prepare("SELECT id,username,name,role,active,must_change AS mustChange,created_at AS createdAt,last_login AS lastLogin FROM users ORDER BY name").all());
+  res.json(db.prepare("SELECT id,username,name,phone,role,active,must_change AS mustChange,created_at AS createdAt,last_login AS lastLogin FROM users ORDER BY name").all());
 });
 const USERNAME_RE = /^[A-Za-z0-9._@-]{3,40}$/;
+/* "" for no phone, null when invalid; Georgian mobiles without a country code get +995 */
+function cleanPhone(v) {
+  const s = String(v ?? "").replace(/[\s()-]/g, "");
+  if (!s) return "";
+  if (!/^\+?\d{9,15}$/.test(s)) return null;
+  return s.startsWith("+") ? s : (s.length === 9 ? "+995" + s : "+" + s);
+}
 api.post("/users", auth, admin, (req, res) => {
   const { username, name, role, password } = req.body || {};
+  const phone = cleanPhone((req.body || {}).phone);
+  if (phone === null) return res.status(400).json({ error: "ტელეფონის ნომერი არასწორია" });
   if (!USERNAME_RE.test(username || "")) return res.status(400).json({ error: "მომხმარებლის სახელი: 3–40 ლათინური ასო, ციფრი ან . _ - @" });
   if (!name || !String(name).trim()) return res.status(400).json({ error: "მიუთითეთ სახელი და გვარი" });
   if (!ROLES.includes(role)) return res.status(400).json({ error: "არასწორი როლი" });
   if (typeof password !== "string" || password.length < 8) return res.status(400).json({ error: "დროებითი პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს" });
   if (db.prepare("SELECT 1 FROM users WHERE username=?").get(username)) return res.status(409).json({ error: "ეს მომხმარებლის სახელი დაკავებულია" });
   const id = newId();
-  db.prepare("INSERT INTO users(id,username,name,password_hash,role,active,must_change,created_at) VALUES(?,?,?,?,?,1,1,?)")
-    .run(id, username, String(name).trim(), bcrypt.hashSync(password, 10), role, now());
+  db.prepare("INSERT INTO users(id,username,name,phone,password_hash,role,active,must_change,created_at) VALUES(?,?,?,?,?,?,1,1,?)")
+    .run(id, username, String(name).trim(), phone, bcrypt.hashSync(password, 10), role, now());
   res.json({ id });
 });
 api.patch("/users/:id", auth, admin, (req, res) => {
@@ -231,6 +243,7 @@ api.patch("/users/:id", auth, admin, (req, res) => {
   const self = u.id === req.user.id;
   if (self && (b.active === false || (b.role !== undefined && b.role !== "admin"))) return res.status(400).json({ error: "საკუთარ თავს ადმინის უფლებას ან წვდომას ვერ ჩამოართმევთ" });
   if (b.name !== undefined) { if (!String(b.name).trim()) return res.status(400).json({ error: "სახელი ცარიელია" }); db.prepare("UPDATE users SET name=? WHERE id=?").run(String(b.name).trim(), u.id); }
+  if (b.phone !== undefined) { const ph = cleanPhone(b.phone); if (ph === null) return res.status(400).json({ error: "ტელეფონის ნომერი არასწორია" }); db.prepare("UPDATE users SET phone=? WHERE id=?").run(ph, u.id); }
   if (b.role !== undefined) { if (!ROLES.includes(b.role)) return res.status(400).json({ error: "არასწორი როლი" }); db.prepare("UPDATE users SET role=? WHERE id=?").run(b.role, u.id); }
   if (b.active !== undefined) {
     db.prepare("UPDATE users SET active=? WHERE id=?").run(b.active ? 1 : 0, u.id);
