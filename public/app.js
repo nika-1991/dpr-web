@@ -30,6 +30,8 @@ function tr(s){
   let out=s; for(const k of I18N_FRAGS) if(out.includes(k)) out=out.split(k).join(I18N[k]);
   return out;
 }
+/* Georgian capitals (Mtavruli) for menu-style labels; browsers do not uppercase Georgian themselves */
+const mtavruli=s=>String(s).replace(/[\u10D0-\u10FA\u10FD-\u10FF]/g,c=>String.fromCharCode(c.charCodeAt(0)+0xBC0));
 function setLang(l){
   LANG=l; try{ localStorage.setItem("dpr.lang",l); }catch(e){}
   document.documentElement.lang=l; document.title="DPR "+tr("საიტის ანგარიშები");
@@ -369,7 +371,7 @@ function renderProject(){
       h("h1",{style:"margin-top:6px"},p.name),
       h("div",{class:"muted"},[p.client,p.location].filter(Boolean).join(" · "))),
     canWorkOn(p)&&!p.archived?h("button",{class:"btn primary",type:"button",onclick:()=>openOrCreate(todayISO())},"დღევანდელი ანგარიში"):null);
-  const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;render();}},l)));
+  const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-label":tr(l),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;render();}},mtavruli(tr(l)))));
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
   else if(S.tab==="progress") body=renderProgress(p);
