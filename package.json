@@ -1,0 +1,20 @@
+{
+  "name": "dpr-web",
+  "version": "1.0.0",
+  "description": "ყოველდღიური საიტის ანგარიშები (DPR) — პროექტები, გუნდები, ანგარიშები, მომხმარებლის სახელით და პაროლით შესვლა",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed-sample": "node scripts/seed-sample.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "2.4.3",
+    "better-sqlite3": "11.8.1",
+    "express": "4.21.2",
+    "xlsx": "0.18.5"
+  }
+}

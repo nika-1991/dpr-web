@@ -1,0 +1,17 @@
+services:
+  dpr:
+    build: .
+    container_name: dpr
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: "შეცვალეთ-ეს-პაროლი-2026"   # მხოლოდ პირველი გაშვებისას გამოიყენება
+      # COOKIE_SECURE: "true"   # ჩართეთ, როცა საიტი HTTPS-ით მუშაობს
+      # TRUST_PROXY: "1"        # ჩართეთ, თუ წინ დგას Nginx/Caddy
+    volumes:
+      - dpr-data:/data
+
+volumes:
+  dpr-data:
