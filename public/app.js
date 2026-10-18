@@ -14,11 +14,33 @@ const STATUS = {draft:"დრაფტი",submitted:"გაგზავნი�
 const POLL_MS = 20000;
 
 /* ---------- helpers ---------- */
+/* language: Georgian by default, English on demand. Every text passed through h() is translated by tr() */
+let LANG=(()=>{ try{ return localStorage.getItem("dpr.lang")==="en"?"en":"ka"; }catch(e){ return "ka"; } })();
+const LOCALE=()=>LANG==="en"?"en-GB":"ka-GE";
+const BILINGUAL=/^([^]*?[\u10A0-\u10FF][^]*?) \/ ([^\u10A0-\u10FF]*[A-Za-z][^\u10A0-\u10FF]*)$/;
+const I18N=window.I18N_EN||{};
+const I18N_FRAGS=Object.keys(I18N).filter(k=>/^[\s·,.]|[\s:(]$/.test(k)).sort((a,b)=>b.length-a.length);
+function tr(s){
+  if(typeof s!=="string"||!/[\u10A0-\u10FF]/.test(s)) return s;
+  const bi=BILINGUAL.exec(s);
+  if(LANG==="ka") return bi?bi[1]:s;
+  if(I18N[s]!=null) return I18N[s];
+  const t=s.trim(); if(I18N[t]!=null) return s.replace(t,I18N[t]);
+  if(bi) return bi[2];
+  let out=s; for(const k of I18N_FRAGS) if(out.includes(k)) out=out.split(k).join(I18N[k]);
+  return out;
+}
+function setLang(l){
+  LANG=l; try{ localStorage.setItem("dpr.lang",l); }catch(e){}
+  document.documentElement.lang=l; document.title="DPR "+tr("საიტის ანგარიშები");
+  render();
+}
 function h(tag, props, ...kids){
   const el=document.createElement(tag);
-  for(const c of kids.flat(Infinity)){ if(c==null||c===false) continue; el.append(c instanceof Node?c:String(c)); }
-  if(props) for(const [k,v] of Object.entries(props)){
+  for(const c of kids.flat(Infinity)){ if(c==null||c===false) continue; el.append(c instanceof Node?c:String(tr(c))); }
+  if(props) for(let [k,v] of Object.entries(props)){
     if(v==null||v===false) continue;
+    if(k==="placeholder"||k==="title"||k==="aria-label") v=tr(v);
     if(k==="class") el.className=v;
     else if(k==="style") el.style.cssText=v;
     else if(k.startsWith("on")&&typeof v==="function") el.addEventListener(k.slice(2),v);
@@ -35,7 +57,7 @@ function fmtDate(iso,short){ if(!iso) return ""; const m=/^(\d{4})-(\d{2})-(\d{2
 function fmtDateTime(iso){ if(!iso) return "—"; const d=new Date(iso); return fmtDate(isoDay(d))+" "+pad(d.getHours())+":"+pad(d.getMinutes()); }
 function normCode(c){ return String(c??"").trim().replace(/\./g,","); }
 function num(v){ if(v===""||v==null) return 0; const n=parseFloat(String(v).replace(",",".")); return isFinite(n)?n:0; }
-function fmtNum(n){ return (Math.round(n*100)/100).toLocaleString("ka-GE",{maximumFractionDigits:2}); }
+function fmtNum(n){ return (Math.round(n*100)/100).toLocaleString(LOCALE(),{maximumFractionDigits:2}); }
 function toast(msg){ const t=h("div",{class:"toast",role:"status"},msg); document.body.append(t); setTimeout(()=>t.remove(),3400); }
 function errMsg(e){ return (e&&e.message)||"უცნობი შეცდომა"; }
 function chip(status){ return h("span",{class:"chip st-"+(status||"none")}, STATUS[status]||"არ არის"); }
@@ -166,6 +188,8 @@ function renderBar(){
   if((S.view==="project"||S.view==="report") && p) add(p.name,()=>go("project",{pid:S.pid,tab:"reports"}));
   if(S.view==="report" && S.rep) add("DPR-"+String(S.rep.num||0).padStart(3,"0")+" · "+fmtDate(S.rep.date));
   const me=document.getElementById("me"); me.replaceChildren();
+  document.querySelector(".brand-name").textContent=tr("საიტის ანგარიშები");
+  me.append(h("button",{class:"lang-btn",type:"button",title:LANG==="en"?"ქართული":"English","aria-label":LANG==="en"?"ქართული":"English",onclick:()=>setLang(LANG==="en"?"ka":"en")},LANG==="en"?"ქა":"EN"));
   if(S.me){
     me.append(h("button",{class:"me-btn",type:"button",title:"ჩემი ანგარიში",onclick:()=>go("account")},
       h("span",{class:"avatar"},initials(S.me.name)),h("span",null,S.me.name),h("span",{class:"role-tag"},S.admin?"ადმინი":"თანამშრომელი")));
@@ -367,7 +391,7 @@ function renderReportsTab(p){
   const lead=(first.getDay()+6)%7;
   const byDate=new Map([...S.reports.values()].map(r=>[r.date,r]));
   const shift=d=>{ const n=new Date(y,m-1+d,1); S.month=n.getFullYear()+"-"+pad(n.getMonth()+1); render(); };
-  const monthName=first.toLocaleDateString("ka-GE",{month:"long",year:"numeric"});
+  const monthName=first.toLocaleDateString(LOCALE(),{month:"long",year:"numeric"});
   const cal=h("div",{class:"cal"},
     ["ორ","სა","ოთ","ხუ","პა","შა","კვ"].map(d=>h("div",{class:"dow"},d)),
     Array.from({length:lead},()=>h("div",{class:"d out","aria-hidden":"true"})),
@@ -388,7 +412,7 @@ function renderReportsTab(p){
   const right=[];
   if(S.creating&&S.creating.date) right.push(renderCreatePanel(p));
   right.push(h("section",{class:"panel"},
-    h("div",{class:"panel-h"},h("h3",null,"ანგარიშები ",h("span",{class:"en"},list.length+" ჩანაწერი")),
+    h("div",{class:"panel-h"},h("h3",null,"ანგარიშები ",h("span",{class:"en cnt-sub"},list.length+" ჩანაწერი")),
       list.length?h("button",{class:"btn sm",type:"button",onclick:()=>exportProject(p)},"რეესტრის ექსპორტი (.xlsx)"):null),
     list.length?h("div",{class:"rlist"},list.map(([id,r])=>h("button",{class:"ritem",type:"button",onclick:()=>openReport(id)},
         h("span",{class:"rn"},"DPR-"+String(r.num||0).padStart(3,"0")),
@@ -514,14 +538,14 @@ function markDirty(sec){
   S.dirty.add(sec); setSave("შენახვა…");
   clearTimeout(S.saveTimer); S.saveTimer=setTimeout(flush,900);
 }
-function setSave(t,err){ const el=document.getElementById("savest"); if(el){ el.textContent=t; el.classList.toggle("err",!!err); } }
+function setSave(t,err){ const el=document.getElementById("savest"); if(el){ el.textContent=tr(t); el.classList.toggle("err",!!err); } }
 async function flush(){
   if(!S.dirty.size||S.saving||!S.repId) return;
   S.saving=true; const secs=[...S.dirty]; S.dirty.clear(); const id=S.repId;
   const patch={}; for(const s of secs) patch[s]=clone(S.rep[s]);
   try{ const r=await api("PATCH","/reports/"+encodeURIComponent(id),patch); S.reports.set(id,r);
        if(S.rep&&S.repId===id){ S.rep.updatedBy=r.updatedBy; S.rep.updatedAt=r.updatedAt; }
-       setSave("შენახულია "+new Date().toLocaleTimeString("ka-GE",{hour:"2-digit",minute:"2-digit"})); }
+       setSave("შენახულია "+new Date().toLocaleTimeString(LOCALE(),{hour:"2-digit",minute:"2-digit"})); }
   catch(e){ secs.forEach(s=>S.dirty.add(s)); setSave("ვერ შეინახა: "+errMsg(e),true); }
   S.saving=false; if(S.dirty.size){ clearTimeout(S.saveTimer); S.saveTimer=setTimeout(flush,3000); }
 }
@@ -590,7 +614,7 @@ function renderProjectSheet(p){
     h("div",{class:"sh-hd"},
       h("div",{class:"sh-title"},"👥 პროექტში ჩართული პირი / პოზიცია",h("span",{class:"en"},"Project Participant / Position")),
       h("div",{class:"sh-sub"},"კომპანიის სახელი: პასუხისმგებელი პირის გვარი, ტელეფონი, ელ. ფოსტა")),
-    PARTICIPANTS.map(([k,ka,en])=>row(ka+" — "+en,parts[k])));
+    PARTICIPANTS.map(([k,ka,en])=>row(ka+" / "+en,parts[k])));
   const codes=h("section",{class:"sh-box"},
     h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"🏷️ კოდები",h("span",{class:"en"},"Codes"))),
     row("პროექტის ბუღალტრული კოდი / Accounting Code",p.accountingCode,true),
@@ -808,7 +832,7 @@ function renderBoq(p){
     h("div",{class:"tw"},h("table",{class:"rt"},h("thead",null,h("tr",null,["კოდი","BoQ თავი","სამუშაოს დასახელება","განზ.",""].map(t=>h("th",null,t)))),
       h("tbody",null,S.additional.map(a=>h("tr",null,h("td",{class:"mono"},a.code),h("td",null,a.chapter||""),h("td",null,a.name),h("td",null,a.unit||""),
         h("td",null,S.admin&&a.id?h("button",{class:"btn sm ghost",type:"button","aria-label":"წაშლა",onclick:async()=>{try{await api("DELETE","/additional/"+encodeURIComponent(a.id)); S.additional=S.additional.filter(x=>x.id!==a.id); render();}catch(e){toast(errMsg(e));}}},"✕"):null))))))):null;
-  return [importer,h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ხარჯთაღრიცხვა",h("span",{class:"en"},(p.boq||[]).filter(x=>x.type==="პოზიცია").length+" პოზიცია")),ed?h("span",{class:"small muted"},"ცვლილებები ავტომატურად ინახება"):null),holder),addl].filter(Boolean);
+  return [importer,h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ხარჯთაღრიცხვა",h("span",{class:"en cnt-sub"},(p.boq||[]).filter(x=>x.type==="პოზიცია").length+" პოზიცია")),ed?h("span",{class:"small muted"},"ცვლილებები ავტომატურად ინახება"):null),holder),addl].filter(Boolean);
 }
 function excelDate(v){
   if(v==null||v==="") return "";
@@ -888,7 +912,7 @@ function renderTeam(p){
           h("button",{class:"btn primary",type:"button",onclick:()=>{ if(!userSel.value){ toast("აირჩიეთ მომხმარებელი"); return; } const m=clone(members); m[userSel.value]={role:roleSel.value,addedAt:new Date().toISOString()}; save([...ids,userSel.value],m,"დაემატა გუნდში"); }},"დამატება")),
         h("p",{class:"small muted",style:"margin:0"},"გუნდის წევრი ხედავს მხოლოდ ამ პროექტს და ავსებს მის ანგარიშებს. ახალი თანამშრომლისთვის ჯერ შექმენით ანგარიში „მომხმარებლების მართვაში“.")));
   }
-  return [adder,h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"პროექტის გუნდი",h("span",{class:"en"},ids.length+" წევრი"))),list)].filter(Boolean);
+  return [adder,h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"პროექტის გუნდი",h("span",{class:"en cnt-sub"},ids.length+" წევრი"))),list)].filter(Boolean);
 }
 
 /* ---------- INFO ---------- */
@@ -948,7 +972,7 @@ function renderUsers(){
   });
   return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"ადმინისტრირება"),h("h1",null,"მომხმარებლები"))),
     h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ახალი მომხმარებელი")),createForm,h("div",{id:"created-box",class:"panel-b",style:"padding-top:0"},created)),
-    h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ყველა მომხმარებელი",h("span",{class:"en"},S.users.length))),
+    h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ყველა მომხმარებელი",h("span",{class:"en cnt-sub"},S.users.length))),
       h("div",{class:"tw"},h("table",{class:"rt stack users"},h("thead",null,h("tr",null,["სახელი","როლი","პროექტები","ბოლო შესვლა","სტატუსი",""].map(t=>h("th",null,t)))),h("tbody",null,rows))))];
 }
 
@@ -1017,6 +1041,7 @@ function exportProject(p){
 
 /* ---------- boot ---------- */
 document.getElementById("brand").addEventListener("click",()=>{ if(S.me&&!S.me.mustChange) go("home"); });
+document.documentElement.lang=LANG; document.title="DPR "+tr("საიტის ანგარიშები");
 (async function boot(){
   try{ const r=await api("GET","/me"); await onLoggedIn(r.user); }
   catch(e){ if(!S.me) render(); }

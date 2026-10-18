@@ -247,3 +247,6 @@ tr.sub td{font-weight:600}
 img{max-width:100%}
 body{font-size:14px}
 @media (max-width:520px){.role-tag{display:none}}
+.en:not(.cnt-sub){display:none}
+.lang-btn{font-family:var(--f-mono);font-size:.75rem;font-weight:600;letter-spacing:.05em;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:4px;padding:3px 8px;cursor:pointer}
+.lang-btn:hover{background:var(--sunk)}
