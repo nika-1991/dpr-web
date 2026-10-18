@@ -308,6 +308,7 @@ api.delete("/additional/:id", auth, admin, (req, res) => {
 
 /* ---------------- reports ---------------- */
 const SECTIONS = ["conditions", "issues", "hse", "works", "expenses", "personnel", "materials", "fuel", "visitors", "photos"];
+const PRICED = ["works", "expenses"];
 const getReportRow = (id) => db.prepare("SELECT * FROM reports WHERE id=?").get(id);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const REPORT_TZ = process.env.REPORT_TZ || "Asia/Tbilisi";
@@ -364,7 +365,13 @@ api.patch("/reports/:id", auth, (req, res) => {
   const editable = !p.archived && (req.user.role === "admin" ? r.status !== "approved" : isMember(p, req.user) && r.status === "draft");
   if (!editable) return res.status(403).json({ error: r.status === "draft" ? "ამ ანგარიშის რედაქტირების უფლება არ გაქვთ" : "ანგარიში დაბლოკილია (" + r.status + ")" });
   const b = req.body || {};
-  for (const k of SECTIONS) if (b[k] !== undefined) r[k] = cleanSection(k, b[k]);
+  for (const k of SECTIONS) if (b[k] !== undefined) {
+    const rows = cleanSection(k, b[k]);
+    /* unit prices are set by the reviewer (admin); other users keep whatever is stored */
+    if (req.user.role !== "admin" && PRICED.includes(k))
+      rows.forEach((row, i) => { if (row && typeof row === "object") { delete row.price; const old = (r[k] || [])[i]; if (old && old.price !== undefined) row.price = old.price; } });
+    r[k] = rows;
+  }
   r.updatedBy = req.user.id; r.updatedAt = now();
   saveReport(req.params.id, r);
   res.json(withId(req.params.id, r));
@@ -383,6 +390,15 @@ api.post("/reports/:id/status", auth, (req, res) => {
   r.updatedBy = req.user.id; r.updatedAt = t;
   saveReport(req.params.id, r);
   res.json(withId(req.params.id, r));
+});
+/* analysis: works (revenue) and expenses (cost) of every report, for the reviewer */
+api.get("/analysis", auth, admin, (req, res) => {
+  const reports = db.prepare("SELECT project_id,data FROM reports").all().map((row) => {
+    const r = JSON.parse(row.data);
+    return { projectId: row.project_id, date: r.date, num: r.num, status: r.status, works: r.works || [], expenses: r.expenses || [] };
+  });
+  const additional = db.prepare("SELECT project_id,data FROM additional").all().map((row) => ({ projectId: row.project_id, ...JSON.parse(row.data) }));
+  res.json({ reports, additional });
 });
 api.delete("/reports/:id", auth, admin, (req, res) => {
   const x = loadEditable(req, res); if (!x) return;

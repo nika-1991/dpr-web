@@ -157,6 +157,7 @@ async function go(view, opts={}){
     main.replaceChildren(h("div",{class:"empty"},h("h2",null,"იტვირთება…")));
     try{ await loadProjectData(S.pid); }catch(e){ toast("ანგარიშები ვერ ჩაიტვირთა: "+errMsg(e)); }
   }
+  if(view==="analysis"&&S.admin){ try{ S.analysis=await api("GET","/analysis"); }catch(e){ S.analysis=null; toast(errMsg(e)); } }
   if(view==="users"&&S.admin){ try{ S.users=await api("GET","/users"); }catch(e){ toast(errMsg(e)); } }
   render(); window.scrollTo(0,0);
 }
@@ -186,6 +187,7 @@ function renderBar(){
   const add=(label,fn)=>{ if(c.childNodes.length) c.append(h("span",{class:"sep"},"/")); c.append(fn?h("button",{type:"button",onclick:fn},label):h("span",{class:"muted"},label)); };
   if(S.view==="settings") add("სიები");
   if(S.view==="users") add("მომხმარებლები");
+  if(S.view==="analysis") add("ანალიზი");
   if(S.view==="account") add("ჩემი ანგარიში");
   if((S.view==="project"||S.view==="report") && p) add(p.name,()=>go("project",{pid:S.pid,tab:"reports"}));
   if(S.view==="report" && S.rep) add("DPR-"+String(S.rep.num||0).padStart(3,"0")+" · "+fmtDate(S.rep.date));
@@ -207,6 +209,7 @@ function render(){
   else if(S.view==="home") v=renderHome();
   else if(S.view==="settings") v=renderSettings();
   else if(S.view==="users") v=renderUsers();
+  else if(S.view==="analysis") v=renderAnalysis();
   else if(S.view==="project") v=P()?renderProject():renderMissing();
   else if(S.view==="report") v=renderReport();
   else v=renderHome();
@@ -289,6 +292,7 @@ function renderHome(){
   const head=h("div",{class:"head"},
     h("div",null,h("div",{class:"eyebrow"},"Daily Progress Report"),h("h1",null,"პროექტები")),
     S.admin?h("div",{class:"row"},
+      h("button",{class:"btn",type:"button",onclick:()=>go("analysis")},"ანალიზი"),
       h("button",{class:"btn",type:"button",onclick:()=>go("users")},"მომხმარებლები"),
       h("button",{class:"btn",type:"button",onclick:()=>go("settings")},"სიები"),
       h("button",{class:"btn primary",type:"button",onclick:()=>{S.creating="project";render();}},"+ ახალი პროექტი")):null);
@@ -456,6 +460,8 @@ const SECTION_KEYS=["conditions","issues","hse","works","expenses","personnel","
 function ctx(){ const idx=boqIndex(P()); return {idx,item:c=>c?idx.get(normCode(c)):null}; }
 function autoItem(field,missing="ვერ მოიძებნა"){ return (r,c)=>{ if(!r.code) return ""; const it=c.item(r.code); if(!it) return {warn:missing}; return it[field]??""; }; }
 const listOpt=k=>()=>S.lists[k]||[];
+const amount=r=>num(r.qty)*num(r.price);
+const amountText=r=>r.price===""||r.price==null?"":fmtNum(amount(r));
 const SECTIONS={
   conditions:{title:"სამუშაო პირობები",en:"Working Conditions",kind:"conditions"},
   issues:{title:"კრიტიკული საკითხები",en:"Open Issues",add:"+ საკითხი",cols:[
@@ -477,12 +483,14 @@ const SECTIONS={
     {k:"_ch",l:"BoQ თავი",auto:autoItem("chapter"),w:"140px"},
     {k:"_nm",l:"სამუშაოს დასახელება",auto:autoItem("name",""),w:"220px"},
     {k:"_un",l:"განზ.",auto:autoItem("unit",""),w:"56px"},
-    {k:"qty",l:"რაოდ.",t:"num",w:"86px",sum:true},
+    {k:"qty",l:"რაოდ.",t:"num",w:"86px",sum:true,recalc:true},
     {k:"_tot",l:"სულ მოცულობა",auto:(r,c)=>{const it=c.item(r.code); return it&&it.qty!==""&&it.qty!=null?fmtNum(num(it.qty)):"";},w:"86px"},
     {k:"staff",l:"დასაქმებულთა რაოდ.",t:"num",w:"80px",sum:true},
     {k:"from",l:"📌-დან",t:"text",w:"76px"},{k:"to",l:"📌-მდე",t:"text",w:"76px"},
     {k:"_st",l:"დაწყება (გეგმა)",auto:(r,c)=>{ if(!r.code) return ""; const it=c.item(r.code); return it&&it.start?fmtDate(it.start):"მონაცემი არაა"; },w:"90px"},
     {k:"_en",l:"დასრულება (გეგმა)",auto:(r,c)=>{ if(!r.code) return ""; const it=c.item(r.code); return it&&it.end?fmtDate(it.end):"მონაცემი არაა"; },w:"90px"},
+    {k:"price",l:"ერთ. ღირებულება",t:"num",w:"100px",admin:true,recalc:true},
+    {k:"_amt",l:"ღირებულება",auto:r=>amountText(r),sumFn:rows=>rows.reduce((a,r)=>a+amount(r),0),w:"110px",admin:true},
     {k:"comment",l:"კომენტარი",t:"area",w:"180px"}]},
   expenses:{title:"ხარჯები",en:"Expenses",add:"+ ხარჯი",cols:[
     {k:"code",l:"BoQ #",t:"code",w:"92px"},
@@ -490,10 +498,12 @@ const SECTIONS={
     {k:"type",l:"ხარჯის ტიპი",t:"select",opts:listOpt("costCats"),w:"130px",structural:true},
     {k:"desc",l:"ხარჯის აღწერა",t:"area",w:"200px"},
     {k:"unit",l:"განზ.",t:"select",opts:listOpt("units"),w:"80px"},
-    {k:"qty",l:"რაოდ.",t:"num",w:"80px"},
+    {k:"qty",l:"რაოდ.",t:"num",w:"80px",recalc:true},
     {k:"fuelType",l:"საწვავის ტიპი",t:"select",opts:listOpt("fuelTypes"),w:"110px",when:r=>r.type==="ტექნიკა"},
     {k:"fuelQty",l:"საწვავის რაოდ.",t:"num",w:"86px",sum:true,when:r=>r.type==="ტექნიკა"},
     {k:"country",l:"ქვეყანა",t:"select",opts:()=>COUNTRIES,w:"130px"},
+    {k:"price",l:"ერთ. ღირებულება",t:"num",w:"100px",admin:true,recalc:true},
+    {k:"_amt",l:"ღირებულება",auto:r=>amountText(r),sumFn:rows=>rows.reduce((a,r)=>a+amount(r),0),w:"110px",admin:true},
     {k:"comment",l:"კომენტარი",t:"area",w:"170px"}]},
   personnel:{title:"პერსონალი",en:"Personnel on site",add:"+ თანამშრომელი",cols:[
     {k:"name",l:"სახელი გვარი",t:"text",w:"180px"},
@@ -650,17 +660,21 @@ function renderConditions(ed){
 
 function renderRows(key,def,rows,ed){
   const c=ctx();
-  const cols=def.cols.filter(col=>!col.lang||col.lang===LANG);
+  const cols=def.cols.filter(col=>(!col.lang||col.lang===LANG)&&(!col.admin||S.admin));
+  const amtCol=cols.find(col=>col.k==="_amt");
+  const refreshAmount=i=>{ if(!amtCol) return;
+    const td=document.getElementById(key+"-"+i+"-_amt"); if(td) td.textContent=amountText(rows[i]);
+    const ft=document.getElementById(key+"-sum-_amt"); if(ft) ft.textContent=fmtNum(amtCol.sumFn(rows)); };
   const rerender=()=>{ document.getElementById("sec-"+key).replaceWith(renderSection(key)); };
   const cell=(row,col,i)=>{
-    if(col.auto){ const v=col.auto(row,c); const warn=v&&typeof v==="object"; return h("td",{class:"auto"+(warn?" warn":""),"data-l":col.l},warn?v.warn:v); }
+    if(col.auto){ const v=col.auto(row,c); const warn=v&&typeof v==="object"; return h("td",{id:key+"-"+i+"-"+col.k,class:"auto"+(warn?" warn":"")+(col.sumFn?" num":""),"data-l":col.l},warn?v.warn:v); }
     const active=!col.when||col.when(row);
     const val=row[col.k]??"";
     if(col.t==="check"){ const id=key+"-"+i+"-"+col.k;
       return h("td",{"data-l":col.l,class:"chk"+(ed&&active?" ed":"")},h("label",{class:"ck-wrap",for:id},h("input",{id,type:"checkbox",checked:val==="კი",disabled:!ed||!active,"aria-label":col.l,onchange:e=>{ row[col.k]=e.target.checked?"კი":""; markDirty(key); }}))); }
     if(!ed||!active||col.ro){ return h("td",{"data-l":col.l},h("span",{class:"ro"+(col.t==="num"?" num":"")},active?(col.t==="date"?fmtDate(val):col.t==="num"&&val!==""?fmtNum(num(val)):val):"")); }
     const id=key+"-"+i+"-"+col.k;
-    const onIn=e=>{ row[col.k]=e.target.value; markDirty(key); };
+    const onIn=e=>{ row[col.k]=e.target.value; markDirty(key); if(col.recalc) refreshAmount(i); };
     let el;
     if(col.t==="select"){ const opts=col.opts(); el=h("select",{id,onchange:e=>{onIn(e); if(col.structural) rerender();}},h("option",{value:""},"—"),opts.map(o=>h("option",{value:o},o)),val&&!opts.includes(val)?h("option",{value:val},val):null); el.value=val; }
     else if(col.t==="area") el=h("textarea",{id,rows:1,oninput:onIn,value:val});
@@ -673,7 +687,7 @@ function renderRows(key,def,rows,ed){
     h("thead",null,h("tr",null,h("th",null,"#"),cols.map(col=>h("th",{style:"min-width:"+col.w},col.l)),ed&&!def.fixed?h("th",null,""):null)),
     h("tbody",null,rows.map((row,i)=>h("tr",null,h("td",{class:"ix"},i+1),cols.map(col=>cell(row,col,i)),
       ed&&!def.fixed?h("td",null,h("button",{class:"btn sm ghost del",type:"button","aria-label":"სტრიქონის წაშლა",title:"წაშლა",onclick:()=>{rows.splice(i,1);markDirty(key);rerender();}},"✕")):null))),
-    cols.some(c=>c.sum)&&rows.length?h("tfoot",null,h("tr",null,h("td",null,"Σ"),cols.map(col=>h("td",{class:"num","data-l":col.sum?col.l+" — ჯამი":null},col.sum?fmtNum(rows.reduce((a,r)=>a+num(r[col.k]),0)):"")),ed?h("td",null):null)):null);
+    cols.some(c=>c.sum||c.sumFn)&&rows.length?h("tfoot",null,h("tr",null,h("td",null,"Σ"),cols.map(col=>h("td",{id:col.sumFn?key+"-sum-"+col.k:null,class:"num","data-l":col.sum||col.sumFn?col.l+" — ჯამი":null},col.sumFn?fmtNum(col.sumFn(rows)):col.sum?fmtNum(rows.reduce((a,r)=>a+num(r[col.k]),0)):"")),ed&&!def.fixed?h("td",null):null)):null);
   const empty=!rows.length?h("div",{class:"panel-b muted small"},ed?"ჩანაწერი არ არის. დაამატეთ ქვემოთ ღილაკით.":"ჩანაწერი არ არის."):null;
   const foot=ed&&!def.fixed?h("div",{class:"tbl-foot"},
     h("button",{class:"btn sm",type:"button",onclick:()=>{ const nr={}; if(key==="personnel"){ nr.meal="1"; const last=rows[rows.length-1]; if(last){nr.start=last.start;nr.end=last.end;} } if(key==="expenses") nr.country="საქართველო"; rows.push(nr); markDirty(key); rerender(); setTimeout(()=>{ const f=document.querySelector("#sec-"+key+" tbody tr:last-child input, #sec-"+key+" tbody tr:last-child select, #sec-"+key+" tbody tr:last-child textarea"); f&&f.focus(); },0); }},def.add),
@@ -921,6 +935,84 @@ function renderInfo(p){
     h("button",{class:"btn sm",type:"button",onclick:async()=>{ try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი აღდგა":"პროექტი დაარქივდა"); render(); }catch(e){} }},p.archived?"აღდგენა":"დაარქივება")),
     h("div",{class:"panel-b small muted"},"დაარქივებულ პროექტზე ახალი ანგარიში არ იქმნება და არსებულები აღარ რედაქტირდება; ნახვა რჩება.")));
   return out;
+}
+
+/* ---------- ANALYSIS (admin): revenue = priced works, cost = priced expenses ---------- */
+function analysisData(){
+  const A=S.analysis||{reports:[],additional:[]}, F=S.anFilter||(S.anFilter={approvedOnly:true,from:"",to:""});
+  const reps=A.reports.filter(r=>(!F.approvedOnly||r.status==="approved")&&(!F.from||r.date>=F.from)&&(!F.to||r.date<=F.to));
+  const out=new Map();
+  for(const [pid,p] of S.projects){
+    const idx=new Map((p.boq||[]).map(it=>[normCode(it.code),it]));
+    for(const a of A.additional.filter(a=>a.projectId===pid)) if(!idx.has(normCode(a.code))) idx.set(normCode(a.code),{name:a.name,unit:a.unit});
+    out.set(pid,{p,idx,rev:0,cost:0,unpriced:0,works:new Map(),costs:new Map(),months:new Map(),reports:0});
+  }
+  for(const r of reps){
+    const d=out.get(r.projectId); if(!d) continue; d.reports++;
+    const m=r.date.slice(0,7); if(!d.months.has(m)) d.months.set(m,{rev:0,cost:0});
+    for(const w of r.works){ if(!w.code) continue;
+      if(w.price===""||w.price==null){ if(num(w.qty)) d.unpriced++; continue; }
+      const a=amount(w), code=normCode(w.code), it=d.idx.get(code)||{};
+      const g=d.works.get(code)||{code,name:it.name||"",unit:it.unit||"",qty:0,amt:0}; g.qty+=num(w.qty); g.amt+=a; d.works.set(code,g);
+      d.rev+=a; d.months.get(m).rev+=a; }
+    for(const x of r.expenses){
+      if(x.price===""||x.price==null){ if(num(x.qty)) d.unpriced++; continue; }
+      const a=amount(x), t=x.type||"სხვა";
+      const g=d.costs.get(t)||{type:t,amt:0,lines:new Map()}; g.amt+=a;
+      const lk=(x.desc||"—")+"|"+(x.unit||""); const l=g.lines.get(lk)||{desc:x.desc||"—",unit:x.unit||"",qty:0,amt:0}; l.qty+=num(x.qty); l.amt+=a; g.lines.set(lk,l);
+      d.costs.set(t,g); d.cost+=a; d.months.get(m).cost+=a; }
+  }
+  return [...out.values()].sort((a,b)=>String(a.p.name).localeCompare(String(b.p.name),"ka"));
+}
+function renderAnalysis(){
+  if(!S.admin) return renderMissing();
+  const F=S.anFilter||(S.anFilter={approvedOnly:true,from:"",to:""});
+  const data=analysisData();
+  const money=n=>fmtNum(n)+" ₾";
+  const pct=(a,b)=>b?fmtNum(a/b*100)+"%":"—";
+  const tot=data.reduce((t,d)=>({rev:t.rev+d.rev,cost:t.cost+d.cost}),{rev:0,cost:0});
+  const fId=uid(), tId=uid(), cId=uid();
+  const filters=h("section",{class:"panel"},h("div",{class:"panel-b an-filters"},
+    h("div",{class:"field"},h("label",{for:fId},"თარიღიდან"),h("input",{id:fId,type:"date",class:"inp",value:F.from,onchange:e=>{F.from=e.target.value;render();}})),
+    h("div",{class:"field"},h("label",{for:tId},"თარიღამდე"),h("input",{id:tId,type:"date",class:"inp",value:F.to,onchange:e=>{F.to=e.target.value;render();}})),
+    h("label",{class:"check",for:cId},h("input",{id:cId,type:"checkbox",checked:F.approvedOnly,onchange:e=>{F.approvedOnly=e.target.checked;render();}}),"მხოლოდ დადასტურებული ანგარიშები"),
+    h("button",{class:"btn sm ghost",type:"button",onclick:async()=>{ try{ S.analysis=await api("GET","/analysis"); render(); }catch(e){ toast(errMsg(e)); } }},"განახლება")));
+  const kpi=h("div",{class:"an-kpis"},
+    [["შემოსავალი",money(tot.rev)],["ხარჯი",money(tot.cost)],["სხვაობა",money(tot.rev-tot.cost)],["მარჟა",pct(tot.rev-tot.cost,tot.rev)]]
+      .map(([l,v])=>h("div",{class:"an-kpi"},h("div",{class:"muted small"},l),h("div",{class:"an-kpi-v"},v))));
+  S.anOpen=S.anOpen||new Set();
+  const summary=h("section",{class:"panel"},
+    h("div",{class:"panel-h"},h("h2",null,"პროექტების მიხედვით")),
+    h("div",{class:"tw"},h("table",{class:"rt an-t"},
+      h("thead",null,h("tr",null,["პროექტი","ანგარიში","შემოსავალი","ხარჯი","სხვაობა","მარჟა"].map((l,i)=>h("th",{class:i>1?"num":null},l)))),
+      h("tbody",null,data.map(d=>{
+        const open=S.anOpen.has(d.p.id);
+        return [h("tr",{class:"an-row",tabindex:"0",onclick:()=>{ open?S.anOpen.delete(d.p.id):S.anOpen.add(d.p.id); render(); },onkeydown:e=>{ if(e.key==="Enter") e.currentTarget.click(); }},
+            h("td",null,h("span",{class:"an-caret"},open?"▾":"▸")," ",d.p.name,d.unpriced?h("span",{class:"chip st-draft",style:"margin-left:8px"},d.unpriced+" ფასის გარეშე"):null),
+            h("td",{class:"num"},d.reports),h("td",{class:"num"},money(d.rev)),h("td",{class:"num"},money(d.cost)),
+            h("td",{class:"num"+(d.rev-d.cost<0?" neg":"")},money(d.rev-d.cost)),h("td",{class:"num"},pct(d.rev-d.cost,d.rev))),
+          open?h("tr",{class:"an-detail"},h("td",{colspan:"6"},renderAnalysisDetail(d,money))):null];
+      })),
+      h("tfoot",null,h("tr",null,h("td",null,"სულ"),h("td",{class:"num"},data.reduce((a,d)=>a+d.reports,0)),h("td",{class:"num"},money(tot.rev)),h("td",{class:"num"},money(tot.cost)),h("td",{class:"num"},money(tot.rev-tot.cost)),h("td",{class:"num"},pct(tot.rev-tot.cost,tot.rev)))))));
+  return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"Analysis"),h("h1",null,"ანალიზი"))),filters,kpi,summary,
+    h("p",{class:"small muted"},"შემოსავალი = შესრულებული სამუშაოს რაოდენობა × ერთ. ღირებულება; ხარჯი = ხარჯის რაოდენობა × ერთ. ღირებულება. ფასს ანგარიშის დადასტურებისას რივიუერი უწერს.")];
+}
+function renderAnalysisDetail(d,money){
+  const works=[...d.works.values()].sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
+  const costs=[...d.costs.values()].sort((a,b)=>b.amt-a.amt);
+  const months=[...d.months.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  const tbl=(head,rows,foot)=>h("table",{class:"rt an-sub"},h("thead",null,h("tr",null,head.map((l,i)=>h("th",{class:i>=head.length-2?"num":null},l)))),h("tbody",null,rows),foot?h("tfoot",null,foot):null);
+  return h("div",{class:"an-grid"},
+    h("div",null,h("h3",null,"შემოსავალი — სამუშაოების მიხედვით"),
+      works.length?tbl(["BoQ #","დასახელება","განზ.","რაოდ.","ღირებულება"],works.map(w=>h("tr",null,h("td",{class:"mono"},w.code),h("td",null,w.name),h("td",null,w.unit),h("td",{class:"num"},fmtNum(w.qty)),h("td",{class:"num"},money(w.amt)))),
+        h("tr",null,h("td",{colspan:"4"},"სულ"),h("td",{class:"num"},money(d.rev)))):h("p",{class:"muted small"},"ფასიანი სამუშაო არ არის.")),
+    h("div",null,h("h3",null,"ხარჯები — ტიპის მიხედვით"),
+      costs.length?tbl(["ტიპი / აღწერა","განზ.","რაოდ.","ღირებულება"],costs.map(g=>[
+          h("tr",{class:"an-grp"},h("td",{colspan:"3"},g.type),h("td",{class:"num"},money(g.amt))),
+          [...g.lines.values()].map(l=>h("tr",null,h("td",{class:"an-ind"},l.desc),h("td",null,l.unit),h("td",{class:"num"},fmtNum(l.qty)),h("td",{class:"num"},money(l.amt))))]),
+        h("tr",null,h("td",{colspan:"3"},"სულ"),h("td",{class:"num"},money(d.cost)))):h("p",{class:"muted small"},"ფასიანი ხარჯი არ არის.")),
+    months.length?h("div",null,h("h3",null,"თვეების მიხედვით"),
+      tbl(["თვე","შემოსავალი","ხარჯი"],months.map(([m,v])=>h("tr",null,h("td",null,new Date(m+"-01T00:00").toLocaleDateString(LOCALE(),{month:"long",year:"numeric"})),h("td",{class:"num"},money(v.rev)),h("td",{class:"num"},money(v.cost)))))):null);
 }
 
 /* ---------- USERS (admin) ---------- */
