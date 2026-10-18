@@ -355,3 +355,7 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .sec-hse .rt th:last-child,.sec-hse .rt td:last-child{width:130px}
 .sec-hse .rt td.ed>textarea{min-height:36px;font-size:.78rem}
 .sec-hse td.chk.ed .ck-wrap{min-height:36px}
+/* conditions card fills the HSE card height: rows spread evenly instead of leaving a gap at the bottom */
+.sec-conditions{display:flex;flex-direction:column}
+.sec-conditions>.panel-b{flex:1;display:flex;flex-direction:column}
+.sec-conditions .cond{flex:1;align-content:space-evenly;row-gap:10px}
