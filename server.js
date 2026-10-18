@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS reports(
 CREATE INDEX IF NOT EXISTS reports_date ON reports(date);
 CREATE TABLE IF NOT EXISTS additional(id TEXT PRIMARY KEY, project_id TEXT NOT NULL, data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS report_revisions(
+  report_id TEXT NOT NULL, rev INTEGER NOT NULL, data TEXT NOT NULL, saved_at TEXT NOT NULL, PRIMARY KEY(report_id, rev));
 CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, mime TEXT NOT NULL, size INTEGER NOT NULL, created_at TEXT NOT NULL);
 `);
 
@@ -385,7 +387,11 @@ api.post("/reports/:id/status", auth, (req, res) => {
   if (a === "submit" && r.status === "draft" && (isAdmin || isMember(p, req.user)) && !p.archived) Object.assign(r, { status: "submitted", submittedBy: req.user.id, submittedAt: t });
   else if (a === "return" && isAdmin && r.status === "submitted") Object.assign(r, { status: "draft" });
   else if (a === "approve" && isAdmin && r.status === "submitted") Object.assign(r, { status: "approved", approvedBy: req.user.id, approvedAt: t });
-  else if (a === "reopen" && isAdmin && r.status === "approved") Object.assign(r, { status: "draft", rev: (r.rev || 0) + 1 });
+  else if (a === "reopen" && isAdmin && r.status === "approved") {
+    /* keep the approved version before opening the next revision */
+    db.prepare("INSERT OR REPLACE INTO report_revisions(report_id,rev,data,saved_at) VALUES(?,?,?,?)").run(req.params.id, r.rev || 0, JSON.stringify(r), t);
+    Object.assign(r, { status: "draft", rev: (r.rev || 0) + 1 });
+  }
   else return res.status(400).json({ error: "ეს მოქმედება ამ სტატუსზე შეუძლებელია" });
   r.updatedBy = req.user.id; r.updatedAt = t;
   saveReport(req.params.id, r);
@@ -400,10 +406,18 @@ api.get("/analysis", auth, admin, (req, res) => {
   const additional = db.prepare("SELECT project_id,data FROM additional").all().map((row) => ({ projectId: row.project_id, ...JSON.parse(row.data) }));
   res.json({ reports, additional });
 });
+/* earlier (approved) revisions of a report */
+api.get("/reports/:id/revisions", auth, (req, res) => {
+  const row = getReportRow(req.params.id);
+  if (!row || !canSee(getProject(row.project_id), req.user)) return res.status(404).json({ error: "ანგარიში ვერ მოიძებნა" });
+  res.json(db.prepare("SELECT rev,data,saved_at FROM report_revisions WHERE report_id=? ORDER BY rev DESC").all(req.params.id)
+    .map((x) => ({ ...JSON.parse(x.data), id: req.params.id, rev: x.rev, savedAt: x.saved_at })));
+});
 api.delete("/reports/:id", auth, admin, (req, res) => {
   const x = loadEditable(req, res); if (!x) return;
   if (x.r.status === "approved") return res.status(400).json({ error: "დადასტურებული ანგარიში არ იშლება" });
   db.prepare("DELETE FROM reports WHERE id=?").run(req.params.id);
+  db.prepare("DELETE FROM report_revisions WHERE report_id=?").run(req.params.id);
   res.json({ ok: true });
 });
 

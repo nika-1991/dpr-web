@@ -55,7 +55,7 @@ window.I18N_EN = {
   "სამუშაო პირობები": "Working Conditions", "კრიტიკული საკითხები": "Open Issues", "+ საკითხი": "+ Issue", "BoQ თავი": "BoQ Item",
   "სამუშაოს დასახელება": "Work Description", "კრიტიკული საკითხის აღწერა": "Critical Issue Description", "დასრულება გეგმით": "Planned Completion",
   "მონაცემი არაა": "No data", "განახლებული თარიღი": "Updated Date", "📌-დან": "📌 From", "📌-მდე": "📌 To", "შენიშვნა": "Comments",
-  "უსაფრთხოება": "HSE", "+ პუნქტი": "+ Item", "ჩატარდა": "Done", "შევსებულია ": "Filled ", "ანალიზი": "Analysis", "ერთ. ღირებულება": "Unit price", "ღირებულება": "Amount", "თარიღიდან": "From", "თარიღამდე": "To",
+  "უსაფრთხოება": "HSE", "+ პუნქტი": "+ Item", "ჩატარდა": "Done", "ვერსია": "Version", " — მიმდინარე": " — current", " — დადასტურებული": " — approved", ") — მხოლოდ ნახვა. მიმდინარე ვერსიაზე დასაბრუნებლად აირჩიეთ ის ჩამოსაშლელში.": ") — view only. Pick the current version in the drop-down to go back.", "ეს არის ძველი ვერსია (": "This is an older version (", "შევსებულია ": "Filled ", "ანალიზი": "Analysis", "ერთ. ღირებულება": "Unit price", "ღირებულება": "Amount", "თარიღიდან": "From", "თარიღამდე": "To",
   "განახლება": "Refresh", "შემოსავალი": "Revenue", "ხარჯი": "Cost", "სხვაობა": "Difference", "მარჟა": "Margin", "პროექტების მიხედვით": "By project",
   "პროექტი": "Project", "ანგარიში": "Reports", " ფასის გარეშე": " without price", "შემოსავალი — სამუშაოების მიხედვით": "Revenue — by work item",
   "ხარჯები — ტიპის მიხედვით": "Costs — by type", "თვეების მიხედვით": "By month", "ტიპი / აღწერა": "Type / description", "თვე": "Month",

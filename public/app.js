@@ -162,7 +162,7 @@ async function go(view, opts={}){
   render(); window.scrollTo(0,0);
 }
 function onReportsChanged(){
-  if(S.view!=="report"||!S.repId) return;
+  if(S.view!=="report"||!S.repId||S.oldRev!=null) return;
   const remote=S.reports.get(S.repId);
   if(!remote){ if(S.rep){ toast("ანგარიში წაიშალა"); go("project",{pid:S.pid,tab:"reports"}); } return; }
   if(!S.rep){ S.rep=clone(remote); render(); return; }
@@ -394,7 +394,18 @@ function openOrCreate(date){
   S.creating={date}; S.tab="reports"; render();
   setTimeout(()=>document.getElementById("create-panel")?.scrollIntoView({block:"nearest"}),0);
 }
-function openReport(id){ S.repId=id; S.rep=splitHse(clone(S.reports.get(id))); S.dirty.clear(); go("report",{pid:S.pid}); }
+function openReport(id){ S.repId=id; S.rep=splitHse(clone(S.reports.get(id))); S.dirty.clear(); S.oldRev=null; S.revs=[]; loadRevisions(); go("report",{pid:S.pid}); }
+/* earlier approved versions (kept by the server when a new REV is opened) */
+async function loadRevisions(){
+  const id=S.repId;
+  try{ const list=await api("GET","/reports/"+encodeURIComponent(id)+"/revisions"); if(S.repId!==id) return; S.revs=list; if(S.view==="report"&&!typing()) render(); }catch(e){}
+}
+function showRevision(v){
+  flushNow();
+  if(v==="cur"){ S.oldRev=null; S.rep=splitHse(clone(S.reports.get(S.repId))); }
+  else{ const old=S.revs.find(x=>String(x.rev)===v); if(!old) return; S.oldRev=old.rev; S.rep=splitHse(clone(old)); }
+  render();
+}
 /* older HSE items hold Georgian and English in one text: show them as two fields, one per language (saved on the next edit) */
 function splitHse(r){
   for(const x of (r&&r.hse)||[]){
@@ -559,7 +570,7 @@ const SECTIONS={
 };
 
 function repEditable(){
-  const p=P(), r=S.rep; if(!p||!r||p.archived) return false;
+  const p=P(), r=S.rep; if(!p||!r||p.archived||S.oldRev!=null) return false;
   if(S.admin) return r.status!=="approved";
   return isMember(p) && r.status==="draft";
 }
@@ -603,22 +614,28 @@ function renderReport(){
   const actions=[];
   const setStatus=async(action,msg)=>{
     clearTimeout(S.saveTimer); await flush();
-    try{ const nr=await api("POST","/reports/"+encodeURIComponent(S.repId)+"/status",{action}); S.reports.set(nr.id,nr); S.rep=clone(nr); toast(msg); render(); }
+    try{ const nr=await api("POST","/reports/"+encodeURIComponent(S.repId)+"/status",{action}); S.reports.set(nr.id,nr); S.rep=clone(nr); toast(msg); render(); if(action==="reopen") loadRevisions(); }
     catch(e){ toast("ვერ შესრულდა: "+errMsg(e)); } };
-  if(r.status==="draft" && (S.admin||isMember(p)) && !p.archived)
+  const old=S.oldRev!=null;
+  if(!old&&r.status==="draft" && (S.admin||isMember(p)) && !p.archived)
     actions.push(h("button",{class:"btn primary",type:"button",onclick:()=>setStatus("submit","ანგარიში გაიგზავნა დასადასტურებლად")},"გაგზავნა"));
-  if(S.admin && r.status==="submitted"){
+  if(!old&&S.admin && r.status==="submitted"){
     actions.push(h("button",{class:"btn",type:"button",onclick:()=>setStatus("return","ანგარიში დაბრუნდა შესავსებად")},"დაბრუნება"));
     actions.push(h("button",{class:"btn ok",type:"button",onclick:()=>setStatus("approve","ანგარიში დადასტურდა")},"დადასტურება"));
   }
-  if(S.admin && r.status==="approved")
+  if(!old&&S.admin && r.status==="approved")
     actions.push(h("button",{class:"btn",type:"button",onclick:()=>setStatus("reopen","გაიხსნა ახალი რევიზია")},"ახალი რევიზია (REV+1)"));
   if(window.XLSX) actions.push(h("button",{class:"btn",type:"button",onclick:()=>exportReport(p)},"Excel"));
-  if(S.admin && r.status!=="approved") actions.push(deleteControl());
+  if(!old&&S.admin && r.status!=="approved") actions.push(deleteControl());
+  const cur=S.reports.get(S.repId)||r;
+  const revSel=S.revs&&S.revs.length?h("select",{class:"inp rev-sel","aria-label":"ვერსია",onchange:e=>showRevision(e.target.value)},
+    h("option",{value:"cur"},"REV"+String(cur.rev||0).padStart(2,"0")+" — მიმდინარე"),
+    S.revs.map(x=>h("option",{value:String(x.rev)},"REV"+String(x.rev).padStart(2,"0")+" — დადასტურებული"+(x.approvedAt?" "+fmtDate(x.approvedAt.slice(0,10)):"")))):null;
+  if(revSel) revSel.value=old?String(S.oldRev):"cur";
 
   const head=h("div",{class:"rep-head"},
     h("div",{style:"display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 280px"},
-      h("div",{class:"doc-code"},docCode(p,r)),
+      h("div",{class:"row",style:"gap:10px"},h("div",{class:"doc-code"},docCode(p,r)),revSel),
       h("div",{class:"row small"},h("strong",null,fmtDate(r.date)),chip(r.status),
         h("span",{class:"muted"},"ავტორი: "),who(r.createdBy),
         r.submittedBy?[h("span",{class:"muted"},"· გაგზავნა: "),who(r.submittedBy)]:null,
@@ -626,7 +643,8 @@ function renderReport(){
     h("span",{class:"savest",id:"savest"},ed?"ცვლილებები ავტომატურად ინახება":"მხოლოდ ნახვა"),
     h("div",{class:"row"},actions));
 
-  const notice = !ed ? h("div",{class:"notice info"},
+  const notice = old ? h("div",{class:"notice"},"ეს არის ძველი ვერსია (REV"+String(S.oldRev).padStart(2,"0")+") — მხოლოდ ნახვა. მიმდინარე ვერსიაზე დასაბრუნებლად აირჩიეთ ის ჩამოსაშლელში.")
+    : !ed ? h("div",{class:"notice info"},
       r.status==="submitted"?"ანგარიში გაგზავნილია და ელოდება დადასტურებას. ცვლილებისთვის ადმინისტრატორმა უნდა დააბრუნოს.":
       r.status==="approved"?"ანგარიში დადასტურებულია. ცვლილებისთვის ადმინისტრატორი ხსნის ახალ რევიზიას.":
       "ამ ანგარიშის რედაქტირება შეუძლიათ მხოლოდ პროექტის გუნდის წევრებს.") : null;
