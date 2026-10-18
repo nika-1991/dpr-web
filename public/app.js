@@ -34,7 +34,7 @@ function tr(s){
 const mtavruli=s=>String(s).replace(/[\u10D0-\u10FA\u10FD-\u10FF]/g,c=>String.fromCharCode(c.charCodeAt(0)+0xBC0));
 function setLang(l){
   LANG=l; try{ localStorage.setItem("dpr.lang",l); }catch(e){}
-  document.documentElement.lang=l; document.title="DPR "+tr("საიტის ანგარიშები");
+  document.documentElement.lang=l; document.title=tr("პროექტები")+" · Tesen Group";
   render();
 }
 function h(tag, props, ...kids){
@@ -190,7 +190,7 @@ function renderBar(){
   if((S.view==="project"||S.view==="report") && p) add(p.name,()=>go("project",{pid:S.pid,tab:"reports"}));
   if(S.view==="report" && S.rep) add("DPR-"+String(S.rep.num||0).padStart(3,"0")+" · "+fmtDate(S.rep.date));
   const me=document.getElementById("me"); me.replaceChildren();
-  document.querySelector(".brand-name").textContent=tr("საიტის ანგარიშები");
+  document.querySelector(".brand-name").textContent=tr("პროექტები");
   me.append(h("button",{class:"lang-btn",type:"button",title:LANG==="en"?"ქართული":"English","aria-label":LANG==="en"?"ქართული":"English",onclick:()=>setLang(LANG==="en"?"ka":"en")},LANG==="en"?"ქა":"EN"));
   if(S.me){
     me.append(h("button",{class:"me-btn",type:"button",title:"ჩემი ანგარიში",onclick:()=>go("account")},
@@ -317,47 +317,48 @@ async function saveProject(pid,patch,msg){
   try{ const p=await api("PATCH","/projects/"+encodeURIComponent(pid),patch); S.projects.set(pid,p); if(msg) toast(msg); return p; }
   catch(e){ toast("ვერ შეინახა: "+errMsg(e)); throw e; }
 }
+/* create / edit form laid out like the project data page (title band, participants, codes, HSE) */
 function renderProjectForm(pid){
   const p=pid?S.projects.get(pid):{};
-  const f={};
-  const fld=(k,label,opts={})=>{ const id=uid(); const el=h("input",{id,value:p[k]||"",placeholder:opts.ph||""}); f[k]=el; return h("div",{class:"field"},h("label",{for:id},label),el); };
-  const pf={};
-  const pfld=([k,ka,en])=>{ const id=uid(); const el=h("input",{id,value:(p.participants||{})[k]||"",placeholder:"კომპანია: სახელი, გვარი, ტელ., ელ.ფოსტა"}); pf[k]=el; return h("div",{class:"field"},h("label",{for:id},ka+" / "+en),el); };
-  const ro=!S.admin;
+  const f={}, pf={};
+  const inp=(store,k,val,label)=>{ const el=h("input",{class:"inp","aria-label":label,value:val||""}); store[k]=el; return el; };
+  const band=h("div",{class:"sh-band"},
+    [["name","პროექტის დასახელება / Project Title"],["client","დამკვეთის დასახელება / Client Name"],["location","ადგილმდებარეობა / Location"]]
+      .map(([k,l])=>h("div",{class:"sh-cell"},h("div",{class:"sh-th"},l),h("div",{class:"sh-td sh-td-in"},inp(f,k,p[k],l)))));
+  const row=(label,el)=>h("div",{class:"sh-row"},h("div",{class:"sh-lbl"},label),el);
+  const parts=h("section",{class:"sh-box"},
+    h("div",{class:"sh-hd"},
+      h("div",{class:"sh-title"},"👥 პროექტში ჩართული პირი / პოზიცია",h("span",{class:"en"},"Project Participant / Position")),
+      h("div",{class:"sh-sub"},"კომპანიის სახელი: პასუხისმგებელი პირის გვარი, ტელეფონი, ელ. ფოსტა")),
+    PARTICIPANTS.map(([k,ka,en])=>row(ka+" / "+en,inp(pf,k,(p.participants||{})[k],ka+" / "+en))));
+  const codes=h("section",{class:"sh-box"},
+    h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"🏷️ კოდები",h("span",{class:"en"},"Codes"))),
+    [["accountingCode","პროექტის ბუღალტრული კოდი / Accounting Code"],["companyCode","კომპანიის კოდი / Company Code"],["projectCode","პროექტის კოდი / Project Code"]]
+      .map(([k,l])=>{ const el=inp(f,k,p[k],l); el.classList.add("mono"); return row(l,el); }));
   const hse=clone(p.hse||[]);
   const hseBox=h("div",{class:"hse-ed"});
   const drawHse=()=>hseBox.replaceChildren(...hse.map((x,i)=>h("div",{class:"hse-ed-row"},
       h("span",{class:"ix"},i+1),
-      h("textarea",{class:"inp",rows:3,placeholder:"აღწერა ქართულად",value:x.desc||"",oninput:e=>x.desc=e.target.value}),
-      h("textarea",{class:"inp",rows:3,placeholder:"Description in English",value:x.descEn||"",oninput:e=>x.descEn=e.target.value}),
+      h("textarea",{class:"inp",rows:3,"aria-label":"აღწერა ქართულად",value:x.desc||"",oninput:e=>x.desc=e.target.value}),
+      h("textarea",{class:"inp",rows:3,"aria-label":"Description in English",value:x.descEn||"",oninput:e=>x.descEn=e.target.value}),
       h("button",{class:"btn sm ghost",type:"button","aria-label":"სტრიქონის წაშლა",onclick:()=>{hse.splice(i,1);drawHse();}},"✕"))),
     h("button",{class:"btn sm",type:"button",onclick:()=>{hse.push({desc:"",descEn:""});drawHse();}},"+ პუნქტი"));
   drawHse();
-  const body=h("div",{class:"panel-b"},
-    h("div",{class:"fgrid"},
-      fld("name","პროექტის დასახელება / Project Title"),
-      fld("client","დამკვეთი / Client Name"),
-      fld("location","ადგილმდებარეობა / Location"),
-      fld("companyCode","კომპანიის კოდი",{ph:"INFR"}),
-      fld("projectCode","პროექტის კოდი",{ph:"TBH"}),
-      fld("accountingCode","ბუღალტრული კოდი / Accounting Code",{ph:"1068"})),
-    h("h3",{style:"margin:18px 0 10px"},"პროექტში ჩართული პირები ",h("span",{class:"en"},"Project Participants")),
-    h("div",{class:"fgrid"},PARTICIPANTS.map(pfld)),
-    pid?[h("h3",{style:"margin:18px 0 4px"},"უსაფრთხოების (HSE) პუნქტები"),h("p",{class:"small muted",style:"margin:0 0 10px"},"ყოველი ახალი ანგარიში ამ პუნქტებით იწყება."),hseBox]:null);
-  if(ro) body.querySelectorAll("input,textarea").forEach(e=>e.disabled=true);
+  const hseSec=h("section",{class:"sh-box"},
+    h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"🦺 უსაფრთხოების (HSE) პუნქტები",h("span",{class:"en"},"HSE")),h("div",{class:"sh-sub"},"ყოველი ახალი ანგარიში ამ პუნქტებით იწყება. მარცხნივ ქართულად, მარჯვნივ ინგლისურად.")),
+    hseBox);
   const save=async()=>{
     const data={}; for(const k in f) data[k]=f[k].value.trim();
     if(!data.name){ f.name.focus(); toast("შეიყვანეთ პროექტის დასახელება"); return; }
     data.participants={}; for(const k in pf) data.participants[k]=pf[k].value.trim();
-    if(pid) data.hse=hse.map(x=>({desc:(x.desc||"").trim(),descEn:(x.descEn||"").trim()})).filter(x=>x.desc||x.descEn);
+    data.hse=hse.map(x=>({desc:(x.desc||"").trim(),descEn:(x.descEn||"").trim()})).filter(x=>x.desc||x.descEn);
     if(pid){ try{ await saveProject(pid,data,"შენახულია"); S.editInfo=false; render(); }catch(e){} }
     else{ try{ const np=await api("POST","/projects",data); S.projects.set(np.id,np); S.creating=null; toast("პროექტი შეიქმნა — დაამატეთ გუნდი"); go("project",{pid:np.id,tab:"team"}); }catch(e){ toast("ვერ შეიქმნა: "+errMsg(e)); } }
   };
-  return h("section",{class:"panel"},
-    h("div",{class:"panel-h"},h("h2",null,pid?"პროექტის მონაცემები":"ახალი პროექტი"),
-      ro?null:[h("button",{class:"btn ghost",type:"button",onclick:()=>{ if(pid) S.editInfo=false; else S.creating=null; render();}},"გაუქმება"),
-      h("button",{class:"btn primary",type:"button",onclick:save},pid?"შენახვა":"შექმნა")]),
-    body);
+  const bar=h("div",{class:"form-bar"},h("h2",null,pid?"პროექტის მონაცემები":"ახალი პროექტი"),
+    h("button",{class:"btn ghost",type:"button",onclick:()=>{ if(pid) S.editInfo=false; else S.creating=null; render();}},"გაუქმება"),
+    h("button",{class:"btn primary",type:"button",onclick:save},pid?"შენახვა":"შექმნა"));
+  return h("div",{class:"sheet-head sheet-form"},bar,band,h("div",{class:"sh-grid"},parts,codes),hseSec);
 }
 
 /* ---------- PROJECT ---------- */
@@ -1036,7 +1037,7 @@ function exportProject(p){
 
 /* ---------- boot ---------- */
 document.getElementById("brand").addEventListener("click",()=>{ if(S.me&&!S.me.mustChange) go("home"); });
-document.documentElement.lang=LANG; document.title="DPR "+tr("საიტის ანგარიშები");
+document.documentElement.lang=LANG; document.title=tr("პროექტები")+" · Tesen Group";
 (async function boot(){
   try{ const r=await api("GET","/me"); await onLoggedIn(r.user); }
   catch(e){ if(!S.me) render(); }

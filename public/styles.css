@@ -296,3 +296,8 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .brand-name{font-size:.92rem;font-weight:600}
 .login-logo .logo{height:34px}
 @media (max-width:640px){.brand-sep,.brand-name{display:none}.logo{height:20px}}
+.form-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.form-bar h2{flex:1;min-width:0}
+.sh-td-in{padding:6px}
+.sh-td-in .inp,.sheet-form .sh-row .inp{border-color:var(--sh-line);background:var(--surface)}
+.sheet-form .sh-box{padding-bottom:12px}
