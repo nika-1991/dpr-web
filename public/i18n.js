@@ -55,7 +55,7 @@ window.I18N_EN = {
   "სამუშაო პირობები": "Working Conditions", "კრიტიკული საკითხები": "Open Issues", "+ საკითხი": "+ Issue", "BoQ თავი": "BoQ Item",
   "სამუშაოს დასახელება": "Work Description", "კრიტიკული საკითხის აღწერა": "Critical Issue Description", "დასრულება გეგმით": "Planned Completion",
   "მონაცემი არაა": "No data", "განახლებული თარიღი": "Updated Date", "📌-დან": "📌 From", "📌-მდე": "📌 To", "შენიშვნა": "Comments",
-  "უსაფრთხოება": "HSE", "+ პუნქტი": "+ Item", "დასახელება / აღწერა": "Description", "სტატუსი": "Status", "კი": "Yes", "არა": "No",
+  "უსაფრთხოება": "HSE", "+ პუნქტი": "+ Item", "ჩატარდა": "Done", "დასახელება / აღწერა": "Description", "სტატუსი": "Status", "კი": "Yes", "არა": "No",
   "შესრულებული სამუშაოები": "Ongoing and Additional Works", "+ სამუშაო": "+ Work", "განზ.": "Unit", "რაოდ.": "Q-ty",
   "სულ მოცულობა": "Total Volume", "დასაქმებულთა რაოდ.": "Staff Number", "დაწყება (გეგმა)": "Start (plan)", "დასრულება (გეგმა)": "End (plan)",
   "კომენტარი": "Comments", "ხარჯები": "Expenses", "+ ხარჯი": "+ Expense", "ხარჯის ტიპი": "Type of Expense", "ხარჯის აღწერა": "Expense Description",

@@ -483,7 +483,7 @@ const SECTIONS={
   hse:{title:"უსაფრთხოება",en:"HSE",add:"+ პუნქტი",cols:[
     {k:"desc",l:"დასახელება / აღწერა",t:"area",w:"440px",lang:"ka"},
     {k:"descEn",l:"აღწერა / Description",t:"area",w:"440px",lang:"en"},
-    {k:"status",l:"სტატუსი",t:"select",opts:()=>["კი","არა"],w:"90px"},
+    {k:"status",l:"ჩატარდა",t:"check",w:"90px"},
     {k:"comment",l:"შენიშვნა",t:"area",w:"220px"}]},
   works:{title:"შესრულებული სამუშაოები",en:"Ongoing and Additional Works",add:"+ სამუშაო",cols:[
     {k:"code",l:"BoQ #",t:"code",w:"92px"},
@@ -598,12 +598,8 @@ function renderReport(){
       r.status==="approved"?"ანგარიში დადასტურებულია. ცვლილებისთვის ადმინისტრატორი ხსნის ახალ რევიზიას.":
       "ამ ანგარიშის რედაქტირება შეუძლიათ მხოლოდ პროექტის გუნდის წევრებს.") : null;
 
-  const nav=h("nav",{class:"secnav","aria-label":"სექციები"},SECTION_KEYS.map(k=>{
-    const n=Array.isArray(r[k])?r[k].length:null;
-    return h("button",{type:"button",onclick:()=>document.getElementById("sec-"+k)?.scrollIntoView({behavior:"smooth"})},h("span",null,SECTIONS[k].title),n!=null?h("span",{class:"cnt"},n):null);
-  }));
   const datalist=h("datalist",{id:"boq-dl"},[...ctx().idx.values()].filter(it=>it.type!=="თავი"&&it.type!=="ქვეთავი").map(it=>h("option",{value:it.code},it.name)));
-  return [head,notice,datalist,h("div",{class:"rep-body"},nav,h("div",{class:"secs"},SECTION_KEYS.map(renderSection)))];
+  return [head,notice,datalist,h("div",{class:"secs"},SECTION_KEYS.map(renderSection))];
 }
 function deleteControl(){
   const wrap=h("span",{class:"confirm"});
@@ -636,7 +632,7 @@ function renderProjectSheet(p){
 function renderSection(key){
   const def=SECTIONS[key], r=S.rep, ed=repEditable();
   let body;
-  if(def.kind==="conditions") body=h("div",{class:"panel-b"},h("div",{style:"max-width:760px"},renderConditions(ed)));
+  if(def.kind==="conditions") body=h("div",{class:"panel-b"},renderConditions(ed));
   else if(def.kind==="photos") body=renderPhotos(ed);
   else body=renderRows(key,def,r[key]||(r[key]=[]),ed);
   return h("section",{class:"panel sec",id:"sec-"+key},
@@ -652,16 +648,16 @@ function copyHseFromLast(){
 }
 function renderConditions(ed){
   const c=S.rep.conditions||(S.rep.conditions={});
-  const row=(label,...ctrls)=>{ const id=uid(); ctrls[0].id=id; return h("div",{class:"sh-row"},h("label",{class:"sh-lbl",for:id},label),h("div",{class:"sh-ctl"},ctrls)); };
-  const inp=(k,type,ph)=>{ const el=h("input",{class:"inp",type:type||"text",disabled:!ed,placeholder:ph||"",oninput:e=>{c[k]=e.target.value;markDirty("conditions");}}); el.value=c[k]??""; return el; };
+  const fld=(label,...ctrls)=>{ const id=uid(); ctrls[0].id=id; return h("div",{class:"cond-f"},h("label",{for:id},label),h("div",{class:"cond-c"},ctrls)); };
+  const inp=(k,type,ph,cls)=>{ const el=h("input",{class:"inp"+(cls?" "+cls:""),type:type||"text",disabled:!ed,placeholder:ph||"",oninput:e=>{c[k]=e.target.value;markDirty("conditions");}}); el.value=c[k]??""; return el; };
   const weather=h("select",{class:"inp",disabled:!ed,onchange:e=>{c.weather=e.target.value;markDirty("conditions");}},h("option",{value:""},"—"),(S.lists.weather||[]).map(o=>h("option",{value:o},o)));
   weather.value=c.weather??"";
-  return [
-    row("ამინდი / Weather",weather),
-    row("ტემპ / Temp (min / max)",inp("tempMin","number","min °C"),inp("tempMax","number","max °C")),
-    row("სამუშაო საათები / Working Hours",inp("hours")),
-    row("არა სამუშაო საათები / Non-Working Hours",inp("breakHours")),
-    row("დამატებითი სამუშაო საათი / Overtime hours",inp("overtime"))];
+  return h("div",{class:"cond"},
+    fld("ამინდი / Weather",weather),
+    fld("ტემპ / Temp (min / max)",inp("tempMin","number","min","t"),h("span",{class:"muted"},"–"),inp("tempMax","number","max","t"),h("span",{class:"muted small"},"°C")),
+    fld("სამუშაო საათები / Working Hours",inp("hours","text","07:00-18:00")),
+    fld("არა სამუშაო საათები / Non-Working Hours",inp("breakHours","text","13:00-14:00")),
+    fld("დამატებითი სამუშაო საათი / Overtime hours",inp("overtime","text","—")));
 }
 
 function renderRows(key,def,rows,ed){
@@ -672,6 +668,8 @@ function renderRows(key,def,rows,ed){
     if(col.auto){ const v=col.auto(row,c); const warn=v&&typeof v==="object"; return h("td",{class:"auto"+(warn?" warn":""),"data-l":col.l},warn?v.warn:v); }
     const active=!col.when||col.when(row);
     const val=row[col.k]??"";
+    if(col.t==="check"){ const id=key+"-"+i+"-"+col.k;
+      return h("td",{"data-l":col.l,class:"chk"},h("input",{id,type:"checkbox",checked:val==="კი",disabled:!ed||!active,"aria-label":col.l,onchange:e=>{ row[col.k]=e.target.checked?"კი":""; markDirty(key); }})); }
     if(!ed||!active){ return h("td",{"data-l":col.l},h("span",{class:"ro"+(col.t==="num"?" num":"")},active?(col.t==="date"?fmtDate(val):col.t==="num"&&val!==""?fmtNum(num(val)):val):"")); }
     const id=key+"-"+i+"-"+col.k;
     const onIn=e=>{ row[col.k]=e.target.value; markDirty(key); };
