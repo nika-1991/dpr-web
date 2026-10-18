@@ -230,7 +230,7 @@ function renderLogin(){
     catch(ex){ err.textContent=errMsg(ex); pass.value=""; pass.focus(); }
     btn.disabled=false; }},
     h("div",{class:"login-logo"},h("img",{class:"logo logo-l",src:"/logo.png",alt:"Tesen Group"}),h("img",{class:"logo logo-d",src:"/logo-dark.png",alt:"Tesen Group"})),
-    h("div",null,h("h1",null,"შესვლა"),h("p",{class:"muted small",style:"margin:4px 0 0"},"ყოველდღიური საიტის ანგარიშები")),
+    h("div",null,h("h1",null,"შესვლა"),h("p",{class:"muted small",style:"margin:4px 0 0"},"ყოველდღიური რეპორტის საიტი")),
     h("div",{class:"field"},h("label",{for:uId},"მომხმარებლის სახელი"),user),
     h("div",{class:"field"},h("label",{for:pId},"პაროლი"),pass),
     err,btn,

@@ -15,7 +15,7 @@ window.I18N_EN = {
   "საიტის ანგარიშები": "Site Reports", "სიები": "Lists", "მომხმარებლები": "Users", "ჩემი ანგარიში": "My account",
   "ადმინი": "Admin", "თანამშრომელი": "Employee", "პროექტი ვერ მოიძებნა": "Project not found",
   "შესაძლოა წვდომა შეგეზღუდათ.": "Your access may have been restricted.", "პროექტების სია": "Projects list",
-  "შესვლა": "Sign in", "ყოველდღიური საიტის ანგარიშები": "Daily site reports", "მომხმარებლის სახელი": "Username", "პაროლი": "Password",
+  "შესვლა": "Sign in", "ყოველდღიური რეპორტის საიტი": "Daily report site", "მომხმარებლის სახელი": "Username", "პაროლი": "Password",
   "ანგარიშს ქმნის ადმინისტრატორი. პაროლი თუ დაგავიწყდათ, მიმართეთ მას.": "Accounts are created by the administrator. If you forgot your password, contact them.",
   "მონაცემები ვერ ჩაიტვირთა": "Could not load data", "ახალი პაროლები არ ემთხვევა": "The new passwords do not match",
   "პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს": "Password must be at least 8 characters", "პაროლი შეიცვალა": "Password changed",
