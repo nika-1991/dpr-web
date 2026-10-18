@@ -55,7 +55,7 @@ window.I18N_EN = {
   "სამუშაო პირობები": "Working Conditions", "კრიტიკული საკითხები": "Open Issues", "+ საკითხი": "+ Issue", "BoQ თავი": "BoQ Item",
   "სამუშაოს დასახელება": "Work Description", "კრიტიკული საკითხის აღწერა": "Critical Issue Description", "დასრულება გეგმით": "Planned Completion",
   "მონაცემი არაა": "No data", "განახლებული თარიღი": "Updated Date", "📌-დან": "📌 From", "📌-მდე": "📌 To", "შენიშვნა": "Comments",
-  "უსაფრთხოება": "HSE", "+ პუნქტი": "+ Item", "ჩატარდა": "Done", "თარიღი": "Date", "შემქმნელი": "Created by", "დამადასტურებელი": "Approved by", "ფოტო": "Photos", "სამუშაო": "Works", "ანგარიში ჯერ არ შექმნილა.": "No reports yet.", "გახსნა": "Open", "BoQ მუხლი": "BoQ items", "პროექტის HSE პუნქტები": "Project HSE items", "უსაფრთხოების (HSE) პუნქტები": "Safety (HSE) items",
+  "უსაფრთხოება": "HSE", "+ პუნქტი": "+ Item", "ჩატარდა": "Done", "თარიღი": "Date", "ფოტო": "Photos", "სამუშაო": "Works", "ანგარიში ჯერ არ შექმნილა.": "No reports yet.", "გახსნა": "Open", "BoQ მუხლი": "BoQ items", "პროექტის HSE პუნქტები": "Project HSE items", "უსაფრთხოების (HSE) პუნქტები": "Safety (HSE) items",
   "ყოველი ახალი ანგარიში ამ პუნქტებით იწყება.": "Every new report starts with these items.", "🦺 უსაფრთხოების (HSE) პუნქტები": "🦺 Safety (HSE) items",
   "პუნქტები არ არის.": "No items.", "აღწერა ქართულად": "Description in Georgian",
   "ანგარიში ცარიელი შეიქმნება; HSE პუნქტები ჩაიწერება პროექტის მონაცემებიდან.": "The report starts empty; HSE items are filled in from the project data.",

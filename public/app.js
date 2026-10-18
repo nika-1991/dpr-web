@@ -40,7 +40,7 @@ function h(tag, props, ...kids){
   for(const c of kids.flat(Infinity)){ if(c==null||c===false) continue; el.append(c instanceof Node?c:String(tr(c))); }
   if(props) for(let [k,v] of Object.entries(props)){
     if(v==null||v===false) continue;
-    if(k==="placeholder"||k==="title"||k==="aria-label") v=tr(v);
+    if(k==="placeholder"||k==="title"||k==="aria-label"||k==="data-l") v=tr(v);
     if(k==="class") el.className=v;
     else if(k==="style") el.style.cssText=v;
     else if(k.startsWith("on")&&typeof v==="function") el.addEventListener(k.slice(2),v);
@@ -408,16 +408,16 @@ function renderReportsTab(p){
     h("div",{class:"panel-h"},h("h3",null,"ანგარიშები ",h("span",{class:"en cnt-sub"},list.length+" ჩანაწერი")),
       list.length?h("button",{class:"btn sm",type:"button",onclick:()=>exportProject(p)},"რეესტრის ექსპორტი (.xlsx)"):null),
     list.length?h("div",{class:"tw"},h("table",{class:"rt rlist-t stack"},
-      h("thead",null,h("tr",null,["DPR #","თარიღი","REV","სტატუსი","სამუშაო","ფოტო","შემქმნელი","დამადასტურებელი"].map(l=>h("th",null,l)))),
+      h("thead",null,h("tr",null,["DPR #","თარიღი","REV","სამუშაო","ფოტო","შექმნა / Created by","დაადასტურა / Approved by","სტატუსი"].map(l=>h("th",null,l)))),
       h("tbody",null,list.map(([id,r])=>h("tr",{tabindex:"0",role:"link",onclick:()=>openReport(id),onkeydown:e=>{ if(e.key==="Enter") openReport(id); }},
         h("td",{class:"rn","data-l":"DPR #"},"DPR-"+String(r.num||0).padStart(3,"0")),
         h("td",{"data-l":"თარიღი"},fmtDate(r.date)),
         h("td",{class:"mono muted","data-l":"REV"},"REV"+String(r.rev||0).padStart(2,"0")),
-        h("td",{"data-l":"სტატუსი"},chip(r.status)),
         h("td",{class:"num","data-l":"სამუშაო"},cnt(r.works,w=>w.code)),
         h("td",{class:"num","data-l":"ფოტო"},(r.photos||[]).length),
-        h("td",{"data-l":"შემქმნელი"},who(r.createdBy)),
-        h("td",{"data-l":"დამადასტურებელი"},r.status==="approved"?who(r.approvedBy):h("span",{class:"muted"},"—")))))))
+        h("td",{"data-l":"შექმნა / Created by"},who(r.createdBy)),
+        h("td",{"data-l":"დაადასტურა / Approved by"},r.status==="approved"?who(r.approvedBy):h("span",{class:"muted"},"—")),
+        h("td",{"data-l":"სტატუსი"},chip(r.status)))))))
       :h("div",{class:"panel-b muted"},"ანგარიში ჯერ არ შექმნილა.")));
   return h("div",{style:"display:flex;flex-direction:column;gap:16px;max-width:1100px"},out);
 }
