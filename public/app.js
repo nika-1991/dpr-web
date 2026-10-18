@@ -487,7 +487,7 @@ function renderReportsTab(p){
         h("td",{"data-l":"დაადასტურა / Approved by"},r.status==="approved"?who(r.approvedBy):h("span",{class:"muted"},"—")),
         h("td",{"data-l":"სტატუსი"},chip(r.status)))))))
       :h("div",{class:"panel-b muted"},"ანგარიში ჯერ არ შექმნილა.")));
-  return h("div",{style:"display:flex;flex-direction:column;gap:16px;max-width:1100px"},out);
+  return h("div",{style:"display:flex;flex-direction:column;gap:16px"},out);
 }
 
 function renderCreatePanel(p){
