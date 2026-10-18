@@ -486,7 +486,8 @@ const ICONS={
   temp:'<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   pause:'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>',
-  plus:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>'
+  plus:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>'
 };
 function icon(name){
   const sp=document.createElement("span"); sp.className="ico"; sp.setAttribute("aria-hidden","true");
@@ -625,6 +626,7 @@ function renderReport(){
   }
   if(!old&&S.admin && r.status==="approved")
     actions.push(h("button",{class:"btn",type:"button",onclick:()=>setStatus("reopen","გაიხსნა ახალი რევიზია")},"ახალი რევიზია (REV+1)"));
+  actions.push(h("button",{class:"btn",type:"button",onclick:()=>{ flushNow(); window.print(); }},icon("print"),"ბეჭდვა"));
   if(window.XLSX) actions.push(h("button",{class:"btn",type:"button",onclick:()=>exportReport(p)},"Excel"));
   if(!old&&S.admin && r.status!=="approved") actions.push(deleteControl());
   const cur=S.reports.get(S.repId)||r;
@@ -650,7 +652,19 @@ function renderReport(){
       "ამ ანგარიშის რედაქტირება შეუძლიათ მხოლოდ პროექტის გუნდის წევრებს.") : null;
 
   const datalist=h("datalist",{id:"boq-dl"},[...ctx().idx.values()].filter(it=>it.type!=="თავი"&&it.type!=="ქვეთავი").map(it=>h("option",{value:it.code},it.name)));
-  return [head,renderSecProgress(),notice,datalist,h("div",{class:"secs"},SECTION_KEYS.map(renderSection))];
+  return [renderPrintHead(p,r),head,renderSecProgress(),notice,datalist,h("div",{class:"secs"},SECTION_KEYS.map(renderSection))];
+}
+/* header that only appears on paper: logo, document code, project data and participants */
+function renderPrintHead(p,r){
+  const parts=p.participants||{};
+  const cell=(l,v)=>h("div",{class:"ph-cell"},h("div",{class:"ph-l"},l),h("div",{class:"ph-v"},v||"—"));
+  return h("div",{class:"print-only print-head"},
+    h("div",{class:"ph-top"},h("img",{src:"/logo.png",alt:"Tesen Group",class:"ph-logo"}),
+      h("div",{class:"ph-title"},h("div",null,"ყოველდღიური ანგარიში / Daily Progress Report"),h("div",{class:"ph-code"},docCode(p,r)))),
+    h("div",{class:"ph-grid"},
+      cell("პროექტის დასახელება / Project Title",p.name),cell("დამკვეთი / Client",p.client),cell("ადგილმდებარეობა / Location",p.location),
+      cell("თარიღი / Date",fmtDate(r.date)),cell("სტატუსი / Status",STATUS[r.status]),cell("ბუღალტრული კოდი / Accounting Code",p.accountingCode)),
+    h("div",{class:"ph-grid ph-parts"},PARTICIPANTS.map(([k,ka,en])=>cell(ka+" / "+en,parts[k]))));
 }
 function deleteControl(){
   const wrap=h("span",{class:"confirm"});
