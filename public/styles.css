@@ -145,7 +145,11 @@ main{max-width:1320px;margin:0 auto;padding-block:22px 64px;
 .sec{scroll-margin-top:80px}
 .part-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px 18px;font-size:.85rem}
 .part-grid div{display:flex;flex-direction:column;border-bottom:1px dotted var(--line);padding-bottom:4px}
-.part-grid span:first-child{font-size:.74rem;color:var(--muted)}
+.part-grid span:first-child{font-size:.88rem;font-weight:700;color:var(--ink)}
+.part-grid span:last-child{font-size:.8rem;color:var(--muted)}
+.part-panel{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 30%,var(--line))}
+.part-panel .panel-h{border-bottom-color:color-mix(in srgb,var(--accent) 25%,var(--line))}
+.part-panel .part-grid div{border-bottom-color:color-mix(in srgb,var(--accent) 25%,var(--line))}
 
 /* row table */
 .tw{overflow-x:auto}

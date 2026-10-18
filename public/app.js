@@ -330,7 +330,8 @@ function renderProjectForm(pid){
 /* ---------- PROJECT ---------- */
 function renderProject(){
   const p=P();
-  const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["team","გუნდი"],["info","პროექტის მონაცემები"]];
+  const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],...(S.admin?[["team","გუნდი"],["info","პროექტის მონაცემები"]]:[])];
+  if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
   const head=h("div",{class:"head"},
     h("div",{style:"min-width:0"},
       h("div",{class:"row"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c)),p.archived?h("span",{class:"chip st-none"},"არქივი"):null),
@@ -347,14 +348,16 @@ function renderProject(){
   return [head,tabBar,body];
 }
 
+function canCreateOn(date){ return S.admin || date<=todayISO(); }
 function openOrCreate(date){
   const id=S.pid+"__"+date;
   if(S.reports.has(id)) return openReport(id);
+  if(!canCreateOn(date)){ toast("მომავალი თარიღით ანგარიშის შექმნა შეუძლებელია"); return; }
   S.creating={date}; S.tab="reports"; render();
   setTimeout(()=>document.getElementById("create-panel")?.scrollIntoView({block:"nearest"}),0);
 }
 function openReport(id){ S.repId=id; S.rep=clone(S.reports.get(id)); S.dirty.clear(); go("report",{pid:S.pid}); }
-function sortedReports(){ return [...S.reports.entries()].sort((a,b)=>a[1].date<b[1].date?1:-1); }
+function sortedReports(){ return [...S.reports.entries()].sort((a,b)=>b[1].date.localeCompare(a[1].date)||(b[1].num||0)-(a[1].num||0)); }
 
 function renderReportsTab(p){
   const today=todayISO();
@@ -400,11 +403,11 @@ function renderCreatePanel(p){
   const date=S.creating.date;
   const prev=sortedReports().map(e=>e[1]).find(r=>r.date<date);
   const dId=uid();
-  const dateIn=h("input",{id:dId,type:"date",value:date,class:"inp",style:"max-width:200px",onchange:e=>{S.creating={date:e.target.value};render();}});
+  const dateIn=h("input",{id:dId,type:"date",value:date,max:S.admin?null:todayISO(),class:"inp",style:"max-width:200px",onchange:e=>{S.creating={date:e.target.value};render();}});
   const opts={conditions:true,hse:true,personnel:true,issues:true};
   const labels={conditions:"სამუშაო პირობები (საათები)",hse:"უსაფრთხოების (HSE) პუნქტები",personnel:"პერსონალის სია",issues:"ღია კრიტიკული საკითხები"};
   const checks=prev?Object.keys(opts).map(k=>{const id=uid(); return h("label",{class:"check",for:id},h("input",{id,type:"checkbox",checked:true,onchange:e=>opts[k]=e.target.checked}),labels[k]);}):[];
-  const exists=S.reports.has(S.pid+"__"+date);
+  const exists=S.reports.has(S.pid+"__"+date); const future=!canCreateOn(date);
   return h("section",{class:"panel",id:"create-panel"},
     h("div",{class:"panel-h"},h("h3",null,"ახალი ანგარიში"),h("button",{class:"btn ghost sm",type:"button",onclick:()=>{S.creating=null;render();}},"გაუქმება")),
     h("div",{class:"panel-b",style:"display:flex;flex-direction:column;gap:12px"},
@@ -412,7 +415,8 @@ function renderCreatePanel(p){
       prev?h("div",{style:"display:flex;flex-direction:column;gap:6px"},h("div",{class:"small muted"},"გადმოტანა წინა ანგარიშიდან ("+fmtDate(prev.date)+"):"),checks)
           :h("div",{class:"small muted"},"წინა ანგარიში არ არის — ანგარიში ცარიელი შეიქმნება."),
       exists?h("div",{class:"notice"},"ამ თარიღზე ანგარიში უკვე არსებობს."):null,
-      h("div",{class:"row"},h("button",{class:"btn primary",type:"button",disabled:exists||!date,onclick:()=>createReport(date,prev,opts)},"ანგარიშის შექმნა"))));
+      future?h("div",{class:"notice"},"მომავალი თარიღით ანგარიშის შექმნა შეუძლებელია."):null,
+      h("div",{class:"row"},h("button",{class:"btn primary",type:"button",disabled:exists||future||!date,onclick:()=>createReport(date,prev,opts)},"ანგარიშის შექმნა"))));
 }
 
 async function createReport(date,prev,opts){
@@ -577,7 +581,7 @@ function deleteControl(){
 }
 function renderParticipants(p){
   const parts=p.participants||{};
-  return h("section",{class:"panel"},
+  return h("section",{class:"panel part-panel"},
     h("div",{class:"panel-h"},h("h3",null,"პროექტში ჩართული პირები",h("span",{class:"en"},"Project Participants")),S.admin?h("button",{class:"btn sm ghost",type:"button",onclick:()=>go("project",{pid:S.pid,tab:"info"})},"შეცვლა"):null),
     h("div",{class:"panel-b part-grid"},
       h("div",null,h("span",null,"დამკვეთი / Client"),h("span",null,p.client||"—")),

@@ -305,10 +305,12 @@ api.delete("/additional/:id", auth, admin, (req, res) => {
 const SECTIONS = ["conditions", "issues", "hse", "works", "expenses", "personnel", "materials", "fuel", "visitors", "photos"];
 const getReportRow = (id) => db.prepare("SELECT * FROM reports WHERE id=?").get(id);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const REPORT_TZ = process.env.REPORT_TZ || "Asia/Tbilisi";
+const todayLocal = () => new Intl.DateTimeFormat("en-CA", { timeZone: REPORT_TZ }).format(new Date());
 
 api.get("/projects/:id/reports", auth, (req, res) => {
   if (!canSee(getProject(req.params.id), req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
-  res.json(db.prepare("SELECT id,data FROM reports WHERE project_id=?").all(req.params.id).map((r) => withId(r.id, JSON.parse(r.data))));
+  res.json(db.prepare("SELECT id,data FROM reports WHERE project_id=? ORDER BY date DESC").all(req.params.id).map((r) => withId(r.id, JSON.parse(r.data))));
 });
 api.get("/reports", auth, (req, res) => {
   const date = String(req.query.date || "");
@@ -328,6 +330,7 @@ api.post("/reports", auth, (req, res) => {
   if (!canSee(p, req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
   if (p.archived) return res.status(400).json({ error: "პროექტი დაარქივებულია" });
   if (!DATE_RE.test(b.date || "")) return res.status(400).json({ error: "თარიღი არასწორია" });
+  if (req.user.role !== "admin" && b.date > todayLocal()) return res.status(400).json({ error: "მომავალი თარიღით ანგარიშის შექმნა შეუძლებელია" });
   const id = b.projectId + "__" + b.date;
   const create = db.transaction(() => {
     if (getReportRow(id)) return null;
