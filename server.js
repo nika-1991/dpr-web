@@ -247,25 +247,30 @@ const isMember = (p, u) => !!(p && (p.memberIds || []).includes(u.id));
 const canSee = (p, u) => !!p && (u.role === "admin" || isMember(p, u));
 const withId = (id, d) => ({ id, ...d });
 
-/* per-project summary for the dashboard: reports, last report, BoQ progress (average % done over BoQ items) */
+/* per-project summary for the dashboard: reports, last report, BoQ progress (average share done over BoQ items),
+   the progress after each report date, and progress per BoQ item */
+const codeKey = (c) => String(c ?? "").trim().replace(/\./g, ",");
+const qtyNum = (v) => parseFloat(String(v ?? "").replace(",", ".")) || 0;
 function projectStats(p, id) {
-  const reps = db.prepare("SELECT data FROM reports WHERE project_id=?").all(id).map((r) => JSON.parse(r.data));
+  const reps = db.prepare("SELECT data FROM reports WHERE project_id=?").all(id).map((r) => JSON.parse(r.data))
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  const items = (p.boq || []).filter((it) => it.type === "პოზიცია" && qtyNum(it.qty) > 0);
   const done = new Map();
-  for (const r of reps) for (const w of r.works || []) {
-    if (!w.code) continue;
-    const k = String(w.code).trim().replace(/\./g, ",");
-    done.set(k, (done.get(k) || 0) + (parseFloat(String(w.qty ?? "").replace(",", ".")) || 0));
+  const avg = () => items.length ? items.reduce((a, it) => a + Math.min((done.get(codeKey(it.code)) || 0) / qtyNum(it.qty), 1), 0) / items.length : 0;
+  const timeline = [];
+  for (const r of reps) {
+    for (const w of r.works || []) if (w.code) done.set(codeKey(w.code), (done.get(codeKey(w.code)) || 0) + qtyNum(w.qty));
+    timeline.push([r.date, Math.round(avg() * 1000) / 10]);
   }
-  const items = (p.boq || []).filter((it) => it.type === "პოზიცია" && parseFloat(it.qty) > 0);
-  let sum = 0, complete = 0, started = 0;
-  for (const it of items) {
-    const q = done.get(String(it.code).trim().replace(/\./g, ",")) || 0, pct = Math.min(q / parseFloat(it.qty), 1);
-    sum += pct; if (pct >= 1) complete++; if (q > 0) started++;
-  }
-  const last = reps.sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+  const perItem = items.map((it) => {
+    const q = done.get(codeKey(it.code)) || 0;
+    return { code: it.code, name: it.name, unit: it.unit, qty: qtyNum(it.qty), done: q, pct: Math.round(Math.min(q / qtyNum(it.qty), 1) * 1000) / 10 };
+  });
+  const last = reps[reps.length - 1];
   return { reports: reps.length, approved: reps.filter((r) => r.status === "approved").length,
     lastDate: last ? last.date : "", lastStatus: last ? last.status : "",
-    progress: items.length ? Math.round((sum / items.length) * 1000) / 10 : 0, itemsDone: complete, itemsStarted: started };
+    progress: Math.round(avg() * 1000) / 10, itemsDone: perItem.filter((x) => x.pct >= 100).length, itemsStarted: perItem.filter((x) => x.done > 0).length,
+    timeline: timeline.slice(-30), items: perItem.slice(0, 500) };
 }
 api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
