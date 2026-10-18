@@ -626,7 +626,7 @@ function renderReport(){
   }
   if(!old&&S.admin && r.status==="approved")
     actions.push(h("button",{class:"btn",type:"button",onclick:()=>setStatus("reopen","გაიხსნა ახალი რევიზია")},"ახალი რევიზია (REV+1)"));
-  actions.push(h("button",{class:"btn",type:"button",onclick:()=>{ flushNow(); window.print(); }},icon("print"),"ბეჭდვა"));
+  actions.push(h("button",{class:"btn",type:"button",onclick:()=>printReport(p,S.rep)},icon("print"),"ბეჭდვა"));
   if(window.XLSX) actions.push(h("button",{class:"btn",type:"button",onclick:()=>exportReport(p)},"Excel"));
   if(!old&&S.admin && r.status!=="approved") actions.push(deleteControl());
   const cur=S.reports.get(S.repId)||r;
@@ -652,19 +652,66 @@ function renderReport(){
       "ამ ანგარიშის რედაქტირება შეუძლიათ მხოლოდ პროექტის გუნდის წევრებს.") : null;
 
   const datalist=h("datalist",{id:"boq-dl"},[...ctx().idx.values()].filter(it=>it.type!=="თავი"&&it.type!=="ქვეთავი").map(it=>h("option",{value:it.code},it.name)));
-  return [renderPrintHead(p,r),head,renderSecProgress(),notice,datalist,h("div",{class:"secs"},SECTION_KEYS.map(renderSection))];
+  return [head,renderSecProgress(),notice,datalist,h("div",{class:"secs"},SECTION_KEYS.map(renderSection))];
 }
-/* header that only appears on paper: logo, document code, project data and participants */
-function renderPrintHead(p,r){
-  const parts=p.participants||{};
-  const cell=(l,v)=>h("div",{class:"ph-cell"},h("div",{class:"ph-l"},l),h("div",{class:"ph-v"},v||"—"));
-  return h("div",{class:"print-only print-head"},
-    h("div",{class:"ph-top"},h("img",{src:"/logo.png",alt:"Tesen Group",class:"ph-logo"}),
-      h("div",{class:"ph-title"},h("div",null,"ყოველდღიური ანგარიში / Daily Progress Report"),h("div",{class:"ph-code"},docCode(p,r)))),
-    h("div",{class:"ph-grid"},
-      cell("პროექტის დასახელება / Project Title",p.name),cell("დამკვეთი / Client",p.client),cell("ადგილმდებარეობა / Location",p.location),
-      cell("თარიღი / Date",fmtDate(r.date)),cell("სტატუსი / Status",STATUS[r.status]),cell("ბუღალტრული კოდი / Accounting Code",p.accountingCode)),
-    h("div",{class:"ph-grid ph-parts"},PARTICIPANTS.map(([k,ka,en])=>cell(ka+" / "+en,parts[k]))));
+/* printing: a clean document built from the report data, laid out like the DPR form */
+function printReport(p,r){
+  flushNow();
+  document.querySelectorAll(".print-doc").forEach(e=>e.remove());
+  const doc=buildPrintDoc(p,r); document.body.append(doc);
+  const imgs=[...doc.querySelectorAll("img")];
+  Promise.all(imgs.map(im=>im.complete?0:new Promise(res=>{ im.onload=im.onerror=res; }))).then(()=>{
+    window.print();
+    setTimeout(()=>doc.remove(),1000);
+  });
+}
+function buildPrintDoc(p,r){
+  const c=ctx(), it=code=>c.item(code)||{}, parts=p.participants||{}, cond=r.conditions||{};
+  const n=v=>v===""||v==null?"":fmtNum(num(v));
+  const T=(head,rows,foot)=>h("table",{class:"pd-t"},h("thead",null,h("tr",null,head.map(x=>h("th",null,x)))),h("tbody",null,rows),foot?h("tfoot",null,foot):null);
+  const td=(v,cls)=>h("td",{class:cls||null},v==null||v===""?"":v);
+  const sec=(key,title,body,long)=>h("section",{class:"pd-sec"+(long?" long":"")},h("h3",null,title),body);
+  const empty=[];
+  const table=(key,title,head,rows,foot)=>{ if(!rows.length){ empty.push(tr(title)); return null; } return sec(key,title,T(head,rows,foot),rows.length>8); };
+  const priced=S.admin;
+  const kv=list=>h("table",{class:"pd-t"},h("tbody",null,list.map(([k,v])=>h("tr",null,h("td",{class:"k"},k),td(v)))));
+  const info=h("table",{class:"pd-t pd-info"},h("tbody",null,
+    [[["პროექტის დასახელება / Project Title",p.name],["დამკვეთი / Client",p.client],["ადგილმდებარეობა / Location",p.location]],
+     [["თარიღი / Date",fmtDate(r.date)],["სტატუსი / Status",STATUS[r.status]+" · REV"+String(r.rev||0).padStart(2,"0")],["ბუღალტრული კოდი / Accounting Code",p.accountingCode]]]
+      .map(row=>h("tr",null,row.map(([l,v])=>h("td",null,h("span",{class:"l"},l),h("span",{class:"v"},v||"—")))))));
+  const temp=[cond.tempMin,cond.tempMax].some(Boolean)?(cond.tempMin||"—")+" / "+(cond.tempMax||"—")+" °C":"";
+  const top=h("div",{class:"pd-two"},
+    sec("parts","პროექტში ჩართული პირები / Project Participants",kv(PARTICIPANTS.map(([k,ka,en])=>[ka+" / "+en,parts[k]]))),
+    sec("conditions","სამუშაო პირობები / Working Conditions",kv([["ამინდი / Weather",cond.weather],["ტემპ / Temp (min / max)",temp],["სამუშაო საათები / Working Hours",cond.hours],["არა სამუშაო საათები / Non-Working Hours",cond.breakHours],["დამატებითი სამუშაო საათი / Overtime hours",cond.overtime]])));
+  const hse=table("hse","უსაფრთხოება / HSE",["#","დასახელება / აღწერა","ჩატარდა","შენიშვნა"],
+    (r.hse||[]).map((x,i)=>h("tr",null,td(i+1,"c"),td((LANG==="en"?x.descEn:x.desc)||x.desc||x.descEn),td(x.status==="კი"?"✔":"—","c"),td(x.comment))));
+  const issues=table("issues","კრიტიკული საკითხები / Open Issues",["BoQ #","BoQ თავი","სამუშაოს დასახელება","კრიტიკული საკითხის აღწერა","დასრულება გეგმით","განახლებული თარიღი","📌-დან","📌-მდე","შენიშვნა"],
+    (r.issues||[]).map(x=>h("tr",null,td(x.code),td(it(x.code).chapter),td(it(x.code).name),td(x.desc),td(fmtDate(it(x.code).end)),td(fmtDate(x.updatedDate)),td(x.from),td(x.to),td(x.comment))));
+  const wrows=(r.works||[]).filter(x=>x.code||x.qty);
+  const works=table("works","შესრულებული სამუშაოები / Ongoing and Additional Works",
+    ["BoQ #","სამუშაოს დასახელება","განზ.","რაოდ.","სულ მოცულობა","დასაქმებულთა რაოდ.","📌-დან","📌-მდე","კომენტარი",...(priced?["ერთ. ღირებულება","ღირებულება"]:[])],
+    wrows.map(x=>h("tr",null,td(x.code),td(it(x.code).name),td(it(x.code).unit),td(n(x.qty),"n"),td(n(it(x.code).qty),"n"),td(n(x.staff),"n"),td(x.from),td(x.to),td(x.comment),...(priced?[td(n(x.price),"n"),td(amountText(x),"n")]:[]))),
+    priced&&wrows.some(x=>x.price!==""&&x.price!=null)?h("tr",null,h("td",{colspan:"10"},"სულ"),td(fmtNum(wrows.reduce((a,x)=>a+amount(x),0)),"n")):null);
+  const erows=r.expenses||[];
+  const expenses=table("expenses","ხარჯები / Expenses",
+    ["BoQ #","ხარჯის ტიპი","ხარჯის აღწერა","განზ.","რაოდ.","საწვავის ტიპი","საწვავის რაოდ.","ქვეყანა","კომენტარი",...(priced?["ერთ. ღირებულება","ღირებულება"]:[])],
+    erows.map(x=>h("tr",null,td(x.code),td(x.type),td(x.desc),td(x.unit),td(n(x.qty),"n"),td(x.fuelType),td(n(x.fuelQty),"n"),td(x.country),td(x.comment),...(priced?[td(n(x.price),"n"),td(amountText(x),"n")]:[]))),
+    priced&&erows.some(x=>x.price!==""&&x.price!=null)?h("tr",null,h("td",{colspan:"10"},"სულ"),td(fmtNum(erows.reduce((a,x)=>a+amount(x),0)),"n")):null);
+  const personnel=table("personnel","პერსონალი / Personnel on site",["#","სახელი გვარი","პოზიცია","დაწყების დრო","დასრულების დრო","სამუშაოს დასახელება","კვება (1/0)"],
+    (r.personnel||[]).filter(x=>x.name||x.work).map((x,i)=>h("tr",null,td(i+1,"c"),td(x.name),td(x.position),td(x.start,"c"),td(x.end,"c"),td(x.work),td(x.meal,"c"))));
+  const mf=rows=>rows.map((x,i)=>h("tr",null,td(i+1,"c"),td(x.name),td(x.unit),td(n(x.qty),"n"),td(x.driver),td(x.plate),td(x.comment)));
+  const mhead=["#","დასახელება","განზ.","რაოდენობა","მძღოლი, საკონტაქტო","ავტომობილის ნომერი","შენიშვნა"];
+  const materials=table("materials","მიღებული მასალა / Received Materials",mhead,mf(r.materials||[]));
+  const fuel=table("fuel","მიღებული საწვავი / Fuel Received at Site",mhead,mf(r.fuel||[]));
+  const visitors=table("visitors","ვიზიტორები / Site Visitors",["სახელი და გვარი","კომპანია","პოზიცია","ვიზიტის დრო","ვიზიტის მიზანი","შენიშვნა"],
+    (r.visitors||[]).map(x=>h("tr",null,td(x.name),td(x.company),td(x.position),td(x.time,"c"),td(x.purpose),td(x.comment))));
+  const photos=(r.photos||[]).length?sec("photos","ფოტო მასალა / Photos",h("div",{class:"pd-ph"},r.photos.map((x,i)=>h("figure",null,h("img",{src:x.url,alt:""}),h("figcaption",null,"Foto #"+(i+1)+(x.desc?" — "+x.desc:""))))),true):(empty.push(tr("ფოტო მასალა / Photos")),null);
+  return h("div",{class:"print-doc"},
+    h("div",{class:"pd-head"},h("img",{src:"/logo.png",alt:"Tesen Group"}),
+      h("div",{class:"pd-title"},h("b",null,"ყოველდღიური ანგარიში / Daily Progress Report"),h("span",{class:"pd-code"},docCode(p,r)))),
+    info,top,hse,issues,works,expenses,personnel,materials,fuel,visitors,photos,
+    empty.length?h("div",{class:"pd-empty"},"ჩანაწერის გარეშე: ",empty.join(", ")):null,
+    h("div",{class:"pd-sign"},h("div",null,"ობიექტის საქმეთა მწარმოებელი / Site Supervisor"),h("div",null,"საიტის მენეჯერი / Site Manager"),h("div",null,"დაადასტურა / Approved by",": ",r.status==="approved"&&r.approvedBy?nameOf(r.approvedBy):"")));
 }
 function deleteControl(){
   const wrap=h("span",{class:"confirm"});
