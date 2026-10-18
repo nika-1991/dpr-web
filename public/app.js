@@ -889,26 +889,29 @@ function renderRows(key,def,rows,ed){
   const empty=!rows.length?h("div",{class:"panel-b muted small"},ed?"ჩანაწერი არ არის. დაამატეთ ქვემოთ ღილაკით.":"ჩანაწერი არ არის."):null;
   const foot=ed&&!def.fixed?h("div",{class:"tbl-foot"},
     h("button",{class:"btn sm",type:"button",onclick:()=>{ const nr={}; if(key==="personnel"){ nr.meal="1"; const last=rows[rows.length-1]; if(last){nr.start=last.start;nr.end=last.end;} } if(key==="expenses") nr.country="საქართველო"; rows.push(nr); markDirty(key); rerender(); setTimeout(()=>{ const f=document.querySelector("#sec-"+key+" tbody tr:last-child input, #sec-"+key+" tbody tr:last-child select, #sec-"+key+" tbody tr:last-child textarea"); f&&f.focus(); },0); }},def.add),
-    key==="works"||key==="issues"||key==="expenses"?additionalControl(rerender):null):null;
+    key==="works"||key==="issues"||key==="expenses"?additionalControl(key,rows,rerender):null):null;
   return [rows.length?h("div",{class:"tw"},table):null,empty,foot].filter(Boolean);
 }
 
-function additionalControl(after){
-  const wrap=h("span",{class:"row"});
+/* additional work (not in the BoQ): pick a chapter (existing BoQ chapters or "სხვა"), name and unit; the server numbers it დ1, დ2 … */
+function additionalControl(key,rows,after){
+  const wrap=h("span",{class:"row add-work"});
   const open=()=>{
-    const code=h("input",{class:"inp mono",placeholder:"მაგ. 901","aria-label":"კოდი",style:"width:90px"});
-    const chapter=h("input",{class:"inp",placeholder:"BoQ თავი","aria-label":"BoQ თავი",style:"width:170px"});
-    const name=h("input",{class:"inp",placeholder:"სამუშაოს დასახელება","aria-label":"სამუშაოს დასახელება",style:"width:240px"});
+    const chapters=[...new Set((P().boq||[]).filter(x=>x.type==="თავი").map(x=>x.name).filter(Boolean))];
+    const chapter=h("select",{class:"inp","aria-label":"BoQ თავი",style:"width:230px"},h("option",{value:""},"აირჩიეთ თავი…"),chapters.map(c=>h("option",{value:c},c)),h("option",{value:"სხვა"},"სხვა"));
+    const name=h("input",{class:"inp",placeholder:"სამუშაოს დასახელება","aria-label":"სამუშაოს დასახელება",style:"width:260px"});
     const unit=h("select",{class:"inp","aria-label":"განზომილება",style:"width:90px"},h("option",{value:""},"განზ."),(S.lists.units||[]).map(u=>h("option",{value:u},u)));
-    wrap.replaceChildren(code,chapter,name,unit,
+    wrap.replaceChildren(chapter,name,unit,
       h("button",{class:"btn sm primary",type:"button",onclick:async()=>{
-        const c=normCode(code.value); if(!c||!name.value.trim()){ toast("კოდი და დასახელება სავალდებულოა"); return; }
-        try{ const d=await api("POST","/projects/"+encodeURIComponent(S.pid)+"/additional",{code:c,chapter:chapter.value.trim(),name:name.value.trim(),unit:unit.value}); S.additional.push(d); toast("დამატებითი სამუშაო "+c+" დაემატა"); after(); }
+        if(!chapter.value){ chapter.focus(); toast("აირჩიეთ თავი"); return; }
+        if(!name.value.trim()){ name.focus(); toast("შეიყვანეთ სამუშაოს დასახელება"); return; }
+        try{ const d=await api("POST","/projects/"+encodeURIComponent(S.pid)+"/additional",{chapter:chapter.value,name:name.value.trim(),unit:unit.value});
+          S.additional.push(d); rows.push({code:d.code}); markDirty(key); toast("დამატებითი სამუშაო "+d.code+" დაემატა"); after(); }
         catch(e){ toast("ვერ დაემატა: "+errMsg(e)); } }},"დამატება"),
       h("button",{class:"btn sm ghost",type:"button",onclick:()=>wrap.replaceChildren(btn)},"გაუქმება"));
-    code.focus();
+    chapter.focus();
   };
-  const btn=h("button",{class:"btn sm ghost",type:"button",onclick:open,title:"სამუშაო, რომელიც ხარჯთაღრიცხვაში არ არის"},"+ დამატებითი სამუშაოს კოდი");
+  const btn=h("button",{class:"btn sm ghost",type:"button",onclick:open,title:"სამუშაო, რომელიც ხარჯთაღრიცხვაში არ არის"},"+ დამატებითი სამუშაო");
   wrap.append(btn); return wrap;
 }
 

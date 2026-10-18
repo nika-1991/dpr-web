@@ -332,11 +332,12 @@ api.post("/projects/:id/additional", auth, (req, res) => {
   const p = getProject(req.params.id);
   if (!canSee(p, req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
   const b = req.body || {};
-  const code = String(b.code || "").trim().replace(/\./g, ",");
-  if (!code || !String(b.name || "").trim()) return res.status(400).json({ error: "კოდი და დასახელება სავალდებულოა" });
-  const exists = (p.boq || []).some((x) => String(x.code).replace(/\./g, ",") === code) ||
-    db.prepare("SELECT data FROM additional WHERE project_id=?").all(req.params.id).some((r) => JSON.parse(r.data).code === code);
-  if (exists) return res.status(409).json({ error: "კოდი " + code + " უკვე არსებობს" });
+  if (!String(b.name || "").trim()) return res.status(400).json({ error: "დასახელება სავალდებულოა" });
+  /* additional works are numbered დ1, დ2, დ3 … per project (the prefix keeps them apart from BoQ codes) */
+  const taken = new Set([...(p.boq || []).map((x) => String(x.code).replace(/\./g, ",")),
+    ...db.prepare("SELECT data FROM additional WHERE project_id=?").all(req.params.id).map((r) => JSON.parse(r.data).code)]);
+  let n = 1; while (taken.has("დ" + n)) n++;
+  const code = "დ" + n;
   const d = { projectId: req.params.id, code, chapter: String(b.chapter || "").trim(), name: String(b.name).trim(), unit: String(b.unit || ""), createdBy: req.user.id };
   const id = newId(8);
   db.prepare("INSERT INTO additional(id,project_id,data) VALUES(?,?,?)").run(id, req.params.id, JSON.stringify(d));
