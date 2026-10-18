@@ -159,23 +159,29 @@ function admin(req, res, next) {
   next();
 }
 
-/* login throttling: 5 failures per username+IP → 15 min lock */
+/* login throttling: 5 failures per username+IP → 15 min lock; temporary (4-digit) passwords are also
+   limited per username across all addresses: 10 failures → 15 min lock */
 const fails = new Map();
 function throttleKey(req, username) { return (req.ip || "") + "|" + String(username || "").toLowerCase(); }
+const userKey = (username) => "user|" + String(username || "").toLowerCase();
+const isLocked = (f, max) => f && f.count >= max && Date.now() - f.at < 15 * 60e3;
+const bump = (key, f) => fails.set(key, { count: (f && Date.now() - f.at < 15 * 60e3 ? f.count : 0) + 1, at: Date.now() });
+const TEMP_PW_RE = /^\d{4}$/;
+const MIN_PW = 4;
 
 api.post("/login", (req, res) => {
   const { username, password } = req.body || {};
   const key = throttleKey(req, username);
-  const f = fails.get(key);
-  if (f && f.count >= 5 && Date.now() - f.at < 15 * 60e3)
-    return res.status(429).json({ error: "ძალიან ბევრი წარუმატებელი ცდა. სცადეთ 15 წუთში." });
+  const f = fails.get(key), uk = userKey(username), fu = fails.get(uk);
   const u = typeof username === "string" ? db.prepare("SELECT * FROM users WHERE username=?").get(username.trim()) : null;
+  if (isLocked(f, 5) || (u && u.must_change && isLocked(fu, 10)))
+    return res.status(429).json({ error: "ძალიან ბევრი წარუმატებელი ცდა. სცადეთ 15 წუთში." });
   const ok = u && u.active && typeof password === "string" && bcrypt.compareSync(password, u.password_hash);
   if (!ok) {
-    fails.set(key, { count: (f && Date.now() - f.at < 15 * 60e3 ? f.count : 0) + 1, at: Date.now() });
+    bump(key, f); bump(uk, fu);
     return res.status(401).json({ error: "მომხმარებლის სახელი ან პაროლი არასწორია" });
   }
-  fails.delete(key);
+  fails.delete(key); fails.delete(uk);
   const token = crypto.randomBytes(32).toString("base64url");
   const exp = new Date(Date.now() + SESSION_DAYS * 864e5).toISOString();
   db.prepare("INSERT INTO sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)").run(sha(token), u.id, now(), exp);
@@ -198,7 +204,7 @@ api.post("/me/password", allowMustChange, auth, (req, res) => {
   const { current, next: np } = req.body || {};
   if (typeof current !== "string" || !bcrypt.compareSync(current, req.user.password_hash))
     return res.status(400).json({ error: "მიმდინარე პაროლი არასწორია" });
-  if (typeof np !== "string" || np.length < 8) return res.status(400).json({ error: "ახალი პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს" });
+  if (typeof np !== "string" || np.length < MIN_PW) return res.status(400).json({ error: "ახალი პაროლი მინიმუმ 4 სიმბოლო უნდა იყოს" });
   if (np === current) return res.status(400).json({ error: "ახალი პაროლი ძველისგან უნდა განსხვავდებოდეს" });
   db.prepare("UPDATE users SET password_hash=?, must_change=0 WHERE id=?").run(bcrypt.hashSync(np, 10), req.user.id);
   // end other sessions of this user
@@ -229,7 +235,7 @@ api.post("/users", auth, admin, (req, res) => {
   if (!USERNAME_RE.test(username || "")) return res.status(400).json({ error: "მომხმარებლის სახელი: 3–40 ლათინური ასო, ციფრი ან . _ - @" });
   if (!name || !String(name).trim()) return res.status(400).json({ error: "მიუთითეთ სახელი და გვარი" });
   if (!ROLES.includes(role)) return res.status(400).json({ error: "არასწორი როლი" });
-  if (typeof password !== "string" || password.length < 8) return res.status(400).json({ error: "დროებითი პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს" });
+  if (typeof password !== "string" || !TEMP_PW_RE.test(password)) return res.status(400).json({ error: "დროებითი პაროლი 4 ციფრი უნდა იყოს" });
   if (db.prepare("SELECT 1 FROM users WHERE username=?").get(username)) return res.status(409).json({ error: "ეს მომხმარებლის სახელი დაკავებულია" });
   const id = newId();
   db.prepare("INSERT INTO users(id,username,name,phone,password_hash,role,active,must_change,created_at) VALUES(?,?,?,?,?,?,1,1,?)")
@@ -250,7 +256,7 @@ api.patch("/users/:id", auth, admin, (req, res) => {
     if (!b.active) db.prepare("DELETE FROM sessions WHERE user_id=?").run(u.id);
   }
   if (b.password !== undefined) {
-    if (typeof b.password !== "string" || b.password.length < 8) return res.status(400).json({ error: "დროებითი პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს" });
+    if (typeof b.password !== "string" || !TEMP_PW_RE.test(b.password)) return res.status(400).json({ error: "დროებითი პაროლი 4 ციფრი უნდა იყოს" });
     db.prepare("UPDATE users SET password_hash=?, must_change=1 WHERE id=?").run(bcrypt.hashSync(b.password, 10), u.id);
     db.prepare("DELETE FROM sessions WHERE user_id=?").run(u.id);
   }

@@ -65,7 +65,7 @@ function toast(msg){ const t=h("div",{class:"toast",role:"status"},msg); documen
 function errMsg(e){ return (e&&e.message)||"უცნობი შეცდომა"; }
 function chip(status){ return h("span",{class:"chip st-"+(status||"none")}, STATUS[status]||"არ არის"); }
 let uidCounter=0; const uid=()=>"f"+(++uidCounter);
-function genPassword(){ const a="abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789"; const b=new Uint32Array(10); crypto.getRandomValues(b); return [...b].map(x=>a[x%a.length]).join(""); }
+function genPassword(){ const b=new Uint32Array(1); crypto.getRandomValues(b); return String(b[0]%10000).padStart(4,"0"); }
 
 /* ---------- API ---------- */
 class ApiError extends Error{ constructor(status,message,code){ super(message); this.status=status; this.code=code; } }
@@ -267,17 +267,17 @@ function renderAccount(){
   const ids={cur:uid(),n1:uid(),n2:uid()};
   const err=h("div",{class:"small",role:"alert",style:"color:var(--bad);min-height:1.2em"});
   const cur=h("input",{id:ids.cur,class:"inp",type:"password",autocomplete:"current-password",required:true});
-  const n1=h("input",{id:ids.n1,class:"inp",type:"password",autocomplete:"new-password",minlength:"8",required:true});
-  const n2=h("input",{id:ids.n2,class:"inp",type:"password",autocomplete:"new-password",minlength:"8",required:true});
+  const n1=h("input",{id:ids.n1,class:"inp",type:"password",autocomplete:"new-password",minlength:"4",required:true});
+  const n2=h("input",{id:ids.n2,class:"inp",type:"password",autocomplete:"new-password",minlength:"4",required:true});
   const forced=S.me.mustChange;
   const form=h("form",{class:"panel-b",style:"display:flex;flex-direction:column;gap:12px;max-width:420px",onsubmit:async e=>{
     e.preventDefault(); err.textContent="";
     if(n1.value!==n2.value){ err.textContent="ახალი პაროლები არ ემთხვევა"; return; }
-    if(n1.value.length<8){ err.textContent="პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს"; return; }
+    if(n1.value.length<4){ err.textContent=tr("პაროლი მინიმუმ 4 სიმბოლო უნდა იყოს"); return; }
     try{ await api("POST","/me/password",{current:cur.value,next:n1.value}); toast("პაროლი შეიცვალა"); const was=S.me.mustChange; S.me.mustChange=false; if(was) await loadAll(); else go("home"); }
     catch(ex){ err.textContent=errMsg(ex); } }},
     h("div",{class:"field"},h("label",{for:ids.cur},forced?"დროებითი პაროლი":"მიმდინარე პაროლი"),cur),
-    h("div",{class:"field"},h("label",{for:ids.n1},"ახალი პაროლი (მინ. 8 სიმბოლო)"),n1),
+    h("div",{class:"field"},h("label",{for:ids.n1},"ახალი პაროლი (მინ. 4 სიმბოლო)"),n1),
     h("div",{class:"field"},h("label",{for:ids.n2},"გაიმეორეთ ახალი პაროლი"),n2),
     err,
     h("div",{class:"row"},h("button",{class:"btn primary",type:"submit"},"პაროლის შეცვლა"),
@@ -1223,7 +1223,7 @@ function renderUsers(){
   const uIn=h("input",{id:ids.u,class:"inp",autocomplete:"off",autocapitalize:"none",placeholder:"მაგ. g.beridze"});
   const nIn=h("input",{id:ids.n,class:"inp",placeholder:"სახელი გვარი"});
   const rIn=h("select",{id:ids.r,class:"inp"},h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"reviewer"},"რივიუერი"),h("option",{value:"admin"},"ადმინისტრატორი"));
-  const pIn=h("input",{id:ids.p,class:"inp mono",value:genPassword()});
+  const pIn=h("input",{id:ids.p,class:"inp mono",inputmode:"numeric",maxlength:"4",pattern:"[0-9]{4}",value:genPassword()});
   const created=h("div");
   const createForm=h("form",{class:"panel-b users-form",style:"display:flex;flex-direction:column;gap:12px",onsubmit:async e=>{
     e.preventDefault();

@@ -18,8 +18,8 @@ window.I18N_EN = {
   "შესვლა": "Sign in", "ყოველდღიური რეპორტის საიტი": "Daily report site", "მომხმარებლის სახელი": "Username", "პაროლი": "Password",
   "ანგარიშს ქმნის ადმინისტრატორი. პაროლი თუ დაგავიწყდათ, მიმართეთ მას.": "Accounts are created by the administrator. If you forgot your password, contact them.",
   "მონაცემები ვერ ჩაიტვირთა": "Could not load data", "ახალი პაროლები არ ემთხვევა": "The new passwords do not match",
-  "პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს": "Password must be at least 8 characters", "პაროლი შეიცვალა": "Password changed",
-  "დროებითი პაროლი": "Temporary password", "მიმდინარე პაროლი": "Current password", "ახალი პაროლი (მინ. 8 სიმბოლო)": "New password (min. 8 characters)",
+  "პაროლი მინიმუმ 4 სიმბოლო უნდა იყოს": "Password must be at least 4 characters", "პაროლი შეიცვალა": "Password changed",
+  "დროებითი პაროლი": "Temporary password", "მიმდინარე პაროლი": "Current password", "ახალი პაროლი (მინ. 4 სიმბოლო)": "New password (min. 4 characters)",
   "გაიმეორეთ ახალი პაროლი": "Repeat new password", "პაროლის შეცვლა": "Change password", "გაუქმება": "Cancel", "გასვლა": "Sign out",
   "თქვენი პაროლი დროებითია. გასაგრძელებლად დააყენეთ საკუთარი პაროლი.": "Your password is temporary. Set your own password to continue.",
   // home
