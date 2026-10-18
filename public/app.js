@@ -380,7 +380,16 @@ function openOrCreate(date){
   S.creating={date}; S.tab="reports"; render();
   setTimeout(()=>document.getElementById("create-panel")?.scrollIntoView({block:"nearest"}),0);
 }
-function openReport(id){ S.repId=id; S.rep=clone(S.reports.get(id)); S.dirty.clear(); go("report",{pid:S.pid}); }
+function openReport(id){ S.repId=id; S.rep=splitHse(clone(S.reports.get(id))); S.dirty.clear(); go("report",{pid:S.pid}); }
+/* older HSE items hold Georgian and English in one text: show them as two fields, one per language (saved on the next edit) */
+function splitHse(r){
+  for(const x of (r&&r.hse)||[]){
+    if(x.descEn||!x.desc) continue;
+    const m=/^([^]*[\u10A0-\u10FF][^]*?)\s+([A-Za-z(][^\u10A0-\u10FF]*)$/.exec(x.desc);
+    if(m){ x.desc=m[1].trim(); x.descEn=m[2].trim(); }
+  }
+  return r;
+}
 function sortedReports(){ return [...S.reports.entries()].sort((a,b)=>b[1].date.localeCompare(a[1].date)||(b[1].num||0)-(a[1].num||0)); }
 
 function renderReportsTab(p){
@@ -447,7 +456,7 @@ async function createReport(date,prev,opts){
   const data={projectId:S.pid,date,
     conditions: prev&&opts.conditions?{...clone(prev.conditions),weather:"",tempMin:"",tempMax:"",overtime:""}:{weather:"",tempMin:"",tempMax:"",hours:"07:00-18:00",breakHours:"13:00-14:00",overtime:""},
     issues: prev&&opts.issues?clone(prev.issues||[]).filter(i=>i.desc||i.code||i.comment):[],
-    hse: prev&&opts.hse?(prev.hse||[]).map(x=>({desc:x.desc,status:"",comment:""})):[],
+    hse: prev&&opts.hse?splitHse(clone(prev)).hse.map(x=>({desc:x.desc,descEn:x.descEn||"",status:"",comment:""})):[],
     works:[],expenses:[],
     personnel: prev&&opts.personnel?(prev.personnel||[]).map(x=>({...x,work:""})):[],
     materials:[],fuel:[],visitors:[],photos:[]};
@@ -472,7 +481,8 @@ const SECTIONS={
     {k:"from",l:"📌-დან",t:"text",w:"80px"},{k:"to",l:"📌-მდე",t:"text",w:"80px"},
     {k:"comment",l:"შენიშვნა",t:"area",w:"200px"}]},
   hse:{title:"უსაფრთხოება",en:"HSE",add:"+ პუნქტი",cols:[
-    {k:"desc",l:"დასახელება / აღწერა",t:"area",w:"440px"},
+    {k:"desc",l:"დასახელება / აღწერა",t:"area",w:"440px",lang:"ka"},
+    {k:"descEn",l:"აღწერა / Description",t:"area",w:"440px",lang:"en"},
     {k:"status",l:"სტატუსი",t:"select",opts:()=>["კი","არა"],w:"90px"},
     {k:"comment",l:"შენიშვნა",t:"area",w:"220px"}]},
   works:{title:"შესრულებული სამუშაოები",en:"Ongoing and Additional Works",add:"+ სამუშაო",cols:[
@@ -637,7 +647,7 @@ function renderSection(key){
 function copyHseFromLast(){
   const prev=sortedReports().map(e=>e[1]).find(x=>x.date<S.rep.date&&(x.hse||[]).length);
   if(!prev){ toast("წინა ანგარიშებში HSE პუნქტები არ მოიძებნა"); return; }
-  S.rep.hse=prev.hse.map(x=>({desc:x.desc,status:"",comment:""})); markDirty("hse");
+  S.rep.hse=splitHse(clone(prev)).hse.map(x=>({desc:x.desc,descEn:x.descEn||"",status:"",comment:""})); markDirty("hse");
   document.getElementById("sec-hse").replaceWith(renderSection("hse"));
 }
 function renderConditions(ed){
@@ -656,7 +666,7 @@ function renderConditions(ed){
 
 function renderRows(key,def,rows,ed){
   const c=ctx();
-  const cols=def.cols;
+  const cols=def.cols.filter(col=>!col.lang||col.lang===LANG);
   const rerender=()=>{ document.getElementById("sec-"+key).replaceWith(renderSection(key)); };
   const cell=(row,col,i)=>{
     if(col.auto){ const v=col.auto(row,c); const warn=v&&typeof v==="object"; return h("td",{class:"auto"+(warn?" warn":""),"data-l":col.l},warn?v.warn:v); }
@@ -1001,7 +1011,7 @@ function reportSheets(wb,p,r){
     [],["კრიტიკული საკითხები / Open Issues"],["BoQ #","BoQ თავი","BOQ სამუშაოს დასახელება","კრიტიკული საკითხის აღწერა","დასრულების თარიღი გეგმით","განახლებული თარიღი","📌-დან","📌-მდე","შენიშვნა"],
     ...(r.issues||[]).map(x=>[x.code||"",it(x.code).chapter||"",it(x.code).name||"",x.desc||"",fmtDate(it(x.code).end)||"",fmtDate(x.updatedDate),x.from||"",x.to||"",x.comment||""]),
     [],["უსაფრთხოება / HSE"],["დასახელება / Description","სტატუსი / Status","თარიღი / Date","შენიშვნა / Comments"],
-    ...(r.hse||[]).map(x=>[x.desc||"",x.status||"",x.status?fmtDate(r.date):"",x.comment||""])];
+    ...(r.hse||[]).map(x=>[[x.desc,x.descEn].filter(Boolean).join("  "),x.status||"",x.status?fmtDate(r.date):"",x.comment||""])];
   const n=v=>v===""||v==null?"":num(v);
   XLSX.utils.book_append_sheet(wb,sheet(head,[42,40,22,40,22,22,10,10,30]),"Open Issues-HSE");
   XLSX.utils.book_append_sheet(wb,sheet([...title,["თარიღი / Date","BoQ #","BoQ თავი","BOQ სამუშაოს დასახელება","განზ. / Unit","რაოდ. / Q-ty","სულ მოცულობა / Total Volumes","დასაქმებულთა რაოდ. / Staff","📌-დან","📌-მდე","დაწყების თარიღი","დასრულების თარიღი","კომენტარი"],
