@@ -231,6 +231,7 @@ api.patch("/users/:id", auth, admin, (req, res) => {
 
 /* ---------------- config ---------------- */
 api.get("/config/lists", auth, (req, res) => res.json(parse(db.prepare("SELECT data FROM config WHERE key='lists'").get())));
+api.get("/config/hse-default", auth, admin, (req, res) => res.json(DEFAULT_HSE));
 api.put("/config/lists", auth, admin, (req, res) => {
   const out = {};
   for (const k of Object.keys(DEFAULT_LISTS)) {

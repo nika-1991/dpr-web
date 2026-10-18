@@ -294,13 +294,13 @@ function renderHome(){
     S.admin?h("div",{class:"row"},
       h("button",{class:"btn",type:"button",onclick:()=>go("analysis")},"ანალიზი"),
       settingsMenu(),
-      h("button",{class:"btn primary",type:"button",onclick:()=>{S.creating="project";render();}},"+ ახალი პროექტი")):null);
+      h("button",{class:"btn primary",type:"button",onclick:newProject},"+ ახალი პროექტი")):null);
   const out=[head];
   if(S.creating==="project") out.push(renderProjectForm(null));
   if(!list.length){
     out.push(S.admin
       ? h("div",{class:"empty"},h("h2",null,"ჯერ პროექტი არ არის"),h("p",{class:"muted"},"1) „მომხმარებლები“ — შექმენით თანამშრომლების ანგარიშები. 2) „+ ახალი პროექტი“ — დაამატეთ პროექტი. 3) პროექტში ატვირთეთ ხარჯთაღრიცხვა და დაამატეთ გუნდი."),
-          h("button",{class:"btn primary",type:"button",onclick:()=>{S.creating="project";render();}},"+ ახალი პროექტი"))
+          h("button",{class:"btn primary",type:"button",onclick:newProject},"+ ახალი პროექტი"))
       : h("div",{class:"empty"},h("h2",null,"ჯერ არცერთ პროექტში არ ხართ დამატებული"),h("p",{class:"muted"},"სთხოვეთ ადმინისტრატორს, დაგამატოთ პროექტის გუნდში. დამატების შემდეგ პროექტი აქ გამოჩნდება.")));
     return out;
   }
@@ -352,6 +352,11 @@ function renderHome(){
   return out;
 }
 
+/* a new project starts with the standard HSE items (editable in the form) */
+async function newProject(){
+  if(!S.hseDefault){ try{ S.hseDefault=await api("GET","/config/hse-default"); }catch(e){ S.hseDefault=[]; } }
+  S.creating="project"; render();
+}
 /* admin settings: a gear button with a small menu (users, drop-down lists) */
 function settingsMenu(){
   const menu=h("div",{class:"menu",role:"menu",hidden:true},
@@ -387,7 +392,7 @@ function renderProjectForm(pid){
     h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"🏷️ კოდები",h("span",{class:"en"},"Codes"))),
     [["accountingCode","პროექტის ბუღალტრული კოდი / Accounting Code"],["companyCode","კომპანიის კოდი / Company Code"],["projectCode","პროექტის კოდი / Project Code"],["dprStart","პირველი DPR ნომერი / First DPR number"]]
       .map(([k,l])=>{ const el=inp(f,k,k==="dprStart"?(p[k]||1):p[k],l); el.classList.add("mono"); if(k==="dprStart"){ el.type="number"; el.min="1"; el.step="1"; } return row(l,el); }));
-  const hse=clone(p.hse||[]);
+  const hse=clone(pid?(p.hse||[]):(S.hseDefault||[]));
   const hseBox=h("div",{class:"hse-ed"});
   const drawHse=()=>hseBox.replaceChildren(...hse.map((x,i)=>h("div",{class:"hse-ed-row"},
       h("span",{class:"ix"},i+1),
