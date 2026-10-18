@@ -2,27 +2,27 @@
 :root{
   color-scheme:light;
   --bg:#eef0ec; --surface:#ffffff; --sunk:#f6f7f4; --ink:#1b2124; --muted:#5b6569; --line:#d6dbd6; --line-strong:#b9c0bb;
-  --accent:#1f5f93; --accent-ink:#ffffff; --accent-soft:#e3edf6;
+  --accent:#036053; --accent-ink:#ffffff; --accent-soft:#e1efec;
   --signal:#c98a00; --signal-soft:#fbf0d2;
   --ok:#2f7d4f; --ok-soft:#e1f1e7; --bad:#b23a32; --bad-soft:#f8e3e1;
   --f-display:"Noto Serif Georgian","Noto Sans Georgian",Georgia,serif;
   --f-body:"Noto Sans Georgian",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
   --r:6px;
-  --sh-head:#2f8396; --sh-head-ink:#ffffff; --sh-tint:#e6eef1; --sh-line:#bfd2d8; --sh-ink:#1d4450;
+  --sh-head:#036053; --sh-head-ink:#ffffff; --sh-tint:#e8f2ef; --sh-line:#bcd6cf; --sh-ink:#073d35;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121618; --surface:#1a2023; --sunk:#151a1c; --ink:#e4e8e5; --muted:#99a3a6; --line:#2b3438; --line-strong:#3d484c;
-  --accent:#6aa6da; --accent-ink:#0d1a24; --accent-soft:#1b2c3a;
+  --accent:#4ab8a0; --accent-ink:#0b1f1b; --accent-soft:#13302a;
   --signal:#e8b744; --signal-soft:#33290f;
   --ok:#62c18a; --ok-soft:#173023; --bad:#e8786f; --bad-soft:#3a1d1b; color-scheme:dark;
-  --sh-head:#22606e; --sh-head-ink:#e9f4f6; --sh-tint:#17252a; --sh-line:#2d454c; --sh-ink:#a9d3dd}}
+  --sh-head:#0d5248; --sh-head-ink:#e6f4f1; --sh-tint:#14231f; --sh-line:#2a453e; --sh-ink:#9fd6c9}}
 :root[data-theme="dark"]{
   --bg:#121618; --surface:#1a2023; --sunk:#151a1c; --ink:#e4e8e5; --muted:#99a3a6; --line:#2b3438; --line-strong:#3d484c;
-  --accent:#6aa6da; --accent-ink:#0d1a24; --accent-soft:#1b2c3a;
+  --accent:#4ab8a0; --accent-ink:#0b1f1b; --accent-soft:#13302a;
   --signal:#e8b744; --signal-soft:#33290f;
   --ok:#62c18a; --ok-soft:#173023; --bad:#e8786f; --bad-soft:#3a1d1b; color-scheme:dark;
-  --sh-head:#22606e; --sh-head-ink:#e9f4f6; --sh-tint:#17252a; --sh-line:#2d454c; --sh-ink:#a9d3dd}
+  --sh-head:#0d5248; --sh-head-ink:#e6f4f1; --sh-tint:#14231f; --sh-line:#2a453e; --sh-ink:#9fd6c9}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
@@ -94,8 +94,9 @@ main{max-width:1320px;margin:0 auto;padding-block:22px 64px;
 
 /* tabs */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
-.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px;cursor:pointer;color:var(--muted);font-weight:500;white-space:nowrap}
-.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 16px;cursor:pointer;color:var(--accent);font-weight:700;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap}
+.tabs button:hover{border-bottom-color:var(--line-strong)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--ink)}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px}
 .panel-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
@@ -285,3 +286,13 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .rlist-t td.num,.rlist-t th:nth-child(4),.rlist-t th:nth-child(5){text-align:center;font-family:var(--f-mono)}
 .rlist-t th:first-child{text-align:left}
 @media (max-width:520px){.me-btn>span:nth-child(2){display:none}}
+/* Tesen Group logo: dark-text version on light theme, light-text version on dark theme */
+.logo{display:block;height:24px;width:auto}
+.logo-d{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .logo-l{display:none}:root:not([data-theme="light"]) .logo-d{display:block}}
+:root[data-theme="dark"] .logo-l{display:none}
+:root[data-theme="dark"] .logo-d{display:block}
+.brand-sep{width:1px;height:22px;background:var(--line-strong)}
+.brand-name{font-size:.92rem;font-weight:600}
+.login-logo .logo{height:34px}
+@media (max-width:640px){.brand-sep,.brand-name{display:none}.logo{height:20px}}
