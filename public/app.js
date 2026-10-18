@@ -293,8 +293,7 @@ function renderHome(){
     h("div",null,h("div",{class:"eyebrow"},"Daily Progress Report"),h("h1",null,"პროექტები")),
     S.admin?h("div",{class:"row"},
       h("button",{class:"btn",type:"button",onclick:()=>go("analysis")},"ანალიზი"),
-      h("button",{class:"btn",type:"button",onclick:()=>go("users")},"მომხმარებლები"),
-      h("button",{class:"btn",type:"button",onclick:()=>go("settings")},"სიები"),
+      settingsMenu(),
       h("button",{class:"btn primary",type:"button",onclick:()=>{S.creating="project";render();}},"+ ახალი პროექტი")):null);
   const out=[head];
   if(S.creating==="project") out.push(renderProjectForm(null));
@@ -305,13 +304,10 @@ function renderHome(){
       : h("div",{class:"empty"},h("h2",null,"ჯერ არცერთ პროექტში არ ხართ დამატებული"),h("p",{class:"muted"},"სთხოვეთ ადმინისტრატორს, დაგამატოთ პროექტის გუნდში. დამატების შემდეგ პროექტი აქ გამოჩნდება.")));
     return out;
   }
-  // dashboard: compact totals, search, status and company filters, small project tiles (or a table)
+  // dashboard: search, status and company filters, small project tiles (or a table)
   const pos=p=>(p.boq||[]).filter(x=>x.type==="პოზიცია").length;
   const st=p=>p.stats||{progress:0,itemsDone:0,reports:0};
   const all=list.map(e=>e[1]);
-  const active=all.filter(p=>!p.archived);
-  const avg=active.length?active.reduce((a,p)=>a+st(p).progress,0)/active.length:0;
-  const kpi=(label,value,cls)=>h("div",{class:"kpi"},h("div",{class:"kpi-l"},label),h("div",{class:"kpi-v"+(cls?" "+cls:"")},value));
   const F=S.homeF||(S.homeF={q:"",f:"active",co:"",view:(()=>{ try{ return localStorage.getItem("dpr.homeView")||"cards"; }catch(e){ return "cards"; } })()});
   const companies=[...new Set(all.map(p=>(p.companyCode||"").trim()).filter(Boolean))].sort();
   if(F.co&&!companies.includes(F.co)) F.co="";
@@ -346,7 +342,6 @@ function renderHome(){
       prog(p),
       last(p))));
   out.push(h("div",{class:"dash-left"},
-    h("div",{class:"kpis"},kpi("სულ პროექტი",String(all.length)),kpi("აქტიური",String(active.length),"acc"),kpi("BoQ მუხლი",String(all.reduce((a,p)=>a+pos(p),0))),kpi("საშუალო პროგრესი",fmtNum(avg)+"%","acc")),
     h("div",{class:"home-bar"},
       h("label",{class:"home-search"},icon("search"),search),
       h("div",{class:"row",style:"gap:6px"},chip_("active","აქტიური"),chip_("archived","დასრულებული"),chip_("all","ყველა")),
@@ -355,6 +350,18 @@ function renderHome(){
     h("div",{class:"dash-count"},icon("grid"),h("span",null,"პროექტები"),h("span",{class:"spacer"}),h("span",{class:"muted small"},shown.length+" პროექტი")),
     listEl));
   return out;
+}
+
+/* admin settings: a gear button with a small menu (users, drop-down lists) */
+function settingsMenu(){
+  const menu=h("div",{class:"menu",role:"menu",hidden:true},
+    h("button",{type:"button",role:"menuitem",onclick:()=>go("users")},icon("personnel"),"მომხმარებლები"),
+    h("button",{type:"button",role:"menuitem",onclick:()=>go("settings")},icon("list"),"სიები"));
+  const btn=h("button",{class:"btn",type:"button","aria-haspopup":"menu","aria-expanded":"false",onclick:e=>{
+    e.stopPropagation(); const open=menu.hidden; menu.hidden=!open; btn.setAttribute("aria-expanded",String(open));
+    if(open) setTimeout(()=>document.addEventListener("click",()=>{ menu.hidden=true; btn.setAttribute("aria-expanded","false"); },{once:true}),0);
+  }},icon("gear"),"პარამეტრები");
+  return h("div",{class:"menu-wrap"},btn,menu);
 }
 
 /* ---------- project form ---------- */
@@ -539,6 +546,8 @@ const ICONS={
   search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
   grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
   table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
   print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>'
 };
 function icon(name){

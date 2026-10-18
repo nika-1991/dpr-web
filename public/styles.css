@@ -415,11 +415,6 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .print-doc.pdf-doc{display:block;width:281mm;color:#111;font-family:var(--f-body);font-size:9.5pt;line-height:1.35;background:#fff}
 /* dashboard */
 .dash-left{display:flex;flex-direction:column;gap:12px;min-width:0}
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
-.kpi-l{font-size:.68rem;font-weight:600;letter-spacing:.03em;color:var(--muted)}
-.kpi-v{font-size:1.25rem;font-weight:700;line-height:1.2}
-.kpi-v.acc{color:var(--accent)}
 .dash-count{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
 .dash-count .ico{width:16px;height:16px;color:var(--accent)}
 .tiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
@@ -473,9 +468,8 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .ptable .plast{border:0;padding:0}
 .ptable th:first-child{text-align:left}
 .ptable td .code-tag{margin-right:4px}
-@media (max-width:640px){.kpis{grid-template-columns:1fr 1fr}}
 /* overall look: rounded white cards with soft shadows on a light slate background */
-.panel,.pcard,.ptile,.kpi,.home-bar,.sh-box,.sh-cell,.login,.rep-head,.empty,.an-kpi,.pp-box{border-radius:var(--radius);border-color:var(--line);box-shadow:var(--shadow)}
+.panel,.pcard,.ptile,.home-bar,.sh-box,.sh-cell,.login,.rep-head,.empty,.an-kpi,.pp-box{border-radius:var(--radius);border-color:var(--line);box-shadow:var(--shadow)}
 .ptile,.pcard{transition:box-shadow .15s,transform .15s,border-color .15s}
 .ptile:hover,.pcard:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
 .bar{box-shadow:0 1px 0 var(--line),0 2px 12px -6px rgba(15,23,42,.08);border-bottom:0}
@@ -485,9 +479,6 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .inp,.field input,.field select,.field textarea{border-radius:var(--r)}
 .code-tag{border-radius:6px;background:var(--sunk);border-color:var(--line)}
 .chip{border-radius:99px}
-.kpi{padding:12px 14px}
-.kpi-l{text-transform:uppercase;letter-spacing:.06em;font-size:.64rem}
-.kpi-v{font-size:1.45rem;font-weight:800}
 .eyebrow{color:var(--accent)}
 .head h1{font-size:1.75rem}
 .sec{border-radius:var(--radius)}
@@ -497,3 +488,9 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .fchip{border-color:var(--line)}
 .vswitch{border-radius:var(--r)}
 @media (prefers-reduced-motion:reduce){.ptile:hover,.pcard:hover{transform:none}}
+.menu-wrap{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:200px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px -8px rgba(15,23,42,.18);padding:6px;display:flex;flex-direction:column}
+.menu[hidden]{display:none}
+.menu button{display:flex;align-items:center;gap:10px;background:none;border:0;border-radius:8px;padding:9px 10px;text-align:left;cursor:pointer;font-weight:600;color:var(--ink)}
+.menu button:hover,.menu button:focus-visible{background:var(--sunk)}
+.menu .ico{width:17px;height:17px;color:var(--accent)}
