@@ -427,8 +427,7 @@ function renderProject(){
       S.admin?h("button",{class:"btn",type:"button",onclick:async()=>{
         if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
         try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},
-        icon(p.archived?"plus":"works"),p.archived?"აქტიურად დაბრუნება":"დასრულებულად მონიშვნა"):null,
-      canWorkOn(p)&&!p.archived?h("button",{class:"btn primary",type:"button",onclick:()=>openOrCreate(todayISO())},"დღევანდელი ანგარიში"):null));
+        icon(p.archived?"plus":"works"),p.archived?"აქტიურად დაბრუნება":"დასრულებულად მონიშვნა"):null));
   const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-label":tr(l),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;render();}},mtavruli(tr(l)))));
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
@@ -440,13 +439,6 @@ function renderProject(){
 }
 
 function canCreateOn(date){ return S.admin || date<=todayISO(); }
-function openOrCreate(date){
-  const id=S.pid+"__"+date;
-  if(S.reports.has(id)) return openReport(id);
-  if(!canCreateOn(date)){ toast("მომავალი თარიღით ანგარიშის შექმნა შეუძლებელია"); return; }
-  S.creating={date}; S.tab="reports"; render();
-  setTimeout(()=>document.getElementById("create-panel")?.scrollIntoView({block:"nearest"}),0);
-}
 function openReport(id){ S.repId=id; S.rep=splitHse(clone(S.reports.get(id))); S.dirty.clear(); S.oldRev=null; S.revs=[]; loadRevisions(); go("report",{pid:S.pid}); }
 /* earlier approved versions (kept by the server when a new REV is opened) */
 async function loadRevisions(){
