@@ -487,6 +487,7 @@ const ICONS={
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   pause:'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>',
   plus:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  pdf:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/>',
   print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>'
 };
 function icon(name){
@@ -585,7 +586,7 @@ function sectionFilled(k,r){
 function renderSecProgress(){
   const r=S.rep, done=SECTION_KEYS.filter(k=>sectionFilled(k,r));
   return h("div",{class:"rep-prog",id:"rep-prog",title:done.map(k=>tr(SECTIONS[k].title)).join(", ")},
-    h("div",{class:"rep-prog-bar"},SECTION_KEYS.map(k=>h("button",{type:"button",class:"seg"+(done.includes(k)?" on":""),title:SECTIONS[k].title,"aria-label":SECTIONS[k].title,onclick:()=>document.getElementById("sec-"+k)?.scrollIntoView({behavior:"smooth"})}))),
+    h("div",{class:"rep-prog-bar"},SECTION_KEYS.map(k=>h("button",{type:"button",class:"seg"+(done.includes(k)?" on":""),title:SECTIONS[k].title,onclick:()=>document.getElementById("sec-"+k)?.scrollIntoView({behavior:"smooth"})},h("span",{class:"seg-bar"}),h("span",{class:"seg-l"},SECTIONS[k].title)))),
     h("span",{class:"small muted"},"შევსებულია "+done.length+" / "+SECTION_KEYS.length));
 }
 function markDirty(sec){
@@ -627,6 +628,7 @@ function renderReport(){
   if(!old&&S.admin && r.status==="approved")
     actions.push(h("button",{class:"btn",type:"button",onclick:()=>setStatus("reopen","გაიხსნა ახალი რევიზია")},"ახალი რევიზია (REV+1)"));
   actions.push(h("button",{class:"btn",type:"button",onclick:()=>printReport(p,S.rep)},icon("print"),"ბეჭდვა"));
+  actions.push(h("button",{class:"btn",type:"button",onclick:e=>pdfReport(p,S.rep,e.currentTarget)},icon("pdf"),"PDF"));
   if(window.XLSX) actions.push(h("button",{class:"btn",type:"button",onclick:()=>exportReport(p)},"Excel"));
   if(!old&&S.admin && r.status!=="approved") actions.push(deleteControl());
   const cur=S.reports.get(S.repId)||r;
@@ -664,6 +666,25 @@ function printReport(p,r){
     window.print();
     setTimeout(()=>doc.remove(),1000);
   });
+}
+/* PDF download: the same print document, handed to html2pdf (loaded on first use), which renders and saves it */
+let html2pdfLoading=null;
+function loadHtml2pdf(){
+  if(window.html2pdf) return Promise.resolve();
+  return html2pdfLoading||(html2pdfLoading=new Promise((res,rej)=>{ const sc=document.createElement("script"); sc.src="/vendor/html2pdf.bundle.min.js"; sc.onload=res; sc.onerror=()=>{ html2pdfLoading=null; rej(new Error("PDF ბიბლიოთეკა ვერ ჩაიტვირთა")); }; document.head.append(sc); }));
+}
+async function pdfReport(p,r,btn){
+  flushNow();
+  if(btn) btn.disabled=true;
+  const doc=buildPrintDoc(p,r); doc.classList.add("pdf-doc");
+  try{
+    await loadHtml2pdf();
+    await Promise.all([...doc.querySelectorAll("img")].map(im=>im.complete?0:new Promise(res=>{ im.onload=im.onerror=res; })));
+    await window.html2pdf().set({margin:8,filename:docCode(p,r)+".pdf",image:{type:"jpeg",quality:0.95},
+      html2canvas:{scale:2,backgroundColor:"#ffffff"},jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
+      pagebreak:{mode:["css","legacy"],avoid:[".pd-sec:not(.long)","tr",".pd-head",".pd-sign"]}}).from(doc).save();
+  }catch(e){ toast("PDF ვერ შეიქმნა: "+errMsg(e)); }
+  if(btn) btn.disabled=false;
 }
 function buildPrintDoc(p,r){
   const c=ctx(), it=code=>c.item(code)||{}, parts=p.participants||{}, cond=r.conditions||{};

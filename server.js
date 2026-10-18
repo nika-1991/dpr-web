@@ -95,6 +95,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/vendor/xlsx.full.min.js", (req, res) => res.sendFile(require.resolve("xlsx/dist/xlsx.full.min.js")));
+app.use("/vendor/html2pdf.bundle.min.js", (req, res) => res.sendFile(require.resolve("html2pdf.js/dist/html2pdf.bundle.min.js")));
 app.use(express.static(path.join(__dirname, "public"), { index: "index.html", maxAge: "1h" }));
 
 const api = express.Router();

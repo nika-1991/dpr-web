@@ -345,8 +345,14 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .sec-hse td.chk{width:56px}
 .rep-prog{display:flex;align-items:center;gap:12px;margin:-4px 2px 2px}
 .rep-prog-bar{flex:1;display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
-.rep-prog .seg{height:7px;border:0;padding:0;border-radius:4px;background:var(--line);cursor:pointer}
-.rep-prog .seg.on{background:var(--accent)}
+.rep-prog{align-items:flex-start}
+.rep-prog .seg{border:0;padding:0;background:none;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0;text-align:left}
+.rep-prog .seg-bar{display:block;height:7px;border-radius:4px;background:var(--line)}
+.rep-prog .seg.on .seg-bar{background:var(--accent)}
+.rep-prog .seg-l{font-size:.62rem;line-height:1.15;color:var(--muted);opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rep-prog .seg.on .seg-l{color:var(--accent);opacity:1}
+.rep-prog .seg:hover .seg-l{opacity:1}
+@media (max-width:640px){.rep-prog .seg-l{display:none}}
 .secs>.sec{order:3}
 .secs>.sec-conditions{order:1}
 .secs>.sec-hse{order:2}
@@ -400,3 +406,5 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .pd-sign{display:flex;justify-content:space-between;gap:30pt;margin-top:22pt;font-size:9pt;break-inside:avoid}
 .pd-sign div{flex:1;border-top:0.6pt solid #333;padding-top:3pt}
 .pd-empty{font-size:8pt;color:#555;margin-top:6pt}
+/* the print document as rendered for the PDF download */
+.print-doc.pdf-doc{display:block;width:281mm;color:#111;font-family:var(--f-body);font-size:9.5pt;line-height:1.35;background:#fff}
