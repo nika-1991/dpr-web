@@ -347,3 +347,11 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .secs>.sec{order:3}
 .secs>.sec-conditions{order:1}
 .secs>.sec-hse{order:2}
+/* HSE: compact text so it lines up with the working-conditions card */
+.secs>.sec-conditions,.secs>.sec-hse{align-self:stretch}
+.sec-hse .rt{font-size:.78rem}
+.sec-hse .rt .ro{line-height:1.4;padding:6px 8px}
+.sec-hse .rt th{padding:6px 8px}
+.sec-hse .rt th:last-child,.sec-hse .rt td:last-child{width:130px}
+.sec-hse .rt td.ed>textarea{min-height:36px;font-size:.78rem}
+.sec-hse td.chk.ed .ck-wrap{min-height:36px}

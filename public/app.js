@@ -499,7 +499,7 @@ const SECTIONS={
     {k:"status",l:"ჩატარდა",t:"check",w:"64px"},
     {k:"desc",l:"დასახელება / აღწერა",t:"area",w:"320px",lang:"ka",ro:true},
     {k:"descEn",l:"აღწერა / Description",t:"area",w:"320px",lang:"en",ro:true},
-    {k:"comment",l:"შენიშვნა",t:"area",w:"220px"}]},
+    {k:"comment",l:"შენიშვნა",t:"area",w:"120px"}]},
   works:{title:"შესრულებული სამუშაოები",en:"Ongoing and Additional Works",add:"+ სამუშაო",cols:[
     {k:"code",l:"BoQ #",t:"code",w:"92px"},
     {k:"_ch",l:"BoQ თავი",auto:autoItem("chapter"),w:"140px"},
