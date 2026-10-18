@@ -26,7 +26,7 @@ db.pragma("foreign_keys = ON");
 db.exec(`
 CREATE TABLE IF NOT EXISTS users(
   id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE COLLATE NOCASE, name TEXT NOT NULL,
-  password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('admin','employee')),
+  password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('admin','reviewer','employee')),
   active INTEGER NOT NULL DEFAULT 1, must_change INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL, last_login TEXT);
 CREATE TABLE IF NOT EXISTS sessions(
@@ -43,6 +43,21 @@ CREATE TABLE IF NOT EXISTS report_revisions(
   report_id TEXT NOT NULL, rev INTEGER NOT NULL, data TEXT NOT NULL, saved_at TEXT NOT NULL, PRIMARY KEY(report_id, rev));
 CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, mime TEXT NOT NULL, size INTEGER NOT NULL, created_at TEXT NOT NULL);
 `);
+
+/* older databases: widen the users.role check to allow the reviewer role */
+if (!/'reviewer'/.test(db.prepare("SELECT sql FROM sqlite_master WHERE name='users'").get().sql)) {
+  db.pragma("foreign_keys = OFF");
+  db.transaction(() => {
+    db.exec(`CREATE TABLE users_new(
+      id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE COLLATE NOCASE, name TEXT NOT NULL,
+      password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('admin','reviewer','employee')),
+      active INTEGER NOT NULL DEFAULT 1, must_change INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL, last_login TEXT);
+    INSERT INTO users_new SELECT id,username,name,password_hash,role,active,must_change,created_at,last_login FROM users;
+    DROP TABLE users; ALTER TABLE users_new RENAME TO users;`);
+  })();
+  db.pragma("foreign_keys = ON");
+}
 
 const now = () => new Date().toISOString();
 const newId = (n = 12) => crypto.randomBytes(n).toString("base64url");
@@ -201,7 +216,7 @@ api.post("/users", auth, admin, (req, res) => {
   const { username, name, role, password } = req.body || {};
   if (!USERNAME_RE.test(username || "")) return res.status(400).json({ error: "მომხმარებლის სახელი: 3–40 ლათინური ასო, ციფრი ან . _ - @" });
   if (!name || !String(name).trim()) return res.status(400).json({ error: "მიუთითეთ სახელი და გვარი" });
-  if (!["admin", "employee"].includes(role)) return res.status(400).json({ error: "არასწორი როლი" });
+  if (!ROLES.includes(role)) return res.status(400).json({ error: "არასწორი როლი" });
   if (typeof password !== "string" || password.length < 8) return res.status(400).json({ error: "დროებითი პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს" });
   if (db.prepare("SELECT 1 FROM users WHERE username=?").get(username)) return res.status(409).json({ error: "ეს მომხმარებლის სახელი დაკავებულია" });
   const id = newId();
@@ -214,9 +229,9 @@ api.patch("/users/:id", auth, admin, (req, res) => {
   if (!u) return res.status(404).json({ error: "მომხმარებელი ვერ მოიძებნა" });
   const b = req.body || {};
   const self = u.id === req.user.id;
-  if (self && (b.active === false || b.role === "employee")) return res.status(400).json({ error: "საკუთარ თავს ადმინის უფლებას ან წვდომას ვერ ჩამოართმევთ" });
+  if (self && (b.active === false || (b.role !== undefined && b.role !== "admin"))) return res.status(400).json({ error: "საკუთარ თავს ადმინის უფლებას ან წვდომას ვერ ჩამოართმევთ" });
   if (b.name !== undefined) { if (!String(b.name).trim()) return res.status(400).json({ error: "სახელი ცარიელია" }); db.prepare("UPDATE users SET name=? WHERE id=?").run(String(b.name).trim(), u.id); }
-  if (b.role !== undefined) { if (!["admin", "employee"].includes(b.role)) return res.status(400).json({ error: "არასწორი როლი" }); db.prepare("UPDATE users SET role=? WHERE id=?").run(b.role, u.id); }
+  if (b.role !== undefined) { if (!ROLES.includes(b.role)) return res.status(400).json({ error: "არასწორი როლი" }); db.prepare("UPDATE users SET role=? WHERE id=?").run(b.role, u.id); }
   if (b.active !== undefined) {
     db.prepare("UPDATE users SET active=? WHERE id=?").run(b.active ? 1 : 0, u.id);
     if (!b.active) db.prepare("DELETE FROM sessions WHERE user_id=?").run(u.id);
@@ -245,7 +260,10 @@ api.put("/config/lists", auth, admin, (req, res) => {
 /* ---------------- projects ---------------- */
 const getProject = (id) => parse(db.prepare("SELECT data FROM projects WHERE id=?").get(id));
 const isMember = (p, u) => !!(p && (p.memberIds || []).includes(u.id));
+const ROLES = ["admin", "reviewer", "employee"];
 const canSee = (p, u) => !!p && (u.role === "admin" || isMember(p, u));
+/* reviewers approve and price reports, but only on projects whose team they are in */
+const canReview = (p, u) => !!p && (u.role === "admin" || (u.role === "reviewer" && isMember(p, u)));
 const withId = (id, d) => ({ id, ...d });
 
 /* per-project summary for the dashboard: reports, last report, BoQ progress (average share done over BoQ items) */
@@ -392,13 +410,13 @@ function saveReport(id, r) { db.prepare("UPDATE reports SET data=?, updated_at=?
 api.patch("/reports/:id", auth, (req, res) => {
   const x = loadEditable(req, res); if (!x) return;
   const { p, r } = x;
-  const editable = !p.archived && (req.user.role === "admin" ? r.status !== "approved" : isMember(p, req.user) && r.status === "draft");
+  const editable = !p.archived && (canReview(p, req.user) ? r.status !== "approved" : isMember(p, req.user) && r.status === "draft");
   if (!editable) return res.status(403).json({ error: r.status === "draft" ? "ამ ანგარიშის რედაქტირების უფლება არ გაქვთ" : "ანგარიში დაბლოკილია (" + r.status + ")" });
   const b = req.body || {};
   for (const k of SECTIONS) if (b[k] !== undefined) {
     const rows = cleanSection(k, b[k]);
     /* unit prices are set by the reviewer (admin); other users keep whatever is stored */
-    if (req.user.role !== "admin" && PRICED.includes(k))
+    if (!canReview(p, req.user) && PRICED.includes(k))
       rows.forEach((row, i) => { if (row && typeof row === "object") { delete row.price; const old = (r[k] || [])[i]; if (old && old.price !== undefined) row.price = old.price; } });
     r[k] = rows;
   }
@@ -409,8 +427,13 @@ api.patch("/reports/:id", auth, (req, res) => {
 api.post("/reports/:id/status", auth, (req, res) => {
   const x = loadEditable(req, res); if (!x) return;
   const { p, r } = x;
-  const isAdmin = req.user.role === "admin";
+  const isAdmin = canReview(p, req.user);
   const a = (req.body || {}).action;
+  /* every work and expense row needs a unit price (0 is allowed) before approval */
+  if (a === "approve") {
+    const missing = PRICED.reduce((n, k) => n + (r[k] || []).filter((x) => (k !== "works" || x.code) && (x.price === "" || x.price == null)).length, 0);
+    if (missing) return res.status(400).json({ error: "დადასტურებამდე ყველა სამუშაოს და ხარჯს უნდა ჰქონდეს ერთ. ღირებულება (ფასის გარეშე: " + missing + ")" });
+  }
   const t = now();
   if (a === "submit" && r.status === "draft" && (isAdmin || isMember(p, req.user)) && !p.archived) Object.assign(r, { status: "submitted", submittedBy: req.user.id, submittedAt: t });
   else if (a === "return" && isAdmin && r.status === "submitted") Object.assign(r, { status: "draft" });
@@ -426,12 +449,14 @@ api.post("/reports/:id/status", auth, (req, res) => {
   res.json(withId(req.params.id, r));
 });
 /* analysis: works (revenue) and expenses (cost) of every report, for the reviewer */
-api.get("/analysis", auth, admin, (req, res) => {
-  const reports = db.prepare("SELECT project_id,data FROM reports").all().map((row) => {
+api.get("/analysis", auth, (req, res) => {
+  if (!["admin", "reviewer"].includes(req.user.role)) return res.status(403).json({ error: "საჭიროა ადმინისტრატორის ან რივიუერის უფლება" });
+  const seen = new Map(), mine = (pid) => { if (!seen.has(pid)) seen.set(pid, canReview(getProject(pid), req.user)); return seen.get(pid); };
+  const reports = db.prepare("SELECT project_id,data FROM reports").all().filter((row) => mine(row.project_id)).map((row) => {
     const r = JSON.parse(row.data);
     return { projectId: row.project_id, date: r.date, num: r.num, status: r.status, works: r.works || [], expenses: r.expenses || [] };
   });
-  const additional = db.prepare("SELECT project_id,data FROM additional").all().map((row) => ({ projectId: row.project_id, ...JSON.parse(row.data) }));
+  const additional = db.prepare("SELECT project_id,data FROM additional").all().filter((row) => mine(row.project_id)).map((row) => ({ projectId: row.project_id, ...JSON.parse(row.data) }));
   res.json({ reports, additional });
 });
 /* earlier (approved) revisions of a report */

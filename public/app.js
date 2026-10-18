@@ -10,6 +10,7 @@ const PARTICIPANTS = [
   ["siteCoordinator","საიტის კოორდინატორი","Site Coordinator"],
   ["supervisor","საქმეთა მწარმოებელი","Site Supervisor"],
   ["subcontractors","ქვეკონტრაქტორ(ებ)ი","Sub-Contractor(s)"]];
+const ROLE_NAMES = {admin:"ადმინი",reviewer:"რივიუერი",employee:"თანამშრომელი"};
 const STATUS = {draft:"დრაფტი",submitted:"გაგზავნილი",approved:"დადასტურებული"};
 const POLL_MS = 20000;
 
@@ -104,6 +105,8 @@ async function loadNames(){ const list=await api("GET","/users/names"); S.names=
 const P = () => S.projects.get(S.pid);
 function isMember(p){ return !!(p && S.me && (p.memberIds||[]).includes(S.me.id)); }
 function canWorkOn(p){ return S.admin || isMember(p); }
+/* reviewers approve and price reports on the projects whose team they are in; admins everywhere */
+function canReview(p){ return S.admin || (S.reviewer && isMember(p)); }
 function boqIndex(p){
   const map=new Map(); let chap="", sub="";
   for(const it of (p&&p.boq)||[]){
@@ -157,7 +160,7 @@ async function go(view, opts={}){
     main.replaceChildren(h("div",{class:"empty"},h("h2",null,"იტვირთება…")));
     try{ await loadProjectData(S.pid); }catch(e){ toast("ანგარიშები ვერ ჩაიტვირთა: "+errMsg(e)); }
   }
-  if(view==="analysis"&&S.admin){ try{ S.analysis=await api("GET","/analysis"); }catch(e){ S.analysis=null; toast(errMsg(e)); } }
+  if(view==="analysis"&&(S.admin||S.reviewer)){ try{ S.analysis=await api("GET","/analysis"); }catch(e){ S.analysis=null; toast(errMsg(e)); } }
   if(view==="users"&&S.admin){ try{ S.users=await api("GET","/users"); }catch(e){ toast(errMsg(e)); } }
   render(); window.scrollTo(0,0);
 }
@@ -196,7 +199,7 @@ function renderBar(){
   me.append(h("button",{class:"lang-btn",type:"button",title:LANG==="en"?"ქართული":"English","aria-label":LANG==="en"?"ქართული":"English",onclick:()=>setLang(LANG==="en"?"ka":"en")},LANG==="en"?"ქა":"EN"));
   if(S.me){
     me.append(h("button",{class:"me-btn",type:"button",title:"ჩემი ანგარიში",onclick:()=>go("account")},
-      h("span",{class:"avatar"},initials(S.me.name)),h("span",null,S.me.name),h("span",{class:"role-tag"},S.admin?"ადმინი":"თანამშრომელი")));
+      h("span",{class:"avatar"},initials(S.me.name)),h("span",null,S.me.name),h("span",{class:"role-tag"},ROLE_NAMES[S.me.role]||S.me.role)));
   }
 }
 
@@ -239,12 +242,12 @@ function renderLogin(){
   return h("div",{class:"login-wrap"},form);
 }
 async function onLoggedIn(user){
-  S.me=user; S.admin=user.role==="admin";
+  S.me=user; S.admin=user.role==="admin"; S.reviewer=user.role==="reviewer";
   if(user.mustChange){ S.view="account"; render(); return; }
   await loadAll();
 }
 function onLoggedOut(){
-  S.me=null; S.admin=false; clearInterval(S.pollTimer); S.projects=new Map(); S.reports=new Map(); S.loadedPid=null; S.rep=null; S.repId=null; S.dirty.clear();
+  S.me=null; S.admin=false; S.reviewer=false; clearInterval(S.pollTimer); S.projects=new Map(); S.reports=new Map(); S.loadedPid=null; S.rep=null; S.repId=null; S.dirty.clear();
   render();
 }
 async function loadAll(){
@@ -291,10 +294,10 @@ function renderHome(){
     .sort((a,b)=>(a[1].archived?1:0)-(b[1].archived?1:0)||String(a[1].name).localeCompare(String(b[1].name),"ka"));
   const head=h("div",{class:"head"},
     h("div",null,h("div",{class:"eyebrow"},"Daily Progress Report"),h("h1",null,"პროექტები")),
-    S.admin?h("div",{class:"row"},
+    S.admin||S.reviewer?h("div",{class:"row"},
       h("button",{class:"btn",type:"button",onclick:()=>go("analysis")},"ანალიზი"),
-      settingsMenu(),
-      h("button",{class:"btn primary",type:"button",onclick:newProject},"+ ახალი პროექტი")):null);
+      S.admin?settingsMenu():null,
+      S.admin?h("button",{class:"btn primary",type:"button",onclick:newProject},"+ ახალი პროექტი"):null):null);
   const out=[head];
   if(S.creating==="project") out.push(renderProjectForm(null));
   if(!list.length){
@@ -630,7 +633,7 @@ const SECTIONS={
 
 function repEditable(){
   const p=P(), r=S.rep; if(!p||!r||p.archived||S.oldRev!=null) return false;
-  if(S.admin) return r.status!=="approved";
+  if(canReview(p)) return r.status!=="approved";
   return isMember(p) && r.status==="draft";
 }
 /* which sections already have something in them (for the progress bar under the report header) */
@@ -678,11 +681,11 @@ function renderReport(){
   const old=S.oldRev!=null;
   if(!old&&r.status==="draft" && (S.admin||isMember(p)) && !p.archived)
     actions.push(h("button",{class:"btn primary",type:"button",onclick:()=>setStatus("submit","ანგარიში გაიგზავნა დასადასტურებლად")},"გაგზავნა"));
-  if(!old&&S.admin && r.status==="submitted"){
+  if(!old&&canReview(p) && r.status==="submitted"){
     actions.push(h("button",{class:"btn",type:"button",onclick:()=>setStatus("return","ანგარიში დაბრუნდა შესავსებად")},"დაბრუნება"));
     actions.push(h("button",{class:"btn ok",type:"button",onclick:()=>setStatus("approve","ანგარიში დადასტურდა")},"დადასტურება"));
   }
-  if(!old&&S.admin && r.status==="approved")
+  if(!old&&canReview(p) && r.status==="approved")
     actions.push(h("button",{class:"btn",type:"button",onclick:()=>setStatus("reopen","გაიხსნა ახალი რევიზია")},"ახალი რევიზია (REV+1)"));
   actions.push(h("button",{class:"btn",type:"button",onclick:()=>printReport(p,S.rep)},icon("print"),"ბეჭდვა"));
   actions.push(h("button",{class:"btn",type:"button",onclick:e=>pdfReport(p,S.rep,e.currentTarget)},icon("pdf"),"PDF"));
@@ -751,7 +754,7 @@ function buildPrintDoc(p,r){
   const sec=(key,title,body,long)=>h("section",{class:"pd-sec"+(long?" long":"")},h("h3",null,title),body);
   const empty=[];
   const table=(key,title,head,rows,foot)=>{ if(!rows.length){ empty.push(tr(title)); return null; } return sec(key,title,T(head,rows,foot),rows.length>8); };
-  const priced=S.admin;
+  const priced=canReview(p);
   const kv=list=>h("table",{class:"pd-t"},h("tbody",null,list.map(([k,v])=>h("tr",null,h("td",{class:"k"},k),td(v)))));
   const info=h("table",{class:"pd-t pd-info"},h("tbody",null,
     [[["პროექტის დასახელება / Project Title",p.name],["დამკვეთი / Client",p.client],["ადგილმდებარეობა / Location",p.location]],
@@ -854,7 +857,7 @@ function renderConditions(ed){
 
 function renderRows(key,def,rows,ed){
   const c=ctx();
-  const cols=def.cols.filter(col=>(!col.lang||col.lang===LANG)&&(!col.admin||S.admin));
+  const cols=def.cols.filter(col=>(!col.lang||col.lang===LANG)&&(!col.admin||canReview(P())));
   const amtCol=cols.find(col=>col.k==="_amt");
   const refreshAmount=i=>{ if(!amtCol) return;
     const td=document.getElementById(key+"-"+i+"-_amt"); if(td) td.textContent=amountText(rows[i]);
@@ -868,14 +871,15 @@ function renderRows(key,def,rows,ed){
       return h("td",{"data-l":col.l,class:"chk"+(ed&&active?" ed":"")},h("label",{class:"ck-wrap",for:id},h("input",{id,type:"checkbox",checked:val==="კი",disabled:!ed||!active,"aria-label":col.l,onchange:e=>{ row[col.k]=e.target.checked?"კი":""; markDirty(key); }}))); }
     if(!ed||!active||col.ro){ return h("td",{"data-l":col.l},h("span",{class:"ro"+(col.t==="num"?" num":"")},active?(col.t==="date"?fmtDate(val):col.t==="num"&&val!==""?fmtNum(num(val)):val):"")); }
     const id=key+"-"+i+"-"+col.k;
-    const onIn=e=>{ row[col.k]=e.target.value; markDirty(key); if(col.recalc) refreshAmount(i); };
+    const needPrice=col.k==="price"&&S.rep&&S.rep.status==="submitted"&&(key!=="works"||row.code);
+    const onIn=e=>{ if(needPrice) e.target.parentElement.classList.toggle("need",e.target.value==="");  row[col.k]=e.target.value; markDirty(key); if(col.recalc) refreshAmount(i); };
     let el;
     if(col.t==="select"){ const opts=col.opts(); el=h("select",{id,onchange:e=>{onIn(e); if(col.structural) rerender();}},h("option",{value:""},"—"),opts.map(o=>h("option",{value:o},o)),val&&!opts.includes(val)?h("option",{value:val},val):null); el.value=val; }
     else if(col.t==="area") el=h("textarea",{id,rows:1,oninput:onIn,value:val});
     else if(col.t==="code") el=h("input",{id,list:"boq-dl",class:"mono",value:val,autocomplete:"off",oninput:onIn,onchange:e=>{row.code=normCode(e.target.value);markDirty(key);rerender();}});
     else el=h("input",{id,type:col.t==="num"?"number":col.t==="date"?"date":col.t==="time"?"time":"text",step:col.t==="num"?"any":null,inputmode:col.t==="num"?"decimal":null,value:val,oninput:onIn});
     el.setAttribute("aria-label",col.l);
-    return h("td",{"data-l":col.l,class:"ed"},el);
+    return h("td",{"data-l":col.l,class:"ed"+(needPrice&&val===""?" need":"")},el);
   };
   const table=h("table",{class:"rt stack"},
     h("thead",null,h("tr",null,def.noIndex?null:h("th",null,"#"),cols.map(col=>h("th",{style:"min-width:"+col.w},col.l)),ed&&!def.fixed?h("th",null,""):null)),
@@ -1106,7 +1110,7 @@ function renderTeam(p){
   if(S.admin){
     const avail=[...S.names.values()].filter(u=>u.active&&!ids.includes(u.id));
     const uId=uid(), rId=uid();
-    const userSel=h("select",{id:uId,class:"inp"},h("option",{value:""},avail.length?"აირჩიეთ…":"ყველა მომხმარებელი უკვე გუნდშია"),avail.map(u=>h("option",{value:u.id},u.name+" ("+u.username+")"+(u.role==="admin"?" — ადმინი":""))));
+    const userSel=h("select",{id:uId,class:"inp"},h("option",{value:""},avail.length?"აირჩიეთ…":"ყველა მომხმარებელი უკვე გუნდშია"),avail.map(u=>h("option",{value:u.id},u.name+" ("+u.username+")"+(u.role!=="employee"?" — "+ROLE_NAMES[u.role]:""))));
     const roleSel=h("select",{id:rId,class:"inp"},PROJECT_ROLES.map(r=>h("option",{value:r},r))); roleSel.value="საქმეთა მწარმოებელი";
     adder=h("section",{class:"panel"},h("div",{class:"panel-h"},h("h3",null,"თანამშრომლის დამატება"),h("button",{class:"btn sm ghost",type:"button",onclick:()=>go("users")},"მომხმარებლების მართვა")),
       h("div",{class:"panel-b",style:"display:flex;flex-direction:column;gap:10px"},
@@ -1156,7 +1160,7 @@ function analysisData(){
   return [...out.values()].sort((a,b)=>String(a.p.name).localeCompare(String(b.p.name),"ka"));
 }
 function renderAnalysis(){
-  if(!S.admin) return renderMissing();
+  if(!S.admin&&!S.reviewer) return renderMissing();
   const F=S.anFilter||(S.anFilter={approvedOnly:true,from:"",to:""});
   const data=analysisData();
   const money=n=>fmtNum(n)+" ₾";
@@ -1213,7 +1217,7 @@ function renderUsers(){
   const ids={u:uid(),n:uid(),r:uid(),p:uid()};
   const uIn=h("input",{id:ids.u,class:"inp",autocomplete:"off",autocapitalize:"none",placeholder:"მაგ. g.beridze"});
   const nIn=h("input",{id:ids.n,class:"inp",placeholder:"სახელი გვარი"});
-  const rIn=h("select",{id:ids.r,class:"inp"},h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"admin"},"ადმინისტრატორი"));
+  const rIn=h("select",{id:ids.r,class:"inp"},h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"reviewer"},"რივიუერი"),h("option",{value:"admin"},"ადმინისტრატორი"));
   const pIn=h("input",{id:ids.p,class:"inp mono",value:genPassword()});
   const created=h("div");
   const createForm=h("form",{class:"panel-b",style:"display:flex;flex-direction:column;gap:12px",onsubmit:async e=>{
@@ -1236,7 +1240,7 @@ function renderUsers(){
       h("button",{class:"btn sm primary",type:"button",onclick:async()=>{ try{ await api("PATCH","/users/"+u.id,{password:pw}); box.replaceChildren(h("span",{class:"small"},"პაროლი შეიცვალა: "),h("span",{class:"pw"},pw)); }catch(e){ toast(errMsg(e)); } }},"დადასტურება"),
       h("button",{class:"btn sm ghost",type:"button",onclick:()=>box.replaceChildren()},"გაუქმება")); };
     const roleSel=h("select",{class:"inp",style:"width:auto","aria-label":"როლი",disabled:self,onchange:async e=>{ try{ await api("PATCH","/users/"+u.id,{role:e.target.value}); toast("როლი შეიცვალა"); refresh(); }catch(ex){ toast(errMsg(ex)); } }},
-      h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"admin"},"ადმინისტრატორი")); roleSel.value=u.role;
+      h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"reviewer"},"რივიუერი"),h("option",{value:"admin"},"ადმინისტრატორი")); roleSel.value=u.role;
     const projs=[...S.projects.values()].filter(p=>(p.memberIds||[]).includes(u.id)).map(p=>p.name);
     return h("tr",null,
       h("td",{"data-l":"სახელი"},h("strong",null,u.name),h("div",{class:"small muted mono"},u.username)),
