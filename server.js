@@ -106,14 +106,19 @@ if (!db.prepare("SELECT 1 FROM users LIMIT 1").get()) {
   const username = process.env.ADMIN_USERNAME || "admin";
   const generated = !process.env.ADMIN_PASSWORD;
   const password = process.env.ADMIN_PASSWORD || crypto.randomBytes(9).toString("base64url");
-  db.prepare("INSERT INTO users(id,username,name,password_hash,role,active,must_change,created_at) VALUES(?,?,?,?,?,1,1,?)")
-    .run(newId(), username, "ადმინისტრატორი", bcrypt.hashSync(password, 10), "admin", now());
+  /* a password chosen in ADMIN_PASSWORD is kept as is; only a generated one must be changed at first login */
+  db.prepare("INSERT INTO users(id,username,name,password_hash,role,active,must_change,created_at) VALUES(?,?,?,?,?,1,?,?)")
+    .run(newId(), username, "ადმინისტრატორი", bcrypt.hashSync(password, 10), "admin", generated ? 1 : 0, now());
   console.log("\n==============================================");
   console.log(" შეიქმნა პირველი ადმინისტრატორი");
   console.log("   მომხმარებელი: " + username);
   console.log("   პაროლი:       " + (generated ? password : "(ADMIN_PASSWORD-დან)"));
-  console.log(" პირველი შესვლისას სისტემა პაროლის შეცვლას მოითხოვს.");
+  if (generated) console.log(" პირველი შესვლისას სისტემა პაროლის შეცვლას მოითხოვს.");
   console.log("==============================================\n");
+} else if (process.env.ADMIN_PASSWORD) {
+  /* existing databases: the main admin still on the ADMIN_PASSWORD is not asked to change it */
+  const a = db.prepare("SELECT id,password_hash FROM users WHERE username=? AND must_change=1").get(process.env.ADMIN_USERNAME || "admin");
+  if (a && bcrypt.compareSync(process.env.ADMIN_PASSWORD, a.password_hash)) db.prepare("UPDATE users SET must_change=0 WHERE id=?").run(a.id);
 }
 
 /* sample data on every start (for hosts whose disk is wiped on restart) */
