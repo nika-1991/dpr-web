@@ -469,15 +469,14 @@ function splitHse(r){
 }
 function sortedReports(){ return [...S.reports.entries()].sort((a,b)=>b[1].date.localeCompare(a[1].date)||(b[1].num||0)-(a[1].num||0)); }
 
+/* reports tab: a toolbar (new report on the left, register export on the right) right above the reports table */
 function renderReportsTab(p){
   const list=sortedReports();
-  const out=[];
-  if(canWorkOn(p)&&!p.archived) out.push(renderCreatePanel(p));
   const cnt=(arr,f)=>(arr||[]).filter(f).length;
-  out.push(h("section",{class:"panel"},
-    h("div",{class:"panel-h"},h("h3",null,"ანგარიშები ",h("span",{class:"en cnt-sub"},list.length+" ჩანაწერი")),
-      list.length?h("button",{class:"btn sm",type:"button",onclick:()=>exportProject(p)},"რეესტრის ექსპორტი (.xlsx)"):null),
-    list.length?h("div",{class:"tw"},h("table",{class:"rt rlist-t stack"},
+  const bar=h("div",{class:"rep-toolbar"},
+    canWorkOn(p)&&!p.archived?renderCreateControls(p):h("span"),
+    list.length?h("button",{class:"btn",type:"button",onclick:()=>exportProject(p)},icon("list"),"რეესტრის ექსპორტი (.xlsx)"):null);
+  const table=list.length?h("section",{class:"panel"},h("div",{class:"tw"},h("table",{class:"rt rlist-t stack"},
       h("thead",null,h("tr",null,["DPR #","თარიღი","REV","სამუშაო","ფოტო","შექმნა / Created by","დაადასტურა / Approved by","სტატუსი"].map(l=>h("th",null,l)))),
       h("tbody",null,list.map(([id,r])=>h("tr",{tabindex:"0",role:"link",onclick:()=>openReport(id),onkeydown:e=>{ if(e.key==="Enter") openReport(id); }},
         h("td",{class:"rn","data-l":"DPR #"},"DPR-"+String(r.num||0).padStart(3,"0")),
@@ -487,25 +486,19 @@ function renderReportsTab(p){
         h("td",{class:"num","data-l":"ფოტო"},(r.photos||[]).length),
         h("td",{"data-l":"შექმნა / Created by"},who(r.createdBy)),
         h("td",{"data-l":"დაადასტურა / Approved by"},r.status==="approved"?who(r.approvedBy):h("span",{class:"muted"},"—")),
-        h("td",{"data-l":"სტატუსი"},chip(r.status)))))))
-      :h("div",{class:"panel-b muted"},"ანგარიში ჯერ არ შექმნილა.")));
-  return h("div",{style:"display:flex;flex-direction:column;gap:16px"},out);
+        h("td",{"data-l":"სტატუსი"},chip(r.status))))))))
+    :h("div",{class:"empty-line muted"},"ანგარიში ჯერ არ შექმნილა.");
+  return h("div",{class:"rep-tab"},bar,table);
 }
-
-function renderCreatePanel(p){
+function renderCreateControls(p){
   const date=(S.creating&&S.creating.date)||todayISO();
-  const dId=uid();
-  const dateIn=h("input",{id:dId,type:"date",value:date,max:S.admin?null:todayISO(),class:"inp",style:"max-width:200px",onchange:e=>{S.creating={date:e.target.value};render();}});
+  const dateIn=h("input",{type:"date",value:date,max:S.admin?null:todayISO(),class:"inp","aria-label":"ანგარიშის თარიღი",onchange:e=>{S.creating={date:e.target.value};render();}});
   const exists=S.reports.has(S.pid+"__"+date); const future=!canCreateOn(date);
-  return h("section",{class:"panel",id:"create-panel"},
-    h("div",{class:"panel-h"},h("h3",null,"ახალი ანგარიში")),
-    h("div",{class:"panel-b",style:"display:flex;flex-direction:column;gap:12px"},
-      h("div",{class:"row",style:"align-items:flex-end;gap:12px"},
-        h("div",{class:"field"},h("label",{for:dId},"ანგარიშის თარიღი"),dateIn),
-        h("button",{class:"btn primary",type:"button",disabled:exists||future||!date,onclick:()=>createReport(date)},"ანგარიშის შექმნა"),
-        exists?h("button",{class:"btn",type:"button",onclick:()=>openReport(S.pid+"__"+date)},"გახსნა"):null),
-      exists?h("div",{class:"notice"},"ამ თარიღზე ანგარიში უკვე არსებობს."):null,
-      future?h("div",{class:"notice"},"მომავალი თარიღით ანგარიშის შექმნა შეუძლებელია."):null));
+  return h("div",{class:"rep-new",id:"create-panel"},dateIn,
+    exists?h("button",{class:"btn",type:"button",onclick:()=>openReport(S.pid+"__"+date)},"გახსნა"):
+      h("button",{class:"btn primary",type:"button",disabled:future||!date,onclick:()=>createReport(date)},"ანგარიშის შექმნა"),
+    exists?h("span",{class:"small muted"},"ამ თარიღზე ანგარიში უკვე არსებობს."):null,
+    future?h("span",{class:"small",style:"color:var(--bad)"},"მომავალი თარიღით ანგარიშის შექმნა შეუძლებელია."):null);
 }
 const hseFromProject=p=>(p.hse||[]).map(x=>({desc:x.desc||"",descEn:x.descEn||"",status:"",comment:""}));
 

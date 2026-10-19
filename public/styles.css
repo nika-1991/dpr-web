@@ -523,3 +523,9 @@ a.btn{text-decoration:none}
 .tabs button{display:inline-flex;align-items:center;gap:8px}
 .tabs button .ico{width:18px;height:18px;opacity:.85}
 .tabs button[aria-selected="true"] .ico{opacity:1}
+/* reports tab */
+.rep-tab{display:flex;flex-direction:column;gap:12px}
+.rep-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.rep-new{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.rep-new .inp{width:auto}
+.empty-line{padding:8px 2px}
