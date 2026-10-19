@@ -545,3 +545,5 @@ a.btn{text-decoration:none}
 .tip::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--surface);font-size:.72rem;font-weight:600;white-space:nowrap;padding:4px 8px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
 .tip:hover::after,.tip:focus-visible::after{opacity:1}
 @media (max-width:640px){.home-search{flex:1 1 100%}.hb-grp{padding-left:0;border-left:0}}
+.vbtn.vtxt{font-size:.8rem;font-weight:600;padding:5px 11px;align-items:center}
+.vbtn.vtxt.co{font-family:var(--f-mono);letter-spacing:.03em}

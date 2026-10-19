@@ -318,7 +318,7 @@ function renderHome(){
   const open=id=>go("project",{pid:id,tab:"reports"});
   const search=h("input",{class:"inp",type:"search",placeholder:"ძებნა: დასახელება, დამკვეთი, კოდი…","aria-label":"ძებნა",value:F.q,oninput:e=>{ F.q=e.target.value; const c=e.target.selectionStart; render(); const el=document.querySelector(".home-search input"); if(el){ el.focus(); el.setSelectionRange(c,c); } }});
   const stBtn=(k,ic,l)=>h("button",{type:"button",class:"vbtn tip"+(F.f===k?" on":""),"aria-label":l,"data-tip":tr(l),"aria-pressed":String(F.f===k),onclick:()=>{F.f=k;render();}},icon(ic));
-  const coChip=(k,l)=>h("button",{type:"button",class:"fchip co"+(F.co===k?" on":""),onclick:()=>{F.co=k;render();}},l);
+  const coChip=(k,l)=>h("button",{type:"button",class:"vbtn vtxt"+(k?" co":"")+(F.co===k?" on":""),"aria-pressed":String(F.co===k),onclick:()=>{F.co=k;render();}},l);
   const viewBtn=(k,ic,l)=>h("button",{type:"button",class:"vbtn tip"+(F.view===k?" on":""),"aria-label":l,"data-tip":tr(l),"aria-pressed":String(F.view===k),onclick:()=>{ F.view=k; try{ localStorage.setItem("dpr.homeView",k); }catch(e){} render(); }},icon(ic));
   const prog=p=>h("div",{class:"pprog"},h("div",{class:"pbar"},h("span",{style:"width:"+Math.min(100,st(p).progress)+"%"})),h("b",null,fmtNum(st(p).progress)+"%"));
   const last=p=>st(p).lastDate?h("span",{class:"plast"},"ბოლო: "+fmtDate(st(p).lastDate)," ",chip(st(p).lastStatus)):h("span",{class:"plast muted"},"ანგარიში არ არის");
@@ -345,7 +345,7 @@ function renderHome(){
   out.push(h("div",{class:"dash-left"},
     h("div",{class:"home-bar"},
       h("label",{class:"home-search"},icon("search"),search),
-      companies.length?h("div",{class:"hb-grp"},h("span",{class:"hb-l"},"კომპანია"),h("div",{class:"hb-row"},coChip("","ყველა"),companies.map(c=>coChip(c,c)))):null,
+      companies.length?h("div",{class:"hb-grp"},h("span",{class:"hb-l"},"კომპანია"),h("div",{class:"vswitch"},coChip("","ყველა"),companies.map(c=>coChip(c,c)))):null,
       h("div",{class:"hb-grp"},h("span",{class:"hb-l"},"პროექტი"),h("div",{class:"vswitch"},stBtn("active","pulse","აქტიური პროექტები"),stBtn("archived","checkc","დასრულებული პროექტები"),stBtn("all","layers","ყველა პროექტი"))),
       h("div",{class:"hb-grp"},h("span",{class:"hb-l"},"განლაგება"),h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")))),
     h("div",{class:"dash-count"},icon("grid"),h("span",null,"პროექტები"),h("span",{class:"spacer"}),h("span",{class:"muted small"},shown.length+" პროექტი")),
