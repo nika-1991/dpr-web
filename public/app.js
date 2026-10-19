@@ -149,8 +149,10 @@ document.addEventListener("visibilitychange",()=>{ if(!document.hidden) poll(); 
 
 /* ---------- navigation ---------- */
 async function go(view, opts={}){
+  const {_pop,_replace,...o}=opts;
   if(S.view==="report" && view!=="report") flushNow();
-  Object.assign(S,{view},opts);
+  Object.assign(S,{view},o);
+  if(!_pop) pushNav(_replace);
   if(view!=="report"){ S.rep=null; S.repId=null; S.dirty.clear(); }
   try{ localStorage.setItem("dpr.nav",JSON.stringify({view:["project","report"].includes(S.view)?"project":"home",pid:S.pid,tab:S.tab})); }catch(e){}
   if((view==="project"||view==="report") && S.pid && S.loadedPid!==S.pid){
@@ -162,6 +164,25 @@ async function go(view, opts={}){
   if(view==="users"&&S.admin){ try{ S.users=await api("GET","/users"); }catch(e){ toast(errMsg(e)); } }
   render(); window.scrollTo(0,0);
 }
+/* browser history: each screen (and project tab) is a history entry, so the browser's Back button goes one step back */
+function navState(){ return {view:S.view,pid:S.pid||null,tab:S.tab||null,repId:S.view==="report"?S.repId:null}; }
+function pushNav(replace){
+  const st=navState(), cur=history.state;
+  if(replace||!cur) history.replaceState(st,"");
+  else if(JSON.stringify(cur)!==JSON.stringify(st)) history.pushState(st,"");
+}
+window.addEventListener("popstate",async e=>{
+  const st=e.state; if(!st||!S.me||S.me.mustChange) return;
+  S.creating=null; S.editInfo=false;
+  if(st.view==="report"&&st.repId){
+    if(S.loadedPid!==st.pid){ S.pid=st.pid; S.reports=new Map(); S.additional=[]; try{ await loadProjectData(st.pid); }catch(e){} }
+    S.pid=st.pid; S.tab=st.tab||"reports";
+    if(S.reports.has(st.repId)){ openReport(st.repId,true); return; }
+    go("project",{pid:st.pid,tab:"reports",_replace:true}); return;
+  }
+  if((st.view==="project"||st.view==="report")&&!S.projects.has(st.pid)){ go("home",{_replace:true}); return; }
+  go(st.view,{pid:st.pid,tab:st.tab||S.tab,_pop:true});
+});
 function onReportsChanged(){
   if(S.view!=="report"||!S.repId||S.oldRev!=null) return;
   const remote=S.reports.get(S.repId);
@@ -256,8 +277,8 @@ async function loadAll(){
   }catch(e){ main.replaceChildren(h("div",{class:"empty"},h("h2",null,"მონაცემები ვერ ჩაიტვირთა"),h("p",{class:"muted"},errMsg(e)))); return; }
   let nav=null; try{ nav=JSON.parse(localStorage.getItem("dpr.nav")||"null"); }catch(e){}
   startPolling();
-  if(nav&&nav.view==="project"&&nav.pid&&S.projects.has(nav.pid)) go("project",{pid:nav.pid,tab:nav.tab||"reports"});
-  else go("home");
+  if(nav&&nav.view==="project"&&nav.pid&&S.projects.has(nav.pid)) go("project",{pid:nav.pid,tab:nav.tab||"reports",_replace:true});
+  else go("home",{_replace:true});
 }
 
 /* ---------- ACCOUNT ---------- */
@@ -435,7 +456,7 @@ function renderProject(){
         if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
         try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},
         icon(p.archived?"plus":"works"),h("span",{class:"two-line"},(LANG==="en"?(p.archived?["Make","active"]:["Mark as","completed"]):(p.archived?["აქტიურად","დაბრუნება"]:["დასრულებულად","მონიშვნა"])).map(t=>h("span",null,t))))):null);
-  const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-label":tr(l),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;render();}},icon(TAB_ICONS[k]),h("span",null,tr(l)))));
+  const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-label":tr(l),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},icon(TAB_ICONS[k]),h("span",null,tr(l)))));
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
   else if(S.tab==="progress") body=renderProgress(p);
@@ -446,7 +467,7 @@ function renderProject(){
 }
 
 function canCreateOn(date){ return S.admin || date<=todayISO(); }
-function openReport(id){ S.repId=id; S.rep=splitHse(clone(S.reports.get(id))); S.dirty.clear(); S.oldRev=null; S.revs=[]; loadRevisions(); go("report",{pid:S.pid}); }
+function openReport(id,fromHistory){ S.repId=id; S.rep=splitHse(clone(S.reports.get(id))); S.dirty.clear(); S.oldRev=null; S.revs=[]; loadRevisions(); go("report",{pid:S.pid,_pop:!!fromHistory}); }
 /* earlier approved versions (kept by the server when a new REV is opened) */
 async function loadRevisions(){
   const id=S.repId;
