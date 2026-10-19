@@ -578,3 +578,9 @@ a.btn{text-decoration:none}
   body.has-side .pside{position:fixed;left:0;top:54px;bottom:0;width:var(--side-w);z-index:10;overflow-y:auto;border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;padding:22px 18px}
 }
 @media (min-width:981px) and (max-width:1180px){ body.has-side{--side-w:232px} }
+
+/* team tab */
+.team-t td{vertical-align:middle;padding:10px}
+.team-t th,.team-t th:first-child{text-align:left}
+.team-t .inp{width:auto;min-width:170px;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:6px 8px}
+.tm-who{display:flex;align-items:center;gap:10px}

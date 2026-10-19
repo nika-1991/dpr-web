@@ -318,10 +318,26 @@ api.put("/config/lists", auth, admin, (req, res) => {
 /* ---------------- projects ---------------- */
 const getProject = (id) => parse(db.prepare("SELECT data FROM projects WHERE id=?").get(id));
 const isMember = (p, u) => !!(p && (p.memberIds || []).includes(u.id));
-const ROLES = ["admin", "reviewer", "employee"];
-const canSee = (p, u) => !!p && (u.role === "admin" || isMember(p, u));
-/* reviewers approve and price reports, but only on projects whose team they are in */
-const canReview = (p, u) => !!p && (u.role === "admin" || (u.role === "reviewer" && isMember(p, u)));
+/* account roles: an admin can do everything; an employee gets rights per project through the team page */
+const ROLES = ["admin", "employee"];
+/* access inside a project: executor (fills reports), reviewer (also approves and prices), viewer (read only) */
+const ACCESS = ["executor", "reviewer", "viewer"];
+const accessOf = (p, u) => !p ? null : u.role === "admin" ? "admin" : isMember(p, u) ? (ACCESS.includes(p.members?.[u.id]?.access) ? p.members[u.id].access : "executor") : null;
+const canSee = (p, u) => !!accessOf(p, u);
+const canWork = (p, u) => ["admin", "reviewer", "executor"].includes(accessOf(p, u));
+const canReview = (p, u) => ["admin", "reviewer"].includes(accessOf(p, u));
+/* older databases: the account-level "reviewer" role becomes reviewer access on that user's projects */
+for (const u of db.prepare("SELECT id FROM users WHERE role='reviewer'").all()) {
+  db.transaction(() => {
+    for (const row of db.prepare("SELECT id,data FROM projects").all()) {
+      const p = JSON.parse(row.data);
+      if (!(p.memberIds || []).includes(u.id)) continue;
+      p.members = p.members || {}; p.members[u.id] = { ...(p.members[u.id] || {}), access: p.members[u.id]?.access || "reviewer" };
+      db.prepare("UPDATE projects SET data=? WHERE id=?").run(JSON.stringify(p), row.id);
+    }
+    db.prepare("UPDATE users SET role='employee' WHERE id=?").run(u.id);
+  })();
+}
 const withId = (id, d) => ({ id, ...d });
 
 /* per-project summary for the dashboard: reports, last report, BoQ progress (average share done over BoQ items) */
@@ -356,7 +372,8 @@ function cleanProject(body, base) {
   p.boq = Array.isArray(p.boq) ? p.boq.slice(0, 5000) : [];
   const validIds = new Set(db.prepare("SELECT id FROM users").all().map((r) => r.id));
   p.memberIds = Array.isArray(p.memberIds) ? [...new Set(p.memberIds.filter((x) => validIds.has(x)))] : [];
-  p.members = typeof p.members === "object" && p.members ? Object.fromEntries(Object.entries(p.members).filter(([k]) => p.memberIds.includes(k))) : {};
+  p.members = typeof p.members === "object" && p.members ? Object.fromEntries(Object.entries(p.members).filter(([k]) => p.memberIds.includes(k))
+    .map(([k, m]) => [k, { ...(m && typeof m === "object" ? m : {}), access: ACCESS.includes(m?.access) ? m.access : "executor" }])) : {};
   p.archived = !!p.archived;
   p.dprStart = Math.max(1, parseInt(p.dprStart, 10) || 1);
   p.hse = (Array.isArray(p.hse) ? p.hse : DEFAULT_HSE).slice(0, 50)
@@ -389,6 +406,7 @@ api.get("/projects/:id/additional", auth, (req, res) => {
 api.post("/projects/:id/additional", auth, (req, res) => {
   const p = getProject(req.params.id);
   if (!canSee(p, req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
+  if (!canWork(p, req.user)) return res.status(403).json({ error: "ამ პროექტზე მხოლოდ ნახვის უფლება გაქვთ" });
   const b = req.body || {};
   if (!String(b.name || "").trim()) return res.status(400).json({ error: "დასახელება სავალდებულოა" });
   /* additional works are numbered დ1, დ2, დ3 … per project (the prefix keeps them apart from BoQ codes) */
@@ -441,6 +459,7 @@ api.post("/reports", auth, (req, res) => {
   const b = req.body || {};
   const p = getProject(b.projectId);
   if (!canSee(p, req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
+  if (!canWork(p, req.user)) return res.status(403).json({ error: "ამ პროექტზე მხოლოდ ნახვის უფლება გაქვთ" });
   if (p.archived) return res.status(400).json({ error: "პროექტი დაარქივებულია" });
   if (!DATE_RE.test(b.date || "")) return res.status(400).json({ error: "თარიღი არასწორია" });
   if (req.user.role !== "admin" && b.date > todayLocal()) return res.status(400).json({ error: "მომავალი თარიღით ანგარიშის შექმნა შეუძლებელია" });
@@ -469,7 +488,7 @@ function saveReport(id, r) { db.prepare("UPDATE reports SET data=?, updated_at=?
 api.patch("/reports/:id", auth, (req, res) => {
   const x = loadEditable(req, res); if (!x) return;
   const { p, r } = x;
-  const editable = !p.archived && (canReview(p, req.user) ? r.status !== "approved" : isMember(p, req.user) && r.status === "draft");
+  const editable = !p.archived && (canReview(p, req.user) ? r.status !== "approved" : canWork(p, req.user) && r.status === "draft");
   if (!editable) return res.status(403).json({ error: r.status === "draft" ? "ამ ანგარიშის რედაქტირების უფლება არ გაქვთ" : "ანგარიში დაბლოკილია (" + r.status + ")" });
   const b = req.body || {};
   for (const k of SECTIONS) if (b[k] !== undefined) {
@@ -494,7 +513,7 @@ api.post("/reports/:id/status", auth, (req, res) => {
     if (missing) return res.status(400).json({ error: "დადასტურებამდე ყველა სამუშაოს და ხარჯს უნდა ჰქონდეს ერთ. ღირებულება (ფასის გარეშე: " + missing + ")" });
   }
   const t = now();
-  if (a === "submit" && r.status === "draft" && (isAdmin || isMember(p, req.user)) && !p.archived) Object.assign(r, { status: "submitted", submittedBy: req.user.id, submittedAt: t });
+  if (a === "submit" && r.status === "draft" && canWork(p, req.user) && !p.archived) Object.assign(r, { status: "submitted", submittedBy: req.user.id, submittedAt: t });
   else if (a === "return" && isAdmin && r.status === "submitted") Object.assign(r, { status: "draft" });
   else if (a === "approve" && isAdmin && r.status === "submitted") Object.assign(r, { status: "approved", approvedBy: req.user.id, approvedAt: t });
   else if (a === "reopen" && isAdmin && r.status === "approved") {
@@ -509,7 +528,6 @@ api.post("/reports/:id/status", auth, (req, res) => {
 });
 /* analysis: works (revenue) and expenses (cost) of every report, for the reviewer */
 api.get("/analysis", auth, (req, res) => {
-  if (!["admin", "reviewer"].includes(req.user.role)) return res.status(403).json({ error: "საჭიროა ადმინისტრატორის ან რივიუერის უფლება" });
   const seen = new Map(), mine = (pid) => { if (!seen.has(pid)) seen.set(pid, canReview(getProject(pid), req.user)); return seen.get(pid); };
   const reports = db.prepare("SELECT project_id,data FROM reports").all().filter((row) => mine(row.project_id)).map((row) => {
     const r = JSON.parse(row.data);

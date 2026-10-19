@@ -10,7 +10,9 @@ const PARTICIPANTS = [
   ["siteCoordinator","საიტის კოორდინატორი","Site Coordinator"],
   ["supervisor","საქმეთა მწარმოებელი","Site Supervisor"],
   ["subcontractors","ქვეკონტრაქტორ(ებ)ი","Sub-Contractor(s)"]];
-const ROLE_NAMES = {admin:"ადმინი",reviewer:"რივიუერი",employee:"თანამშრომელი"};
+const ROLE_NAMES = {admin:"ადმინი",employee:"თანამშრომელი"};
+const ACCESS_NAMES = {executor:"შემსრულებელი",reviewer:"რივიუერი",viewer:"მნახველი"};
+const ACCESS_HINT = {executor:"ქმნის და ავსებს ანგარიშებს",reviewer:"ავსებს, ადასტურებს და წერს ფასებს",viewer:"მხოლოდ ნახვა"};
 /* role badge next to the user's name; skipped when the name already says the role (e.g. "ადმინისტრატორი") */
 function roleTag(u){
   const r=ROLE_NAMES[u.role]||u.role||"";
@@ -107,9 +109,10 @@ async function loadNames(){ const list=await api("GET","/users/names"); S.names=
 /* ---------- project helpers ---------- */
 const P = () => S.projects.get(S.pid);
 function isMember(p){ return !!(p && S.me && (p.memberIds||[]).includes(S.me.id)); }
-function canWorkOn(p){ return S.admin || isMember(p); }
-/* reviewers approve and price reports on the projects whose team they are in; admins everywhere */
-function canReview(p){ return S.admin || (S.reviewer && isMember(p)); }
+/* rights inside a project come from the team page: executor fills reports, reviewer also approves and prices, viewer only reads */
+function accessOf(p){ if(!p||!S.me) return null; if(S.admin) return "admin"; if(!isMember(p)) return null; const a=((p.members||{})[S.me.id]||{}).access; return ACCESS_NAMES[a]?a:"executor"; }
+function canWorkOn(p){ return ["admin","reviewer","executor"].includes(accessOf(p)); }
+function canReview(p){ return ["admin","reviewer"].includes(accessOf(p)); }
 function boqIndex(p){
   const map=new Map(); let chap="", sub="";
   for(const it of (p&&p.boq)||[]){
@@ -130,6 +133,8 @@ function docCode(p,r){
 async function loadProjects(){
   const list=await api("GET","/projects");
   S.projects=new Map(list.map(p=>[p.id,p]));
+  /* reviewer on at least one project: sees the analysis page */
+  S.reviewer=!S.admin&&list.some(p=>accessOf(p)==="reviewer");
 }
 async function loadToday(){
   const list=await api("GET","/reports?date="+todayISO());
@@ -267,7 +272,7 @@ function renderLogin(){
   return h("div",{class:"login-wrap"},form);
 }
 async function onLoggedIn(user){
-  S.me=user; S.admin=user.role==="admin"; S.reviewer=user.role==="reviewer";
+  S.me=user; S.admin=user.role==="admin"; S.reviewer=false;
   if(user.mustChange){ S.view="account"; render(); return; }
   await loadAll();
 }
@@ -669,7 +674,7 @@ const SECTIONS={
 function repEditable(){
   const p=P(), r=S.rep; if(!p||!r||p.archived||S.oldRev!=null) return false;
   if(canReview(p)) return r.status!=="approved";
-  return isMember(p) && r.status==="draft";
+  return canWorkOn(p) && r.status==="draft";
 }
 /* which sections already have something in them (for the progress bar under the report header) */
 function sectionFilled(k,r){
@@ -714,7 +719,7 @@ function renderReport(){
     try{ const nr=await api("POST","/reports/"+encodeURIComponent(S.repId)+"/status",{action}); S.reports.set(nr.id,nr); S.rep=clone(nr); toast(msg); render(); if(action==="reopen") loadRevisions(); }
     catch(e){ toast("ვერ შესრულდა: "+errMsg(e)); } };
   const old=S.oldRev!=null;
-  if(!old&&r.status==="draft" && (S.admin||isMember(p)) && !p.archived)
+  if(!old&&r.status==="draft" && canWorkOn(p) && !p.archived)
     actions.push(h("button",{class:"btn primary",type:"button",onclick:()=>setStatus("submit","ანგარიში გაიგზავნა დასადასტურებლად")},"გაგზავნა"));
   if(!old&&canReview(p) && r.status==="submitted"){
     actions.push(h("button",{class:"btn",type:"button",onclick:()=>setStatus("return","ანგარიში დაბრუნდა შესავსებად")},"დაბრუნება"));
@@ -1131,34 +1136,44 @@ function renderBoqImport(p){
 }
 
 /* ---------- TEAM ---------- */
+/* each member has a position (job title) and an access level in this project; admins have full rights everywhere */
 function renderTeam(p){
   const members=p.members||{}; const ids=p.memberIds||[];
   const save=async(memberIds,mem,msg)=>{ try{ await saveProject(S.pid,{memberIds,members:mem},msg); render(); }catch(e){} };
-  const list=h("div",{class:"mlist"},ids.length?ids.map(id=>{
-    const role=(members[id]||{}).role||"";
-    const u=S.names.get(id);
-    const sel=h("select",{class:"inp",style:"width:auto",disabled:!S.admin,"aria-label":"როლი",onchange:e=>{ const m=clone(members); m[id]={...(m[id]||{}),role:e.target.value}; save(ids,m,"როლი შეიცვალა"); }},h("option",{value:""},"როლი —"),PROJECT_ROLES.map(r=>h("option",{value:r},r)));
-    sel.value=role;
-    return h("div",{class:"mrow"},h("span",{class:"avatar"},initials(u&&u.name)),
-      h("span",{class:"nm"},u?u.name:"წაშლილი მომხმარებელი",u?h("span",{class:"muted small",style:"margin-left:8px"},u.username):null,u&&!u.active?h("span",{class:"chip st-none",style:"margin-left:8px"},"გათიშული"):null),
-      sel,
-      S.admin?h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ const m=clone(members); delete m[id]; save(ids.filter(x=>x!==id),m,"ამოღებულია გუნდიდან"); }},"გუნდიდან ამოღება"):null);
-  }):h("div",{class:"panel-b muted"},"გუნდი ცარიელია."));
+  const posSel=(val,on)=>{ const el=h("select",{class:"inp","aria-label":"თანამდებობა",disabled:!S.admin,onchange:on},h("option",{value:""},"—"),PROJECT_ROLES.map(r=>h("option",{value:r},r))); el.value=val||""; return el; };
+  const accSel=(val,on)=>{ const el=h("select",{class:"inp","aria-label":"უფლება",disabled:!S.admin,onchange:on},Object.entries(ACCESS_NAMES).map(([k,l])=>h("option",{value:k},l))); el.value=val||"executor"; return el; };
+  const upd=(id,patch,msg)=>{ const m=clone(members); m[id]={...(m[id]||{}),...patch}; save(ids,m,msg); };
+  const rows=ids.map(id=>{
+    const m=members[id]||{}; const u=S.names.get(id); const isAdm=u&&u.role==="admin";
+    return h("tr",null,
+      h("td",{"data-l":"თანამშრომელი"},h("div",{class:"tm-who"},h("span",{class:"avatar"},initials(u&&u.name)),
+        h("div",null,h("b",null,u?u.name:"წაშლილი მომხმარებელი"),h("div",{class:"small muted mono"},u?u.username:""),u&&!u.active?h("span",{class:"chip st-none"},"გათიშული"):null))),
+      h("td",{"data-l":"თანამდებობა"},posSel(m.role,e=>upd(id,{role:e.target.value},"თანამდებობა შეიცვალა"))),
+      h("td",{"data-l":"უფლება"},isAdm?h("span",{class:"chip st-approved"},"ადმინი — სრული უფლება")
+        :h("div",null,accSel(m.access,e=>upd(id,{access:e.target.value},"უფლება შეიცვალა")),h("div",{class:"small muted",style:"margin-top:3px"},ACCESS_HINT[m.access||"executor"]))),
+      S.admin?h("td",{"data-l":""},h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ const mm=clone(members); delete mm[id]; save(ids.filter(x=>x!==id),mm,"ამოღებულია გუნდიდან"); }},"ამოღება")):null);
+  });
+  const table=ids.length?h("div",{class:"tw"},h("table",{class:"rt team-t stack"},
+      h("thead",null,h("tr",null,["თანამშრომელი","თანამდებობა","უფლება",...(S.admin?[""]:[])].map(l=>h("th",null,l)))),
+      h("tbody",null,rows)))
+    :h("div",{class:"panel-b muted"},"გუნდი ცარიელია.");
   let adder=null;
   if(S.admin){
-    const avail=[...S.names.values()].filter(u=>u.active&&!ids.includes(u.id));
-    const uId=uid(), rId=uid();
-    const userSel=h("select",{id:uId,class:"inp"},h("option",{value:""},avail.length?"აირჩიეთ…":"ყველა მომხმარებელი უკვე გუნდშია"),avail.map(u=>h("option",{value:u.id},u.name+" ("+u.username+")"+(u.role!=="employee"?" — "+ROLE_NAMES[u.role]:""))));
-    const roleSel=h("select",{id:rId,class:"inp"},PROJECT_ROLES.map(r=>h("option",{value:r},r))); roleSel.value="საქმეთა მწარმოებელი";
+    const avail=[...S.names.values()].filter(u=>u.active&&!ids.includes(u.id)&&u.role!=="admin");
+    const uId=uid(), rId=uid(), aId=uid();
+    const userSel=h("select",{id:uId,class:"inp"},h("option",{value:""},avail.length?"აირჩიეთ…":"ყველა თანამშრომელი უკვე გუნდშია"),avail.map(u=>h("option",{value:u.id},u.name+" ("+u.username+")")));
+    const roleSel=posSel("საქმეთა მწარმოებელი"); roleSel.id=rId;
+    const accessSel=accSel("executor"); accessSel.id=aId;
     adder=h("section",{class:"panel"},h("div",{class:"panel-h"},h("h3",null,"თანამშრომლის დამატება"),h("button",{class:"btn sm ghost",type:"button",onclick:()=>go("users")},"მომხმარებლების მართვა")),
       h("div",{class:"panel-b",style:"display:flex;flex-direction:column;gap:10px"},
         h("div",{class:"row",style:"align-items:flex-end"},
-          h("div",{class:"field",style:"flex:1;min-width:220px"},h("label",{for:uId},"მომხმარებელი"),userSel),
-          h("div",{class:"field"},h("label",{for:rId},"როლი პროექტში"),roleSel),
-          h("button",{class:"btn primary",type:"button",onclick:()=>{ if(!userSel.value){ toast("აირჩიეთ მომხმარებელი"); return; } const m=clone(members); m[userSel.value]={role:roleSel.value,addedAt:new Date().toISOString()}; save([...ids,userSel.value],m,"დაემატა გუნდში"); }},"დამატება")),
-        h("p",{class:"small muted",style:"margin:0"},"გუნდის წევრი ხედავს მხოლოდ ამ პროექტს და ავსებს მის ანგარიშებს. ახალი თანამშრომლისთვის ჯერ შექმენით ანგარიში „მომხმარებლების მართვაში“.")));
+          h("div",{class:"field",style:"flex:1;min-width:220px"},h("label",{for:uId},"თანამშრომელი"),userSel),
+          h("div",{class:"field"},h("label",{for:rId},"თანამდებობა"),roleSel),
+          h("div",{class:"field"},h("label",{for:aId},"უფლება"),accessSel),
+          h("button",{class:"btn primary",type:"button",onclick:()=>{ if(!userSel.value){ toast("აირჩიეთ თანამშრომელი"); return; } const m=clone(members); m[userSel.value]={role:roleSel.value,access:accessSel.value,addedAt:new Date().toISOString()}; save([...ids,userSel.value],m,"დაემატა გუნდში"); }},"დამატება")),
+        h("p",{class:"small muted",style:"margin:0"},"შემსრულებელი ქმნის და ავსებს ანგარიშებს · რივიუერი ასევე ადასტურებს და წერს ფასებს · მნახველი მხოლოდ ათვალიერებს. ადმინისტრატორებს გუნდში დამატება არ სჭირდებათ — მათ ყველა პროექტზე სრული უფლება აქვთ.")));
   }
-  return [adder,h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"პროექტის გუნდი",h("span",{class:"en cnt-sub"},ids.length+" წევრი"))),list)].filter(Boolean);
+  return [adder,h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"პროექტის გუნდი",h("span",{class:"en cnt-sub"},ids.length+" წევრი"))),table)].filter(Boolean);
 }
 
 /* ---------- INFO ---------- */
@@ -1257,7 +1272,7 @@ function renderUsers(){
   const tIn=h("input",{id:ids.t,class:"inp mono",type:"tel",autocomplete:"off",placeholder:"5XX XX XX XX"});
   const uIn=h("input",{id:ids.u,class:"inp",autocomplete:"off",autocapitalize:"none",placeholder:"მაგ. g.beridze"});
   const nIn=h("input",{id:ids.n,class:"inp",placeholder:"სახელი გვარი"});
-  const rIn=h("select",{id:ids.r,class:"inp"},h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"reviewer"},"რივიუერი"),h("option",{value:"admin"},"ადმინისტრატორი"));
+  const rIn=h("select",{id:ids.r,class:"inp"},h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"admin"},"ადმინისტრატორი"));
   const pIn=h("input",{id:ids.p,class:"inp mono",inputmode:"numeric",maxlength:"4",pattern:"[0-9]{4}",value:genPassword()});
   const created=h("div");
   const createForm=h("form",{class:"panel-b users-form",style:"display:flex;flex-direction:column;gap:12px",onsubmit:async e=>{
@@ -1274,6 +1289,7 @@ function renderUsers(){
       h("div",{class:"field"},h("label",{for:ids.t},"ტელეფონი"),tIn),
       h("div",{class:"field"},h("label",{for:ids.r},"როლი"),rIn),
       h("div",{class:"field"},h("label",{for:ids.p},"დროებითი პაროლი"),h("div",{class:"row",style:"flex-wrap:nowrap"},pIn,h("button",{class:"btn sm",type:"button",onclick:()=>{pIn.value=genPassword();}},"ახალი")))),
+    h("p",{class:"small muted",style:"margin:0"},"ადმინისტრატორს ყველა პროექტზე სრული უფლება აქვს. თანამშრომლის უფლება (შემსრულებელი, რივიუერი ან მნახველი) ინიშნება თითოეული პროექტის „გუნდის“ ჩანართზე."),
     h("div",{class:"row"},h("button",{class:"btn primary",type:"submit"},"მომხმარებლის შექმნა")));
   const rows=S.users.map(u=>{
     const self=u.id===S.me.id;
@@ -1282,15 +1298,16 @@ function renderUsers(){
       h("button",{class:"btn sm primary",type:"button",onclick:async()=>{ try{ const res=await api("PATCH","/users/"+u.id,{password:pw}); box.replaceChildren(h("span",{class:"small"},"პაროლი შეიცვალა: "),h("span",{class:"pw"},pw),mailNotice(res,u.email,u.name,u.username,pw,true)); }catch(e){ toast(errMsg(e)); } }},"დადასტურება"),
       h("button",{class:"btn sm ghost",type:"button",onclick:()=>box.replaceChildren()},"გაუქმება")); };
     const roleSel=h("select",{class:"inp",style:"width:auto","aria-label":"როლი",disabled:self,onchange:async e=>{ try{ await api("PATCH","/users/"+u.id,{role:e.target.value}); toast("როლი შეიცვალა"); refresh(); }catch(ex){ toast(errMsg(ex)); } }},
-      h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"reviewer"},"რივიუერი"),h("option",{value:"admin"},"ადმინისტრატორი")); roleSel.value=u.role;
-    const projs=[...S.projects.values()].filter(p=>(p.memberIds||[]).includes(u.id)).map(p=>p.name);
+      h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"admin"},"ადმინისტრატორი")); roleSel.value=u.role==="admin"?"admin":"employee";
+    const projs=u.role==="admin"?[]:[...S.projects.values()].filter(p=>(p.memberIds||[]).includes(u.id))
+      .map(p=>p.name+" — "+tr(ACCESS_NAMES[((p.members||{})[u.id]||{}).access]||ACCESS_NAMES.executor));
     return h("tr",null,
       h("td",{"data-l":"სახელი"},h("strong",null,u.name),h("div",{class:"small muted mono"},u.username)),
       h("td",{"data-l":"კონტაქტი",class:"small contact"},
         h("div",null,h("span",null,u.email||"—"),editBtn(u,"email","ელფოსტა")),
         h("div",null,h("span",{class:"mono"},u.phone||"—"),editBtn(u,"phone","ტელეფონი"))),
       h("td",{"data-l":"როლი"},roleSel),
-      h("td",{"data-l":"პროექტები",class:"small"},projs.length?projs.join(", "):h("span",{class:"muted"},"—")),
+      h("td",{"data-l":"პროექტები",class:"small"},u.role==="admin"?h("span",{class:"muted"},"ყველა პროექტი"):projs.length?projs.map(x=>h("div",null,x)):h("span",{class:"muted"},"—")),
       h("td",{"data-l":"ბოლო შესვლა",class:"small"},u.lastLogin?fmtDateTime(u.lastLogin):"არასდროს",u.mustChange?h("div",{class:"small",style:"color:var(--signal)"},"დროებითი პაროლი"):null),
       h("td",{"data-l":"სტატუსი"},u.active?h("span",{class:"chip st-approved"},"აქტიური"):h("span",{class:"chip st-none"},"გათიშული")),
       h("td",{"data-l":"მოქმედება"},h("div",{class:"row"},
