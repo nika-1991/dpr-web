@@ -316,10 +316,10 @@ function renderHome(){
   const shown=all.filter(p=>(F.f==="all"||(F.f==="archived")===!!p.archived)&&(!F.co||(p.companyCode||"").trim()===F.co)
     &&(!q||[p.name,p.client,p.location,p.companyCode,p.projectCode,p.accountingCode].some(v=>String(v||"").toLowerCase().includes(q))));
   const open=id=>go("project",{pid:id,tab:"reports"});
-  const search=h("input",{class:"inp",type:"search",placeholder:"ძებნა: დასახელება, დამკვეთი, კოდი…","aria-label":"ძებნა",value:F.q,oninput:e=>{ F.q=e.target.value; const c=e.target.selectionStart; render(); const el=document.querySelector(".home-search input"); if(el){ el.focus(); el.setSelectionRange(c,c); } }});
-  const chip_=(k,l)=>h("button",{type:"button",class:"fchip"+(F.f===k?" on":""),onclick:()=>{F.f=k;render();}},l);
+  const search=h("input",{class:"inp",type:"search",placeholder:"ძებნა…",title:"ძებნა: დასახელება, დამკვეთი, კოდი…","aria-label":"ძებნა",value:F.q,oninput:e=>{ F.q=e.target.value; const c=e.target.selectionStart; render(); const el=document.querySelector(".home-search input"); if(el){ el.focus(); el.setSelectionRange(c,c); } }});
+  const stBtn=(k,ic,l)=>h("button",{type:"button",class:"vbtn tip"+(F.f===k?" on":""),"aria-label":l,"data-tip":tr(l),"aria-pressed":String(F.f===k),onclick:()=>{F.f=k;render();}},icon(ic));
   const coChip=(k,l)=>h("button",{type:"button",class:"fchip co"+(F.co===k?" on":""),onclick:()=>{F.co=k;render();}},l);
-  const viewBtn=(k,ic,l)=>h("button",{type:"button",class:"vbtn"+(F.view===k?" on":""),title:l,"aria-label":l,onclick:()=>{ F.view=k; try{ localStorage.setItem("dpr.homeView",k); }catch(e){} render(); }},icon(ic));
+  const viewBtn=(k,ic,l)=>h("button",{type:"button",class:"vbtn tip"+(F.view===k?" on":""),"aria-label":l,"data-tip":tr(l),"aria-pressed":String(F.view===k),onclick:()=>{ F.view=k; try{ localStorage.setItem("dpr.homeView",k); }catch(e){} render(); }},icon(ic));
   const prog=p=>h("div",{class:"pprog"},h("div",{class:"pbar"},h("span",{style:"width:"+Math.min(100,st(p).progress)+"%"})),h("b",null,fmtNum(st(p).progress)+"%"));
   const last=p=>st(p).lastDate?h("span",{class:"plast"},"ბოლო: "+fmtDate(st(p).lastDate)," ",chip(st(p).lastStatus)):h("span",{class:"plast muted"},"ანგარიში არ არის");
   const codes=p=>[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c));
@@ -345,9 +345,9 @@ function renderHome(){
   out.push(h("div",{class:"dash-left"},
     h("div",{class:"home-bar"},
       h("label",{class:"home-search"},icon("search"),search),
-      h("div",{class:"row",style:"gap:6px"},chip_("active","აქტიური"),chip_("archived","დასრულებული"),chip_("all","ყველა")),
-      h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")),
-      companies.length?h("div",{class:"co-row"},h("span",{class:"co-l"},"კომპანია:"),coChip("","ყველა"),companies.map(c=>coChip(c,c))):null),
+      companies.length?h("div",{class:"hb-grp"},h("span",{class:"hb-l"},"კომპანია"),h("div",{class:"hb-row"},coChip("","ყველა"),companies.map(c=>coChip(c,c)))):null,
+      h("div",{class:"hb-grp"},h("span",{class:"hb-l"},"პროექტი"),h("div",{class:"vswitch"},stBtn("active","pulse","აქტიური პროექტები"),stBtn("archived","checkc","დასრულებული პროექტები"),stBtn("all","layers","ყველა პროექტი"))),
+      h("div",{class:"hb-grp"},h("span",{class:"hb-l"},"განლაგება"),h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")))),
     h("div",{class:"dash-count"},icon("grid"),h("span",null,"პროექტები"),h("span",{class:"spacer"}),h("span",{class:"muted small"},shown.length+" პროექტი")),
     listEl));
   return out;
@@ -517,6 +517,9 @@ function autoItem(field,missing="ვერ მოიძებნა"){ return (r
 const listOpt=k=>()=>S.lists[k]||[];
 /* small line icons (24x24, stroke) for section headers and fields */
 const ICONS={
+  pulse:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  checkc:'<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  layers:'<path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/>',
   conditions:'<path d="M12 2v2M4.9 4.9l1.4 1.4M20 12h2M17.7 6.3l1.4-1.4"/><path d="M16 12a4 4 0 0 0-7.4-2.1"/><path d="M17 20H8a4 4 0 1 1 .8-7.9A5 5 0 0 1 18 14a3 3 0 0 1-1 6z"/>',
   issues:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
   hse:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
