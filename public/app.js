@@ -427,7 +427,7 @@ function renderProject(){
   const head=h("div",{class:"head proj-head"},
     h("div",{style:"min-width:0"},
       h("div",{class:"row"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c)),p.archived?h("span",{class:"chip st-none"},"დასრულებული"):null),
-      h("h1",{style:"margin-top:6px"},p.name),
+      h("h1",null,p.name),
       h("div",{class:"muted"},[p.client,p.location].filter(Boolean).join(" · "))),
     S.admin?h("div",{class:"row"},
       h("button",{class:"btn state-btn "+(p.archived?"reopen":"finish"),type:"button",onclick:async()=>{

@@ -483,7 +483,8 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .code-tag{border-radius:6px;background:var(--sunk);border-color:var(--line)}
 .chip{border-radius:99px}
 .eyebrow{color:var(--accent)}
-.head h1{font-size:1.75rem}
+/* page titles (projects list, project name): a little lower, smaller and bold */
+.head h1{font-size:1.35rem;font-weight:700;margin-top:10px;-webkit-text-stroke:.35px currentColor}
 .sec{border-radius:var(--radius)}
 .sec .sec-h{border-radius:0}
 .tabs{border-bottom-color:var(--line)}
