@@ -235,7 +235,6 @@ function renderBar(){
 /* ---------- render root ---------- */
 function render(){
   document.body.classList.toggle("has-side",!!(S.me&&!S.me.mustChange&&S.view==="project"&&P()));
-  document.body.classList.toggle("wide",!!(S.me&&!S.me.mustChange&&S.view==="report"));
   renderBar();
   let v;
   if(!S.me) v=renderLogin();
