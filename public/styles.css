@@ -535,7 +535,8 @@ a.btn{text-decoration:none}
 
 /* dashboard filter bar: narrow search + labelled groups (company, project status, layout) */
 .home-bar{align-items:flex-end}
-.home-search{flex:0 1 280px}
+.home-search{flex:1 1 260px;align-self:flex-end;min-height:34px}
+.hb-grp{padding-left:14px;border-left:1px solid var(--line)}
 .hb-grp{display:flex;flex-direction:column;gap:3px}
 .hb-l{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-left:2px}
 .hb-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:32px}
@@ -543,4 +544,4 @@ a.btn{text-decoration:none}
 .tip{position:relative}
 .tip::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--surface);font-size:.72rem;font-weight:600;white-space:nowrap;padding:4px 8px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
 .tip:hover::after,.tip:focus-visible::after{opacity:1}
-@media (max-width:640px){.home-search{flex:1 1 100%}}
+@media (max-width:640px){.home-search{flex:1 1 100%}.hb-grp{padding-left:0;border-left:0}}
