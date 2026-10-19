@@ -11,6 +11,11 @@ const PARTICIPANTS = [
   ["supervisor","საქმეთა მწარმოებელი","Site Supervisor"],
   ["subcontractors","ქვეკონტრაქტორ(ებ)ი","Sub-Contractor(s)"]];
 const ROLE_NAMES = {admin:"ადმინი",reviewer:"რივიუერი",employee:"თანამშრომელი"};
+/* role badge next to the user's name; skipped when the name already says the role (e.g. "ადმინისტრატორი") */
+function roleTag(u){
+  const r=ROLE_NAMES[u.role]||u.role||"";
+  return String(u.name||"").toLowerCase().includes(r.slice(0,5).toLowerCase())?null:h("span",{class:"role-tag"},r);
+}
 const STATUS = {draft:"დრაფტი",submitted:"გაგზავნილი",approved:"დადასტურებული"};
 const POLL_MS = 20000;
 
@@ -218,7 +223,7 @@ function renderBar(){
   me.append(h("button",{class:"lang-btn",type:"button",title:LANG==="en"?"ქართული":"English","aria-label":LANG==="en"?"ქართული":"English",onclick:()=>setLang(LANG==="en"?"ka":"en")},LANG==="en"?"ქა":"EN"));
   if(S.me){
     me.append(h("button",{class:"me-btn",type:"button",title:"ჩემი ანგარიში",onclick:()=>go("account")},
-      h("span",{class:"avatar"},initials(S.me.name)),h("span",null,S.me.name),h("span",{class:"role-tag"},ROLE_NAMES[S.me.role]||S.me.role)));
+      h("span",{class:"avatar"},initials(S.me.name)),h("span",null,S.me.name),roleTag(S.me)));
   }
 }
 
