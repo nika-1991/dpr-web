@@ -31,8 +31,6 @@ function tr(s){
   let out=s; for(const k of I18N_FRAGS) if(out.includes(k)) out=out.split(k).join(I18N[k]);
   return out;
 }
-/* Georgian capitals (Mtavruli) for menu-style labels; browsers do not uppercase Georgian themselves */
-const mtavruli=s=>String(s).replace(/[\u10D0-\u10FA\u10FD-\u10FF]/g,c=>String.fromCharCode(c.charCodeAt(0)+0xBC0));
 function setLang(l){
   LANG=l; try{ localStorage.setItem("dpr.lang",l); }catch(e){}
   document.documentElement.lang=l; document.title=tr("პროექტები")+" · Tesen Group";
@@ -436,7 +434,7 @@ function renderProject(){
         if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
         try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},
         icon(p.archived?"plus":"works"),h("span",{class:"two-line"},(LANG==="en"?(p.archived?["Make","active"]:["Mark as","completed"]):(p.archived?["აქტიურად","დაბრუნება"]:["დასრულებულად","მონიშვნა"])).map(t=>h("span",null,t))))):null);
-  const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-label":tr(l),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;render();}},mtavruli(tr(l)))));
+  const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-label":tr(l),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;render();}},tr(l))));
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
   else if(S.tab==="progress") body=renderProgress(p);

@@ -7,6 +7,7 @@
   --info:#1d5fa8; --info-soft:#e2edf9;
   --ok:#2f7d4f; --ok-soft:#e1f1e7; --bad:#b23a32; --bad-soft:#f8e3e1;
   --f-display:"Noto Sans Georgian",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-caps:"BPG Nino Mtavruli","Noto Sans Georgian",system-ui,sans-serif;
   --f-body:"Noto Sans Georgian",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
   --r:9px;
@@ -31,6 +32,8 @@
   --info:#78aef0; --info-soft:#17283d;
   --ok:#62c18a; --ok-soft:#173023; --bad:#e8786f; --bad-soft:#3a1d1b; color-scheme:dark;
   --sh-head:#0d5248; --sh-head-ink:#e6f4f1; --sh-tint:#14231f; --sh-line:#2a453e; --sh-ink:#9fd6c9}
+/* BPG Nino Mtavruli (free font by BPG-InfoTech): Georgian capitals style for tabs and headings, like the company site */
+@font-face{font-family:"BPG Nino Mtavruli";src:url("/fonts/bpg-nino-mtavruli-webfont.woff2") format("woff2"),url("/fonts/bpg-nino-mtavruli-webfont.woff") format("woff");font-weight:400;font-display:swap}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
@@ -512,3 +515,7 @@ table.users td{vertical-align:middle}
 .mail-ok{display:inline-flex;align-items:center;gap:5px;margin-left:8px;color:var(--ok);font-weight:600}
 .mail-ok .ico,.btn .ico{width:15px;height:15px}
 a.btn{text-decoration:none}
+/* Mtavruli (capitals) for navigation and headings */
+.tabs button,h1,h2,h3,.sec .sec-h h2,.rt th,.ph-title b,.pd-sec h3,.dash-count{font-family:var(--f-caps);letter-spacing:.02em}
+.tabs button{text-transform:none;font-weight:700}
+.rt th{font-weight:700}
