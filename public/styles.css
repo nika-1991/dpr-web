@@ -547,3 +547,24 @@ a.btn{text-decoration:none}
 @media (max-width:640px){.home-search{flex:1 1 100%}.hb-grp{padding-left:0;border-left:0}}
 .vbtn.vtxt{font-size:.8rem;font-weight:600;padding:5px 11px;align-items:center}
 .vbtn.vtxt.co{font-family:var(--f-mono);letter-spacing:.03em}
+
+/* project page: left sidebar with the project's details, tabs and content on the right */
+.proj-layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px;align-items:start}
+.pside{position:sticky;top:72px;display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.pside-name{font-size:1.3rem;line-height:1.3;margin:0;word-break:break-word}
+.pside-card{display:flex;flex-direction:column;gap:8px;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:.84rem}
+.pside-li{display:flex;gap:8px;align-items:flex-start;line-height:1.35}
+.pside-li+.pside-li{border-top:1px solid var(--line);padding-top:8px}
+.pside-li .ico{width:16px;height:16px;flex:none;margin-top:1px;color:var(--accent)}
+.pside-li.muted .ico{color:var(--warn,#b7791f)}
+.pside-facts{display:flex;flex-direction:column;border-top:1px solid var(--line);padding-top:6px}
+.pside-fact{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;font-size:.84rem}
+.pside-fact+.pside-fact{border-top:1px dashed var(--line)}
+.pside-fact>span{color:var(--muted)}
+.pside-fact b{font-family:var(--f-mono);font-weight:600}
+.pside-fact .pstat{font-family:var(--f-body)}
+.pside-state.btn{width:100%;justify-content:center;white-space:normal;text-align:center;font-size:.82rem;line-height:1.25;padding:9px 10px;height:auto}
+.proj-main{min-width:0}
+.proj-main>.tabs{margin-top:0;margin-bottom:16px}
+@media (max-width:1180px){.proj-layout{grid-template-columns:230px minmax(0,1fr);gap:18px}.pside{padding:14px}}
+@media (max-width:980px){.proj-layout{grid-template-columns:1fr}.pside{position:static}}

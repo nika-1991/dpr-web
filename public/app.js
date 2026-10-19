@@ -451,16 +451,25 @@ function renderProject(){
   const p=P();
   const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
   if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
-  const head=h("div",{class:"head proj-head"},
-    h("div",{style:"min-width:0"},
-      h("div",{class:"row"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c)),p.archived?h("span",{class:"chip st-none"},"დასრულებული"):null),
-      h("h1",null,p.name),
-      h("div",{class:"muted"},[p.client,p.location].filter(Boolean).join(" · "))),
-    S.admin?h("div",{class:"row"},
-      h("button",{class:"btn state-btn "+(p.archived?"reopen":"finish"),type:"button",onclick:async()=>{
+  // left sidebar: codes, name, client/location, status, quick figures, the completed toggle
+  const st=p.stats||{};
+  const fact=(l,v)=>h("div",{class:"pside-fact"},h("span",null,l),h("b",null,v));
+  const side=h("aside",{class:"pside"},
+    [p.companyCode,p.projectCode,p.accountingCode].some(Boolean)?h("div",null,h("div",{class:"hb-l"},"კოდები"),
+      h("div",{class:"row",style:"gap:6px"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c)))):null,
+    h("h1",{class:"pside-name"},p.name),
+    p.client||p.location?h("div",{class:"pside-card"},
+      p.client?h("div",{class:"pside-li"},icon("building"),h("span",null,p.client)):null,
+      p.location?h("div",{class:"pside-li muted"},icon("pin"),h("span",null,p.location)):null):null,
+    h("div",{class:"pside-facts"},
+      fact("სტატუსი",h("span",{class:"pstat "+(p.archived?"off":"on")},h("span",{class:"dot"}),p.archived?"დასრულებული":"აქტიური")),
+      fact("ანგარიშები",String(sortedReports().length)),
+      fact("პროგრესი",fmtNum(st.progress||0)+"%"),
+      st.lastDate?fact("ბოლო ანგარიში",fmtDate(st.lastDate)):null),
+    S.admin?h("button",{class:"btn state-btn pside-state "+(p.archived?"reopen":"finish"),type:"button",onclick:async()=>{
         if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
         try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},
-        icon(p.archived?"plus":"works"),h("span",{class:"two-line"},(LANG==="en"?(p.archived?["Make","active"]:["Mark as","completed"]):(p.archived?["აქტიურად","დაბრუნება"]:["დასრულებულად","მონიშვნა"])).map(t=>h("span",null,t))))):null);
+      icon(p.archived?"plus":"works"),p.archived?"აქტიურად დაბრუნება":"დასრულებულად მონიშვნა"):null);
   const tabBar=h("div",{class:"tabs",role:"tablist"},tabs.map(([k,l])=>h("button",{type:"button",role:"tab","aria-label":tr(l),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},icon(TAB_ICONS[k]),h("span",null,tr(l)))));
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
@@ -468,7 +477,7 @@ function renderProject(){
   else if(S.tab==="boq") body=renderBoq(p);
   else if(S.tab==="team") body=renderTeam(p);
   else body=renderInfo(p);
-  return [head,tabBar,body];
+  return h("div",{class:"proj-layout"},side,h("div",{class:"proj-main"},tabBar,body));
 }
 
 function canCreateOn(date){ return S.admin || date<=todayISO(); }
@@ -543,6 +552,8 @@ function autoItem(field,missing="ვერ მოიძებნა"){ return (r
 const listOpt=k=>()=>S.lists[k]||[];
 /* small line icons (24x24, stroke) for section headers and fields */
 const ICONS={
+  building:'<path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M2 21h20M8 7h4M8 11h4M8 15h4"/>',
+  pin:'<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
   pulse:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
   checkc:'<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
   layers:'<path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/>',
