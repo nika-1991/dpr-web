@@ -568,3 +568,13 @@ a.btn{text-decoration:none}
 .proj-main>.tabs{margin-top:0;margin-bottom:16px}
 @media (max-width:1180px){.proj-layout{grid-template-columns:230px minmax(0,1fr);gap:18px}.pside{padding:14px}}
 @media (max-width:980px){.proj-layout{grid-template-columns:1fr}.pside{position:static}}
+
+/* on wide screens the project sidebar is a full-height panel along the left edge */
+@media (min-width:981px){
+  body.has-side{--side-w:270px}
+  body.has-side .bar-in{max-width:none}
+  body.has-side main{max-width:none;margin:0;padding-left:calc(var(--side-w) + 26px);padding-right:26px}
+  body.has-side .proj-layout{display:block}
+  body.has-side .pside{position:fixed;left:0;top:54px;bottom:0;width:var(--side-w);z-index:10;overflow-y:auto;border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;padding:22px 18px}
+}
+@media (min-width:981px) and (max-width:1180px){ body.has-side{--side-w:232px} }

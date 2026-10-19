@@ -229,6 +229,7 @@ function renderBar(){
 
 /* ---------- render root ---------- */
 function render(){
+  document.body.classList.toggle("has-side",!!(S.me&&!S.me.mustChange&&S.view==="project"&&P()));
   renderBar();
   let v;
   if(!S.me) v=renderLogin();
