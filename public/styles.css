@@ -519,7 +519,8 @@ a.btn{text-decoration:none}
 /* Mtavruli (capitals) for navigation and headings */
 .tabs button,h1,h2,h3,.sec .sec-h h2,.rt th,.ph-title b,.pd-sec h3,.dash-count{font-family:var(--f-caps);letter-spacing:.02em}
 .tabs button{text-transform:none;font-weight:700}
-.rt th{font-weight:700;color:var(--ink);font-size:.78rem;-webkit-text-stroke:.25px currentColor}
+.rt th{font-weight:700;color:var(--sh-head-ink);background:var(--sh-head);border-bottom-color:var(--sh-head);font-size:.76rem}
+.sec .rt th{background:var(--accent-soft);color:var(--ink);border-bottom-color:var(--line-strong)}
 .tabs button{display:inline-flex;align-items:center;gap:8px}
 .tabs button .ico{width:18px;height:18px;opacity:.85}
 .tabs button[aria-selected="true"] .ico{opacity:1}
