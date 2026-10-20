@@ -219,7 +219,8 @@ function renderBar(){
   const add=(label,fn)=>{ if(c.childNodes.length) c.append(h("span",{class:"sep"},"/")); c.append(fn?h("button",{type:"button",onclick:fn},label):h("span",{class:"muted"},label)); };
   if(S.view==="settings") add("სიები");
   if(S.view==="users") add("მომხმარებლები");
-  if(S.view==="analysis") add("ანალიზი");
+  if(S.view==="analysis") add("ანალიტიკა");
+  if(PLACEHOLDERS[S.view]) add(PLACEHOLDERS[S.view][1]);
   if(S.view==="account") add("ჩემი ანგარიში");
   if((S.view==="project"||S.view==="report") && p) add(p.name,()=>go("project",{pid:S.pid,tab:"reports"}));
   if(S.view==="report" && S.rep) add("DPR-"+String(S.rep.num||0).padStart(3,"0")+" · "+fmtDate(S.rep.date));
@@ -243,18 +244,31 @@ function render(){
   else if(S.view==="settings") v=renderSettings();
   else if(S.view==="users") v=renderUsers();
   else if(S.view==="analysis") v=renderAnalysis();
+  else if(PLACEHOLDERS[S.view]) v=renderPlaceholder(PLACEHOLDERS[S.view]);
   else if(S.view==="project") v=P()?renderProject():renderMissing();
   else if(S.view==="report") v=renderReport();
   else v=renderHome();
-  const nav=S.me&&!S.me.mustChange&&["home","analysis","users","settings","account"].includes(S.view);
+  const nav=S.me&&!S.me.mustChange&&["home","budget","workforce","materials","issues","analysis","users","settings","account"].includes(S.view);
   document.body.classList.toggle("has-nav",!!nav);
   main.replaceChildren(...[nav?renderAppNav():null,v].flat(Infinity).filter(Boolean));
+}
+/* pages listed in the menu whose content is still to be designed */
+const PLACEHOLDERS={budget:["Budget vs Costs","ბიუჯეტი vs ხარჯები","expenses"],workforce:["Workforce","პერსონალი","personnel"],materials:["Materials","მასალები","materials"],issues:["Issues & Delays","პრობლემები და შეფერხებები","issues"]};
+function renderPlaceholder([en,title,ic]){
+  return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},en),h("h1",null,title))),
+    h("div",{class:"empty"},icon(ic),h("p",{class:"muted"},"გვერდი მზადდება."))];
 }
 /* left navigation panel on the app-level pages (projects, analysis, settings) */
 function renderAppNav(){
   const item=(view,ic,label)=>h("button",{type:"button",class:"anav-i"+(S.view===view?" on":""),"aria-current":S.view===view?"page":null,onclick:()=>go(view)},icon(ic),h("span",null,label));
   return h("nav",{class:"anav","aria-label":"მენიუ"},
-    h("div",{class:"anav-g"},item("home","folder","პროექტები"),S.admin||S.reviewer?item("analysis","chart","ანალიზი"):null),
+    h("div",{class:"anav-g"},
+      item("home","folder","პროექტები"),
+      S.admin||S.reviewer?item("budget","expenses","ბიუჯეტი vs ხარჯები"):null,
+      item("workforce","personnel","პერსონალი"),
+      item("materials","materials","მასალები"),
+      item("issues","issues","პრობლემები და შეფერხებები"),
+      S.admin||S.reviewer?item("analysis","chart","ანალიტიკა"):null),
     h("div",{class:"anav-g anav-set"},h("div",{class:"hb-l"},"პარამეტრები"),
       S.admin?item("users","personnel","მომხმარებლები"):null,
       S.admin?item("settings","list","სიები"):null,
@@ -1239,7 +1253,7 @@ function renderAnalysis(){
           open?h("tr",{class:"an-detail"},h("td",{colspan:"6"},renderAnalysisDetail(d,money))):null];
       })),
       h("tfoot",null,h("tr",null,h("td",null,"სულ"),h("td",{class:"num"},data.reduce((a,d)=>a+d.reports,0)),h("td",{class:"num"},money(tot.rev)),h("td",{class:"num"},money(tot.cost)),h("td",{class:"num"},money(tot.rev-tot.cost)),h("td",{class:"num"},pct(tot.rev-tot.cost,tot.rev)))))));
-  return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"Analysis"),h("h1",null,"ანალიზი"))),filters,kpi,summary,
+  return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"Reports & Analytics"),h("h1",null,"ანალიტიკა"))),filters,kpi,summary,
     h("p",{class:"small muted"},"შემოსავალი = შესრულებული სამუშაოს რაოდენობა × ერთ. ღირებულება; ხარჯი = ხარჯის რაოდენობა × ერთ. ღირებულება. ფასს ანგარიშის დადასტურებისას რივიუერი უწერს.")];
 }
 function renderAnalysisDetail(d,money){
