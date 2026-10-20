@@ -246,7 +246,19 @@ function render(){
   else if(S.view==="project") v=P()?renderProject():renderMissing();
   else if(S.view==="report") v=renderReport();
   else v=renderHome();
-  main.replaceChildren(...[v].flat(Infinity).filter(Boolean));
+  const nav=S.me&&!S.me.mustChange&&["home","analysis","users","settings","account"].includes(S.view);
+  document.body.classList.toggle("has-nav",!!nav);
+  main.replaceChildren(...[nav?renderAppNav():null,v].flat(Infinity).filter(Boolean));
+}
+/* left navigation panel on the app-level pages (projects, analysis, settings) */
+function renderAppNav(){
+  const item=(view,ic,label)=>h("button",{type:"button",class:"anav-i"+(S.view===view?" on":""),"aria-current":S.view===view?"page":null,onclick:()=>go(view)},icon(ic),h("span",null,label));
+  return h("nav",{class:"anav","aria-label":"მენიუ"},
+    h("div",{class:"anav-g"},item("home","folder","პროექტები"),S.admin||S.reviewer?item("analysis","chart","ანალიზი"):null),
+    h("div",{class:"anav-g anav-set"},h("div",{class:"hb-l"},"პარამეტრები"),
+      S.admin?item("users","personnel","მომხმარებლები"):null,
+      S.admin?item("settings","list","სიები"):null,
+      item("account","gear","ჩემი ანგარიში")));
 }
 function renderMissing(){ return h("div",{class:"empty"},h("h2",null,"პროექტი ვერ მოიძებნა"),h("p",{class:"muted"},"შესაძლოა წვდომა შეგეზღუდათ."),h("button",{class:"btn",type:"button",onclick:()=>go("home")},"პროექტების სია")); }
 
@@ -324,10 +336,7 @@ function renderHome(){
     .sort((a,b)=>(a[1].archived?1:0)-(b[1].archived?1:0)||String(a[1].name).localeCompare(String(b[1].name),"ka"));
   const head=h("div",{class:"head"},
     h("div",null,h("div",{class:"eyebrow"},"Daily Progress Report"),h("h1",null,"პროექტები")),
-    S.admin||S.reviewer?h("div",{class:"row"},
-      h("button",{class:"btn",type:"button",onclick:()=>go("analysis")},"ანალიზი"),
-      S.admin?settingsMenu():null,
-      S.admin?h("button",{class:"btn primary",type:"button",onclick:newProject},"+ ახალი პროექტი"):null):null);
+    S.admin?h("div",{class:"row"},h("button",{class:"btn primary",type:"button",onclick:newProject},"+ ახალი პროექტი")):null);
   const out=[head];
   if(S.creating==="project") out.push(renderProjectForm(null));
   if(!list.length){
@@ -390,18 +399,6 @@ async function newProject(){
   if(!S.hseDefault){ try{ S.hseDefault=await api("GET","/config/hse-default"); }catch(e){ S.hseDefault=[]; } }
   S.creating="project"; render();
 }
-/* admin settings: a gear button with a small menu (users, drop-down lists) */
-function settingsMenu(){
-  const menu=h("div",{class:"menu",role:"menu",hidden:true},
-    h("button",{type:"button",role:"menuitem",onclick:()=>go("users")},icon("personnel"),"მომხმარებლები"),
-    h("button",{type:"button",role:"menuitem",onclick:()=>go("settings")},icon("list"),"სიები"));
-  const btn=h("button",{class:"btn",type:"button","aria-haspopup":"menu","aria-expanded":"false",onclick:e=>{
-    e.stopPropagation(); const open=menu.hidden; menu.hidden=!open; btn.setAttribute("aria-expanded",String(open));
-    if(open) setTimeout(()=>document.addEventListener("click",()=>{ menu.hidden=true; btn.setAttribute("aria-expanded","false"); },{once:true}),0);
-  }},icon("gear"),"პარამეტრები");
-  return h("div",{class:"menu-wrap"},btn,menu);
-}
-
 /* ---------- project form ---------- */
 async function saveProject(pid,patch,msg){
   try{ const p=await api("PATCH","/projects/"+encodeURIComponent(pid),patch); p.stats=(S.projects.get(pid)||{}).stats; S.projects.set(pid,p); if(msg) toast(msg); return p; }
