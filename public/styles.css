@@ -609,3 +609,4 @@ a.btn{text-decoration:none}
   .anav-i{width:auto;white-space:nowrap;padding:7px 10px;font-size:.85rem}
 }
 .empty>.ico{width:34px;height:34px;color:var(--muted);opacity:.6}
+.pside-link{border:1px solid var(--line);font-size:.86rem}

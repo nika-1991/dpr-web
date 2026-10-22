@@ -467,7 +467,7 @@ const TAB_ICONS={reports:"report",progress:"chart",boq:"list",info:"info",team:"
 function renderProject(){
   const p=P();
   const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
-  if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
+  if(S.tab!=="schedule"&&!tabs.some(([k])=>k===S.tab)) S.tab="reports";
   // left sidebar: codes, name, client/location, status, quick figures, the completed toggle
   const st=p.stats||{};
   const fact=(l,v)=>h("div",{class:"pside-fact"},h("span",null,l),h("b",null,v));
@@ -483,6 +483,7 @@ function renderProject(){
       fact("ანგარიშები",String(sortedReports().length)),
       fact("პროგრესი",fmtNum(st.progress||0)+"%"),
       st.lastDate?fact("ბოლო ანგარიში",fmtDate(st.lastDate)):null),
+    h("button",{type:"button",class:"anav-i pside-link"+(S.tab==="schedule"?" on":""),"aria-current":S.tab==="schedule"?"page":null,onclick:()=>{S.tab="schedule";S.creating=null;S.editInfo=false;pushNav();render();}},icon("calendar"),h("span",null,"გეგმა-გრაფიკი")),
     S.admin?h("button",{class:"btn state-btn pside-state "+(p.archived?"reopen":"finish"),type:"button",onclick:async()=>{
         if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
         try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},
@@ -493,6 +494,7 @@ function renderProject(){
   else if(S.tab==="progress") body=renderProgress(p);
   else if(S.tab==="boq") body=renderBoq(p);
   else if(S.tab==="team") body=renderTeam(p);
+  else if(S.tab==="schedule") body=h("div",{class:"empty"},icon("calendar"),h("h2",null,"გეგმა-გრაფიკი"),h("p",{class:"muted"},"გვერდი მზადდება."));
   else body=renderInfo(p);
   return h("div",{class:"proj-layout"},side,h("div",{class:"proj-main"},tabBar,body));
 }
@@ -569,6 +571,7 @@ function autoItem(field,missing="ვერ მოიძებნა"){ return (r
 const listOpt=k=>()=>S.lists[k]||[];
 /* small line icons (24x24, stroke) for section headers and fields */
 const ICONS={
+  calendar:'<rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M7 13.5h4M7 17h7"/>',
   building:'<path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M2 21h20M8 7h4M8 11h4M8 15h4"/>',
   pin:'<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
   pulse:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
