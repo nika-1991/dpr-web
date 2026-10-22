@@ -590,9 +590,9 @@ a.btn{text-decoration:none}
 .anav-g{display:flex;flex-direction:column;gap:2px}
 .anav-set{border-top:1px solid var(--line);padding-top:14px}
 .anav-set .hb-l{padding:0 10px 4px}
-.anav-i{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:.92rem;text-align:left;padding:9px 10px;border-radius:8px;cursor:pointer}
-.anav-i .ico{width:19px;height:19px;color:var(--muted);flex:none}
-.anav-i:hover{background:var(--sunk)}
+.anav-i{display:flex;align-items:center;gap:11px;width:100%;border:0;background:none;color:var(--muted);font:inherit;font-size:.82rem;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer}
+.anav-i .ico{width:17px;height:17px;color:var(--muted);flex:none}
+.anav-i:hover{background:var(--sunk);color:var(--ink)}
 .anav-i.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .anav-i.on .ico{color:var(--accent)}
 @media (min-width:981px){
