@@ -609,7 +609,6 @@ a.btn{text-decoration:none}
   .anav-i{width:auto;white-space:nowrap;padding:7px 10px;font-size:.85rem}
 }
 .empty>.ico{width:34px;height:34px;color:var(--muted);opacity:.6}
-.pside-link{border:1px solid var(--line);font-size:.86rem}
 
 /* schedule grid (გეგმა-გრაფიკი) */
 .sched{display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -621,7 +620,7 @@ a.btn{text-decoration:none}
 .g-sw{width:12px;height:12px;border-radius:3px;display:inline-block}
 :root{--g-pos:#0f7a68;--g-mat:#2f6fd0;--g-eq:#c27a12;--g-lab:#8a4fc4}
 .g-sw.pos{background:var(--g-pos)}.g-sw.mat{background:var(--g-mat)}.g-sw.eq{background:var(--g-eq)}.g-sw.lab{background:var(--g-lab)}
-.gwrap{overflow:auto;max-height:calc(100vh - 230px);min-height:260px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);outline:none;position:relative}
+.gwrap{overflow:auto;max-height:calc(100vh - 200px);min-height:260px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);outline:none;position:relative}
 .gwrap:focus-visible{box-shadow:0 0 0 2px var(--accent)}
 .gtable{border-collapse:separate;border-spacing:0;font-size:.78rem;width:max-content}
 .gtable th,.gtable td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0;height:30px;white-space:nowrap}
@@ -651,7 +650,7 @@ a.btn{text-decoration:none}
 .g-head td{background:var(--sunk);font-weight:700}
 .g-head td.g-fz{background:var(--sunk)}
 .g-head.sub td{font-weight:600;color:var(--muted)}
-.g-head .g-hname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gtable td.g-hname{left:74px;max-width:650px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:3px 0 4px -2px rgba(15,23,42,.14)}
 .g-pos td.g-fz{font-weight:500}
 .g-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25;padding-top:4px}
 .g-add{border:0;background:none;color:var(--accent);font:inherit;font-size:.7rem;padding:0 0 3px;cursor:pointer}
@@ -677,15 +676,23 @@ a.btn{text-decoration:none}
 .gtable td.gc.cur{outline:2px solid var(--accent);outline-offset:-2px;z-index:1}
 .g-edit{position:absolute;inset:0;width:100%;height:100%;border:2px solid var(--accent);background:var(--surface);color:var(--ink);font:inherit;font-size:.74rem;text-align:center;padding:0;outline:none;z-index:2}
 .g-hfill{background:var(--sunk)}
-/* totals */
-.gtable tfoot td{position:sticky;bottom:0;z-index:2;background:var(--accent-soft);font-weight:600}
-.gtable tfoot tr:first-child td{bottom:30px}
-.gtable tfoot td.g-fz{z-index:4;background:var(--accent-soft)}
-.gtable td.gt{text-align:center;font-size:.62rem;font-family:var(--f-mono);color:var(--muted)}
-.g-help{margin:0}
 @media (max-width:980px){
   .gwrap{max-height:none}
   .f2,.f3,.f4,.f5,.f6{position:static}
   .f6{box-shadow:none}
   .f1{box-shadow:3px 0 4px -2px rgba(15,23,42,.14)}
 }
+/* schedule tab: whole screen width, no project sidebar */
+body.wide .bar-in{max-width:none}
+body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.g-helpd{position:relative}
+.g-helpd summary{list-style:none;cursor:pointer;width:28px;height:28px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;font-weight:700;color:var(--muted);background:var(--surface)}
+.g-helpd summary::-webkit-details-marker{display:none}
+.g-helpd[open] summary,.g-helpd summary:hover{color:var(--accent);border-color:var(--accent)}
+.g-pop{position:absolute;right:0;top:36px;z-index:30;width:min(380px,85vw);background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px -10px rgba(15,23,42,.3);padding:12px 14px;font-size:.82rem;line-height:1.45}
+.g-pop p{margin:4px 0 10px}
+.g-pop ul{margin:4px 0 0;padding-left:18px}
+.g-tip{position:fixed;z-index:60;max-width:360px;background:var(--ink);color:var(--surface);font-size:.78rem;line-height:1.35;padding:7px 10px;border-radius:7px;box-shadow:0 8px 20px -8px rgba(0,0,0,.4);pointer-events:none;white-space:normal}
+.g-tipsrc{cursor:default}
+.gm-l{position:sticky;left:732px;display:inline-block}
+@media (max-width:980px){.gm-l{left:332px}}

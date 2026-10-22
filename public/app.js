@@ -236,7 +236,9 @@ function renderBar(){
 
 /* ---------- render root ---------- */
 function render(){
-  document.body.classList.toggle("has-side",!!(S.me&&!S.me.mustChange&&S.view==="project"&&P()));
+  const projView=!!(S.me&&!S.me.mustChange&&S.view==="project"&&P());
+  document.body.classList.toggle("has-side",projView&&S.tab!=="schedule");
+  document.body.classList.toggle("wide",projView&&S.tab==="schedule");
   renderBar();
   let v;
   if(!S.me) v=renderLogin();
@@ -464,11 +466,11 @@ function renderProjectForm(pid){
 }
 
 /* ---------- PROJECT ---------- */
-const TAB_ICONS={reports:"report",progress:"chart",boq:"list",info:"info",team:"personnel"};
+const TAB_ICONS={reports:"report",progress:"chart",boq:"list",schedule:"calendar",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
-  const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
-  if(S.tab!=="schedule"&&!tabs.some(([k])=>k===S.tab)) S.tab="reports";
+  const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
+  if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
   // left sidebar: codes, name, client/location, status, quick figures, the completed toggle
   const st=p.stats||{};
   const fact=(l,v)=>h("div",{class:"pside-fact"},h("span",null,l),h("b",null,v));
@@ -484,7 +486,6 @@ function renderProject(){
       fact("ანგარიშები",String(sortedReports().length)),
       fact("პროგრესი",fmtNum(st.progress||0)+"%"),
       st.lastDate?fact("ბოლო ანგარიში",fmtDate(st.lastDate)):null),
-    h("button",{type:"button",class:"anav-i pside-link"+(S.tab==="schedule"?" on":""),"aria-current":S.tab==="schedule"?"page":null,onclick:()=>{S.tab="schedule";S.creating=null;S.editInfo=false;pushNav();render();}},icon("calendar"),h("span",null,"გეგმა-გრაფიკი")),
     S.admin?h("button",{class:"btn state-btn pside-state "+(p.archived?"reopen":"finish"),type:"button",onclick:async()=>{
         if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
         try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},
@@ -497,6 +498,7 @@ function renderProject(){
   else if(S.tab==="team") body=renderTeam(p);
   else if(S.tab==="schedule") body=renderSchedule(p);
   else body=renderInfo(p);
+  if(S.tab==="schedule") return h("div",{class:"proj-main"},tabBar,body);
   return h("div",{class:"proj-layout"},side,h("div",{class:"proj-main"},tabBar,body));
 }
 
@@ -1173,6 +1175,7 @@ function saveSchedule(){
   },600);
 }
 function schedStatus(t,bad){ const el=document.getElementById("sched-status"); if(el){ el.textContent=tr(t); el.style.color=bad?"var(--bad)":""; } }
+function gTip(){ let t=document.getElementById("g-tip"); if(!t){ t=h("div",{id:"g-tip",class:"g-tip",role:"tooltip",hidden:true}); document.body.append(t); } return t; }
 function renderSchedule(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   const sc=S.sched; sc.rows=sc.rows||{};
@@ -1211,7 +1214,20 @@ function renderSchedule(p){
         h("input",{type:"date",class:"inp",value:to,disabled:!edit,"aria-label":"დასრულება",onchange:e=>{ sc.end=e.target.value; changed(); }}))),
     h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ const i=days.indexOf(today); if(i<0){ toast("დღევანდელი თარიღი პერიოდში არ შედის"); return; } const c=wrap.querySelector('th.gd[data-di="'+i+'"]'); if(c) wrap.scrollLeft=c.offsetLeft-wrap.querySelector(".g-fz-last").getBoundingClientRect().right+wrap.getBoundingClientRect().left-40; }},"დღეს"),
     legend,h("span",{class:"spacer"}),
-    h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"));
+    h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
+    h("details",{class:"g-helpd"},h("summary",{"aria-label":"დახმარება",title:"დახმარება"},"?"),
+      h("div",{class:"g-pop"},
+        h("b",null,"როგორ შევავსო"),
+        h("p",null,"დღის უჯრაში ჩაწერეთ იმ დღეს შესასრულებელი მოცულობა — უჯრა გაფერადდება. „გეგმით“ არის დღეების ჯამი: წითელი — აჭარბებს მოცულობას, მწვანე — ემთხვევა."),
+        h("p",null,"პოზიციის ქვეშ „+ რესურსი“ ამატებს მასალას, ტექნიკას ან შრომით რესურსს."),
+        h("b",null,"კლავიატურა"),
+        h("ul",null,
+          h("li",null,"ისრები, Tab, Enter — გადაადგილება"),
+          h("li",null,"რიცხვის აკრეფა — ჩაწერა; ორჯერ დაჭერა ან F2 — შესწორება"),
+          h("li",null,"Delete — წაშლა"),
+          h("li",null,"Shift ან მაუსით გადათრევა — რამდენიმე უჯრის მონიშვნა"),
+          h("li",null,"Ctrl+C / Ctrl+V — კოპირება Excel-იდან და Excel-ში; ერთი მნიშვნელობა ავსებს მთელ მონიშნულს")),
+        edit?null:h("p",{class:"muted"},"გეგმა-გრაფიკს ცვლის ადმინი ან პროექტის რივიუერი."))));
 
   /* header: months, then day numbers */
   const months=[]; for(const d of days){ const m=d.slice(0,7); if(months.length&&months[months.length-1].m===m) months[months.length-1].n++; else months.push({m,n:1}); }
@@ -1219,18 +1235,18 @@ function renderSchedule(p){
   const fz=["BoQ #","დასახელება / რესურსი","განზ.","მოცულობა","ერთ. ფასი","ღირებულება","გეგმით"];
   const thead=h("thead",null,
     h("tr",null,fz.map((l,i)=>h("th",{class:"g-fz f"+i+(i===6?" g-fz-last":""),rowspan:"2"},l)),
-      months.map(x=>h("th",{class:"gm",colspan:String(x.n)},(LANG==="en"?MONTHS_EN:MONTHS_KA)[+x.m.slice(5)-1]+" "+x.m.slice(0,4)))),
+      months.map(x=>h("th",{class:"gm",colspan:String(x.n)},h("span",{class:"gm-l"},(LANG==="en"?MONTHS_EN:MONTHS_KA)[+x.m.slice(5)-1]+" "+x.m.slice(0,4))))),
     h("tr",null,days.map((d,i)=>h("th",{class:"gd"+(wd(d)===0||wd(d)===6?" we":"")+(d===today?" td":""),"data-di":String(i),title:fmtDate(d)},
       h("b",null,String(+d.slice(8))),h("span",null,(LANG==="en"?WD_EN:WD_KA)[wd(d)])))));
 
   const body=rows.map((r,ri)=>{
     if(r.kind==="head") return h("tr",{class:"g-head"+(r.it.type==="ქვეთავი"?" sub":"")},
-      h("td",{class:"g-fz f0 mono"},r.it.code||""),h("td",{class:"g-fz g-hname",colspan:"6"},r.it.name||""),h("td",{class:"g-hfill",colspan:String(days.length)}));
+      h("td",{class:"g-fz f0 mono"},r.it.code||""),h("td",{class:"g-fz g-hname",colspan:"6"},h("span",{class:"g-tipsrc","data-tip":r.it.name||""},r.it.name||"")),h("td",{class:"g-hfill",colspan:String(days.length)}));
     const tot=sum(r.plan), q=r.qty;
     const sumCls="g-fz f6 num"+(q&&tot>q+1e-9?" over":q&&Math.abs(tot-q)<1e-9?" full":"");
     const left=r.kind==="pos"?[
       h("td",{class:"g-fz f0 mono"},h("b",null,r.it.code)),
-      h("td",{class:"g-fz f1"},h("div",{class:"g-name",title:r.it.name},r.it.name),
+      h("td",{class:"g-fz f1"},h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name),
         edit?h("button",{class:"g-add",type:"button",onclick:()=>{ r.sr.res.push({id:Math.random().toString(36).slice(2,8),type:"მასალა",name:"",unit:"",qty:null,price:null,plan:{}}); S.gfocusNew=true; changed(); }},"+ რესურსი"):null),
       h("td",{class:"g-fz f2"},r.it.unit||""),
       h("td",{class:"g-fz f3 num"},q?fmtNum(q):""),
@@ -1251,13 +1267,7 @@ function renderSchedule(p){
     return h("tr",{class:"g-"+r.kind},left,days.map((d,di)=>{ const v=r.plan[d];
       return h("td",{class:"gc"+(v?" f "+c:"")+(wd(d)===0||wd(d)===6?" we":"")+(d===today?" td":""),"data-ri":String(ri),"data-di":String(di)},v?fmtNum(num(v)):""); }));
   });
-  /* daily totals: value of planned work (positions) and of resources */
-  const dayVal=kind=>days.map(d=>rows.reduce((a,r)=>r.kind===kind&&r.plan[d]?a+num(r.plan[d])*r.price:a,0));
-  const totRow=(label,vals)=>{ const all=vals.reduce((a,b)=>a+b,0);
-    return h("tr",{class:"g-tot"},h("td",{class:"g-fz f0"}),h("td",{class:"g-fz f1",colspan:"4"},label),h("td",{class:"g-fz f5 num"},all?fmtNum(all):""),h("td",{class:"g-fz f6"}),
-      vals.map(v=>h("td",{class:"gt"},v?fmtNum(v):""))); };
-  const table=h("table",{class:"gtable"},thead,h("tbody",null,body),
-    h("tfoot",null,totRow("სამუშაოს ღირებულება დღეში",dayVal("pos")),totRow("რესურსების ღირებულება დღეში",dayVal("res"))));
+  const table=h("table",{class:"gtable"},thead,h("tbody",null,body));
 
   /* selection and editing */
   const wrap=h("div",{class:"gwrap",tabindex:"0","aria-label":"გეგმა-გრაფიკის ბადე",onscroll:()=>{ S.gscroll={x:wrap.scrollLeft,y:wrap.scrollTop}; }},table);
@@ -1299,6 +1309,13 @@ function renderSchedule(p){
   wrap.addEventListener("mousedown",e=>{ const c=e.target.closest("td.gc"); if(!c||e.target.closest(".g-edit")) return; e.preventDefault(); wrap.focus({preventScroll:true});
     select(+c.dataset.ri,+c.dataset.di,e.shiftKey); S.gdrag=true; });
   wrap.addEventListener("mouseover",e=>{ if(!S.gdrag) return; const c=e.target.closest("td.gc"); if(c){ const a=S.gsel.anchor||{ri:S.gsel.ri,di:S.gsel.di}; S.gsel={ri:+c.dataset.ri,di:+c.dataset.di,anchor:a}; paint(); } });
+  /* full item name in a small box on hover (names are cut to fit the column) */
+  wrap.addEventListener("mouseover",e=>{ const t=e.target.closest(".g-tipsrc"); const tip=gTip();
+    if(!t||!t.dataset.tip){ tip.hidden=true; return; }
+    const r=t.getBoundingClientRect(); tip.textContent=t.dataset.tip; tip.hidden=false;
+    tip.style.left=Math.min(r.left,window.innerWidth-tip.offsetWidth-12)+"px"; tip.style.top=(r.bottom+6)+"px"; });
+  wrap.addEventListener("mouseleave",()=>{ gTip().hidden=true; });
+  wrap.addEventListener("scroll",()=>{ gTip().hidden=true; });
   wrap.addEventListener("dblclick",e=>{ if(e.target.closest("td.gc")) startEdit(); });
   wrap.addEventListener("keydown",e=>{
     if(e.target!==wrap) return;
@@ -1327,8 +1344,7 @@ function renderSchedule(p){
     if(S.gfocusNew){ S.gfocusNew=false; const n=wrap.querySelector('input[data-new="1"]'); if(n) n.focus(); } });
   const units=h("datalist",{id:"g-units"},((S.lists&&S.lists.units)||[]).map(u=>h("option",{value:u})));
   return h("div",{class:"sched"},bar,
-    rows.length?wrap:h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე.")),units,
-    h("p",{class:"small muted g-help"},edit?"უჯრაში ჩაწერეთ იმ დღეს შესასრულებელი მოცულობა. ისრები, Tab და Enter — გადაადგილება; Delete — წაშლა; Shift ან გადათრევა — რამდენიმე უჯრის მონიშვნა; Ctrl+C / Ctrl+V — Excel-იდან და Excel-ში კოპირება.":"გეგმა-გრაფიკს ცვლის ადმინი ან პროექტის რივიუერი."));
+    rows.length?wrap:h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე.")),units);
 }
 
 /* ---------- TEAM ---------- */
