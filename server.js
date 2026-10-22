@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS reports(
 CREATE INDEX IF NOT EXISTS reports_date ON reports(date);
 CREATE TABLE IF NOT EXISTS additional(id TEXT PRIMARY KEY, project_id TEXT NOT NULL, data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS schedules(project_id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT NOT NULL, updated_by TEXT);
 CREATE TABLE IF NOT EXISTS report_revisions(
   report_id TEXT NOT NULL, rev INTEGER NOT NULL, data TEXT NOT NULL, saved_at TEXT NOT NULL, PRIMARY KEY(report_id, rev));
 CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, mime TEXT NOT NULL, size INTEGER NOT NULL, created_at TEXT NOT NULL);
@@ -535,6 +536,42 @@ api.get("/analysis", auth, (req, res) => {
   });
   const additional = db.prepare("SELECT project_id,data FROM additional").all().filter((row) => mine(row.project_id)).map((row) => ({ projectId: row.project_id, ...JSON.parse(row.data) }));
   res.json({ reports, additional });
+});
+/* schedule (გეგმა-გრაფიკი): resources under each BoQ position and planned quantities per day */
+const RES_TYPES = ["მასალა", "ტექნიკა", "შრომა"];
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+const cleanNum = (v) => { const n = parseFloat(String(v ?? "").replace(",", ".")); return isFinite(n) ? Math.round(n * 1e4) / 1e4 : null; };
+const cleanPlan = (pl) => Object.fromEntries(Object.entries(pl && typeof pl === "object" ? pl : {})
+  .filter(([d, v]) => ISO_RE.test(d) && cleanNum(v) !== null && cleanNum(v) !== 0).slice(0, 2000).map(([d, v]) => [d, cleanNum(v)]));
+const str = (v, n) => String(v ?? "").slice(0, n);
+function cleanSchedule(b) {
+  const rows = {};
+  for (const [code, r] of Object.entries(b && typeof b.rows === "object" && b.rows ? b.rows : {}).slice(0, 5000)) {
+    if (!r || typeof r !== "object") continue;
+    rows[str(code, 40)] = {
+      price: cleanNum(r.price), plan: cleanPlan(r.plan),
+      res: (Array.isArray(r.res) ? r.res : []).slice(0, 200).map((x) => ({
+        id: str(x?.id, 20) || newId(6), type: RES_TYPES.includes(x?.type) ? x.type : "მასალა",
+        name: str(x?.name, 300), unit: str(x?.unit, 30), qty: cleanNum(x?.qty), price: cleanNum(x?.price), plan: cleanPlan(x?.plan),
+      })),
+    };
+  }
+  return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows };
+}
+api.get("/projects/:id/schedule", auth, (req, res) => {
+  if (!canSee(getProject(req.params.id), req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
+  const row = db.prepare("SELECT data,updated_at,updated_by FROM schedules WHERE project_id=?").get(req.params.id);
+  res.json(row ? { ...JSON.parse(row.data), updatedAt: row.updated_at, updatedBy: row.updated_by } : { start: "", end: "", rows: {} });
+});
+/* the schedule is edited by admins and the project's reviewers */
+api.put("/projects/:id/schedule", auth, (req, res) => {
+  const p = getProject(req.params.id);
+  if (!canSee(p, req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
+  if (!canReview(p, req.user)) return res.status(403).json({ error: "გეგმა-გრაფიკს ცვლის ადმინი ან პროექტის რივიუერი" });
+  const d = cleanSchedule(req.body || {}), t = now();
+  db.prepare("INSERT INTO schedules(project_id,data,updated_at,updated_by) VALUES(?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at,updated_by=excluded.updated_by")
+    .run(req.params.id, JSON.stringify(d), t, req.user.id);
+  res.json({ ok: true, updatedAt: t });
 });
 /* earlier (approved) revisions of a report */
 api.get("/reports/:id/revisions", auth, (req, res) => {
