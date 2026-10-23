@@ -1319,8 +1319,6 @@ function renderSchedule(p){
         codeCell(r,n?tri(open,()=>{ open?shut.add(r.code):shut.delete(r.code); rebuild(); },r.it.name):null),
         h("td",{class:"g-fz f1"},h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name),
           h("div",{class:"g-subl"},
-            n?h("span",{class:"muted"},h("span",null,"რესურსები")," · "+n)
-              :h("span",{class:"muted"},"რესურსი არ არის"),
             edit?h("button",{class:"g-add",type:"button",onclick:()=>{ r.sr.res.push({id:Math.random().toString(36).slice(2,8),type:"შრომა",name:"",unit:"",qty:null,price:null,plan:{}}); shut.delete(r.code); S.gfocusNew=true; changed(); }},"+ რესურსი"):null)),
         h("td",{class:"g-fz f2 num"},r.qty?fmtNum(r.qty):"—"," ",h("small",{class:"muted"},r.it.unit||"")),
         h("td",{class:"g-fz f3"},inp(r.sr.price??"",v=>{ r.sr.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":p"})),
@@ -1332,7 +1330,7 @@ function renderSchedule(p){
       h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
         h("select",{class:"g-chip "+c,disabled:!edit,"aria-label":"რესურსის ტიპი","data-f":ri+":t",onchange:e=>{ r.x.type=e.target.value; changed(); }},
           RES_TYPES.map(([t])=>{ const o=h("option",{value:t},t); if(t===r.x.type) o.selected=true; return o; })),
-        inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არ არის მითითებული","aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
+        inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა","aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
         edit?h("button",{class:"g-del",type:"button",tabindex:"-1","aria-label":"რესურსის წაშლა",title:"წაშლა",onclick:()=>{ r.sr.res.splice(r.sr.res.indexOf(r.x),1); changed(); }},"✕"):null)),
       h("td",{class:"g-fz f2"},h("div",{class:"g-qu"},
         inp(r.x.qty??"",v=>{ r.x.qty=numOrNull(v); changed(); },{class:"g-in num","aria-label":"რაოდენობა",placeholder:"0",inputmode:"decimal","data-f":ri+":q"}),

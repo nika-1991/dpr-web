@@ -683,7 +683,8 @@ a.btn{text-decoration:none}
 .g-fold:hover{color:var(--accent)}
 .g-pos td.f0{font-size:.82rem}
 .g-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;line-height:1.3}
-.g-subl{display:flex;gap:10px;align-items:center;font-size:.72rem;margin-top:2px}
+.g-subl{display:flex;gap:10px;align-items:center;font-size:.66rem;margin-top:1px}
+.g-subl:empty{display:none}
 .g-tog{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;padding:0;cursor:pointer}
 .g-add{border:0;background:none;color:var(--muted);font:inherit;padding:0;cursor:pointer}
 .g-add:hover,.g-tog:hover{text-decoration:underline;color:var(--accent)}
@@ -699,7 +700,7 @@ a.btn{text-decoration:none}
 .g-in:hover:not(:disabled){border-color:var(--line)}
 .g-in:focus{outline:none;border-color:var(--accent);background:var(--surface)}
 .g-in.num{text-align:right}
-.g-rn::placeholder{color:var(--bad);font-style:italic;opacity:.85}
+.g-rn::placeholder{color:var(--bad);font-style:italic;opacity:.8;font-size:.68rem}
 .g-qu{display:flex;gap:2px}
 .g-qu .num{flex:1 1 50px;min-width:0}.g-qu .g-un{flex:0 0 52px}
 .g-del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:.72rem;padding:2px 4px;border-radius:4px;flex:none}
