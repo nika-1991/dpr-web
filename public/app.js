@@ -1300,7 +1300,9 @@ function renderSchedule(p){
         r.kind==="pos"&&last<0&&ci===0&&edit?h("button",{class:"g-planbtn",type:"button",onclick:()=>{ S.gplan={code:r.code}; render(); }},"+ დაგეგმვა"):null); });
   };
   /* outline tree like Excel / MS Project: each level is indented; ◢ open group, ▷ folded group */
-  const IND=18;
+  const IND=14;
+  const codeCell=(r,toggle)=>h("td",{class:"g-fz f0 mono"},h("div",{class:"g-code",style:"padding-left:"+depth(r)*IND+"px"},toggle||triGap(),
+    r.kind==="res"?null:h("span",{class:r.kind==="pos"?"g-cpos":"g-chead"},r.it.code||"")));
   const depth=r=>r.kind==="head"?r.lvl-1:r.kind==="pos"?(r.sub?2:r.chap?1:0):depth(r.pos)+1;
   const tri=(open,toggle,label)=>h("button",{class:"g-fold",type:"button","aria-expanded":String(open),"aria-label":(open?tr("აკეცვა"):tr("გაშლა"))+(label?": "+label:""),onclick:toggle},open?"◢":"▷");
   const triGap=()=>h("span",{class:"g-fold-gap","aria-hidden":"true"});
@@ -1308,30 +1310,26 @@ function renderSchedule(p){
   const body=rows.map((r,ri)=>{
     if(r.kind==="head"){ const n=r.kids.filter(k=>planDays(k.plan).length).length;
       return h("tr",{class:"g-head"+(r.it.type==="ქვეთავი"?" sub":"")},
-        h("td",{class:"g-fz f0 mono"},r.it.code||""),
-        h("td",{class:"g-fz f1"},h("div",{class:"g-hrow",style:"padding-left:"+depth(r)*IND+"px"},
-          tri(!fold.has(r.key),()=>{ fold.has(r.key)?fold.delete(r.key):fold.add(r.key); rebuild(); },r.it.name),
-          h("div",{class:"g-hname g-tipsrc","data-tip":r.it.name||""},r.it.name||""))),
+        codeCell(r,tri(!fold.has(r.key),()=>{ fold.has(r.key)?fold.delete(r.key):fold.add(r.key); rebuild(); },r.it.name)),
+        h("td",{class:"g-fz f1"},h("div",{class:"g-hname g-tipsrc","data-tip":r.it.name||""},r.it.name||"")),
         h("td",{class:"g-fz g-hsum",colspan:"3"},r.kids.length?[String(n)," / ",String(r.kids.length)," ",h("span",null,"დაგეგმილი")]:""),
         gridCells(r,ri)); }
     if(r.kind==="pos"){ const n=r.sr.res.length, open=!shut.has(r.code);
       return h("tr",{class:"g-pos"},
-        h("td",{class:"g-fz f0 mono"},h("b",null,r.it.code)),
-        h("td",{class:"g-fz f1"},h("div",{class:"g-hrow",style:"padding-left:"+depth(r)*IND+"px"},
-          n?tri(open,()=>{ open?shut.add(r.code):shut.delete(r.code); rebuild(); },r.it.name):triGap(),
-          h("div",{class:"g-pcell"},h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name),
+        codeCell(r,n?tri(open,()=>{ open?shut.add(r.code):shut.delete(r.code); rebuild(); },r.it.name):null),
+        h("td",{class:"g-fz f1"},h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name),
           h("div",{class:"g-subl"},
             n?h("span",{class:"muted"},h("span",null,"რესურსები")," · "+n)
               :h("span",{class:"muted"},"რესურსი არ არის"),
-            edit?h("button",{class:"g-add",type:"button",onclick:()=>{ r.sr.res.push({id:Math.random().toString(36).slice(2,8),type:"შრომა",name:"",unit:"",qty:null,price:null,plan:{}}); shut.delete(r.code); S.gfocusNew=true; changed(); }},"+ რესურსი"):null)))),
+            edit?h("button",{class:"g-add",type:"button",onclick:()=>{ r.sr.res.push({id:Math.random().toString(36).slice(2,8),type:"შრომა",name:"",unit:"",qty:null,price:null,plan:{}}); shut.delete(r.code); S.gfocusNew=true; changed(); }},"+ რესურსი"):null)),
         h("td",{class:"g-fz f2 num"},r.qty?fmtNum(r.qty):"—"," ",h("small",{class:"muted"},r.it.unit||"")),
         h("td",{class:"g-fz f3"},inp(r.sr.price??"",v=>{ r.sr.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":p"})),
         h("td",{class:"g-fz f4 num"},dur(r.plan)),
         gridCells(r,ri)); }
     const c=cls(r), isNew=S.gfocusNew&&r.x===r.sr.res[r.sr.res.length-1];
     return h("tr",{class:"g-res"},
-      h("td",{class:"g-fz f0"}),
-      h("td",{class:"g-fz f1"},h("div",{class:"g-resname",style:"padding-left:"+(depth(r)*IND+IND)+"px"},
+      codeCell(r,null),
+      h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
         h("select",{class:"g-chip "+c,disabled:!edit,"aria-label":"რესურსის ტიპი","data-f":ri+":t",onchange:e=>{ r.x.type=e.target.value; changed(); }},
           RES_TYPES.map(([t])=>{ const o=h("option",{value:t},t); if(t===r.x.type) o.selected=true; return o; })),
         inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არ არის მითითებული","aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
