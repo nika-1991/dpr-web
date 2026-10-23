@@ -1177,6 +1177,8 @@ function saveSchedule(){
 function schedStatus(t,bad){ const el=document.getElementById("sched-status"); if(el){ el.textContent=tr(t); el.style.color=bad?"var(--bad)":""; } }
 function gTip(){ let t=document.getElementById("g-tip"); if(!t){ t=h("div",{id:"g-tip",class:"g-tip",role:"tooltip",hidden:true}); document.body.append(t); } return t; }
 const planDays=pl=>Object.keys(pl||{}).filter(d=>num(pl[d])).sort();
+/* a position is worked on every day it has its own quantity or one of its resources is used */
+const posDays=r=>[...new Set([...planDays(r.plan),...r.sr.res.flatMap(x=>planDays(x.plan))])].sort();
 const ddmm=d=>d.slice(8)+"."+d.slice(5,7);
 function renderSchedule(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
@@ -1211,7 +1213,7 @@ function renderSchedule(p){
     S.gsel=null; rebuild(); };
   const outline=h("div",{class:"g-lvls",role:"group","aria-label":"დაჯგუფების დონე"},h("span",{class:"hb-l"},"დონე"),
     levels.map(L=>h("button",{type:"button",class:"g-lvl tip","data-tip":tr(lvlName[L]),"aria-label":tr(lvlName[L]),onclick:()=>setLevel(L)},String(L))));
-  const positions=all.filter(r=>r.kind==="pos"), planned=positions.filter(r=>planDays(r.plan).length);
+  const positions=all.filter(r=>r.kind==="pos"), planned=positions.filter(r=>posDays(r).length);
   const editRows=rows.map((r,i)=>r.kind==="head"?-1:i).filter(i=>i>=0);
   const cls=r=>r.kind==="pos"?"pos":(RES_TYPES.find(t=>t[0]===r.x.type)||RES_TYPES[0])[1];
 
@@ -1247,7 +1249,7 @@ function renderSchedule(p){
       h("label",{class:"g-per"},h("span",{class:"hb-l"},"მდე"),h("input",{type:"date",class:"inp",value:to,disabled:!edit,onchange:e=>{ sc.end=e.target.value; changed(); }})),
       seg,
       h("button",{class:"btn",type:"button",onclick:()=>scrollToday(true)},"დღეს"),
-      edit?h("button",{class:"btn primary",type:"button",onclick:()=>{ S.gplan={code:(positions.find(r=>!planDays(r.plan).length)||positions[0]||{}).code}; render(); }},"+ დაგეგმვა"):null));
+      edit?h("button",{class:"btn primary",type:"button",onclick:()=>{ S.gplan={code:(positions.find(r=>!posDays(r).length)||positions[0]||{}).code}; render(); }},"+ დაგეგმვა"):null));
   const legend=h("div",{class:"g-legrow"},
     outline,
     h("span",null,h("i",{class:"g-sw pos wide"}),"სამუშაო"),
@@ -1260,7 +1262,7 @@ function renderSchedule(p){
       h("div",{class:"g-pop"},
         h("b",null,"როგორ შევავსო"),
         h("p",null,"დღის უჯრაში ჩაწერეთ იმ დღეს შესასრულებელი მოცულობა — უჯრა გაფერადდება. „+ დაგეგმვა“ მოცულობას თანაბრად გაანაწილებს არჩეულ პერიოდზე."),
-        h("p",null,"პოზიციის ქვეშ „+ რესურსი“ ამატებს მასალას, ტექნიკას ან შრომით რესურსს. „რესურსები“ აკეცავს და შლის მათ სიას."),
+        h("p",null,"პოზიციის დასახელების წინ „+“ ამატებს მასალას, ტექნიკას ან შრომით რესურსს. რესურსის დღეებში პოზიციის ზოლი თავისით ფერადდება."),
         h("b",null,"კლავიატურა (დღის ხედში)"),
         h("ul",null,
           h("li",null,"ისრები, Tab, Enter — გადაადგილება"),
@@ -1286,17 +1288,20 @@ function renderSchedule(p){
   const lbl=ds=>ds.length?ddmm(ds[0])+" – "+ddmm(ds[ds.length-1]):"";
   const gridCells=(r,ri)=>{
     if(r.kind==="head"){
-      const ds=r.kids.flatMap(k=>planDays(k.plan)).sort(), a=ds[0], b=ds[ds.length-1];
+      const ds=r.kids.flatMap(posDays).sort(), a=ds[0], b=ds[ds.length-1];
       const on=cols.map(c=>!!a&&c.to>=a&&c.from<=b), last=on.lastIndexOf(true);
       return cols.map((c,ci)=>h("td",{class:"gc gh"+(isWe(c)?" we":"")+(isTd(c)?" td":"")},
         on[ci]?h("div",{class:"gb sum"+(!on[ci-1]?" rs":"")+(!on[ci+1]?" re":"")}):null,
         ci===last+1&&last>=0?h("span",{class:"g-lbl"},ddmm(a)+" – "+ddmm(b)):null));
     }
-    const v=colVals(r.plan), c=cls(r), last=v.reduce((a,x,i)=>x?i:a,-1);
+    const v=colVals(r.plan), c=cls(r);
+    /* a position's bar also covers the days its resources are used */
+    const resV=r.kind==="pos"?r.sr.res.map(x=>colVals(x.plan)):[];
+    const on=v.map((x,ci)=>!!x||resV.some(a=>a[ci])), last=on.lastIndexOf(true);
     return cols.map((cl,ci)=>{ const x=v[ci];
-      return h("td",{class:"gc"+(isWe(cl)?" we":"")+(isTd(cl)?" td":"")+(x?" f":""),"data-ri":String(ri),"data-ci":String(ci)},
-        x?h("div",{class:"gb "+c+(r.kind==="pos"?(!v[ci-1]?" rs":"")+(!v[ci+1]?" re":""):" rs re")},fmtNum(x)):null,
-        r.kind==="pos"&&ci===last+1&&last>=0?h("span",{class:"g-lbl"},lbl(planDays(r.plan))):null,
+      return h("td",{class:"gc"+(isWe(cl)?" we":"")+(isTd(cl)?" td":"")+(on[ci]?" f":""),"data-ri":String(ri),"data-ci":String(ci)},
+        on[ci]?h("div",{class:"gb "+c+(r.kind==="pos"?(!on[ci-1]?" rs":"")+(!on[ci+1]?" re":""):"")},x?fmtNum(x):""):null,
+        r.kind==="pos"&&ci===last+1&&last>=0?h("span",{class:"g-lbl"},lbl(posDays(r))):null,
         r.kind==="pos"&&last<0&&ci===0&&edit?h("button",{class:"g-planbtn",type:"button",onclick:()=>{ S.gplan={code:r.code}; render(); }},"+ დაგეგმვა"):null); });
   };
   /* outline tree like Excel / MS Project: each level is indented; ◢ open group, ▷ folded group */
@@ -1306,9 +1311,9 @@ function renderSchedule(p){
   const depth=r=>r.kind==="head"?r.lvl-1:r.kind==="pos"?(r.sub?2:r.chap?1:0):depth(r.pos)+1;
   const tri=(open,toggle,label)=>h("button",{class:"g-fold",type:"button","aria-expanded":String(open),"aria-label":(open?tr("აკეცვა"):tr("გაშლა"))+(label?": "+label:""),onclick:toggle},open?"◢":"▷");
   const triGap=()=>h("span",{class:"g-fold-gap","aria-hidden":"true"});
-  const dur=pl=>{ const n=planDays(pl).length; return n?h("span",null,String(n)," ",h("span",null,"დღე")):"—"; };
+  const dur=ds=>{ const n=ds.length; return n?h("span",null,String(n)," ",h("span",null,"დღე")):"—"; };
   const body=rows.map((r,ri)=>{
-    if(r.kind==="head"){ const n=r.kids.filter(k=>planDays(k.plan).length).length;
+    if(r.kind==="head"){ const n=r.kids.filter(k=>posDays(k).length).length;
       return h("tr",{class:"g-head"+(r.it.type==="ქვეთავი"?" sub":"")},
         codeCell(r,tri(!fold.has(r.key),()=>{ fold.has(r.key)?fold.delete(r.key):fold.add(r.key); rebuild(); },r.it.name)),
         h("td",{class:"g-fz f1"},h("div",{class:"g-hname g-tipsrc","data-tip":r.it.name||""},r.it.name||"")),
@@ -1317,14 +1322,14 @@ function renderSchedule(p){
     if(r.kind==="pos"){ const n=r.sr.res.length, open=!shut.has(r.code);
       return h("tr",{class:"g-pos"},
         codeCell(r,n?tri(open,()=>{ open?shut.add(r.code):shut.delete(r.code); rebuild(); },r.it.name):null),
-        h("td",{class:"g-fz f1"},h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name),
-          h("div",{class:"g-subl"},
-            edit?h("button",{class:"g-add",type:"button",onclick:()=>{ r.sr.res.push({id:Math.random().toString(36).slice(2,8),type:"შრომა",name:"",unit:"",qty:null,price:null,plan:{}}); shut.delete(r.code); S.gfocusNew=true; changed(); }},"+ რესურსი"):null)),
+        h("td",{class:"g-fz f1"},h("div",{class:"g-pname"},
+          edit?h("button",{class:"g-plus",type:"button",title:tr("რესურსის დამატება"),"aria-label":tr("რესურსის დამატება")+": "+(r.it.name||""),onclick:()=>{ const id=Math.random().toString(36).slice(2,8); r.sr.res.push({id,type:"შრომა",name:"",unit:"",qty:null,price:null,plan:{}}); shut.delete(r.code); S.gfocusNew=id; changed(); }},"+"):null,
+          h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name))),
         h("td",{class:"g-fz f2 num"},r.qty?fmtNum(r.qty):"—"," ",h("small",{class:"muted"},r.it.unit||"")),
         h("td",{class:"g-fz f3"},inp(r.sr.price??"",v=>{ r.sr.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":p"})),
-        h("td",{class:"g-fz f4 num"},dur(r.plan)),
+        h("td",{class:"g-fz f4 num"},dur(posDays(r))),
         gridCells(r,ri)); }
-    const c=cls(r), isNew=S.gfocusNew&&r.x===r.sr.res[r.sr.res.length-1];
+    const c=cls(r), isNew=!!S.gfocusNew&&S.gfocusNew===r.x.id;
     return h("tr",{class:"g-res"},
       codeCell(r,null),
       h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
@@ -1336,7 +1341,7 @@ function renderSchedule(p){
         inp(r.x.qty??"",v=>{ r.x.qty=numOrNull(v); changed(); },{class:"g-in num","aria-label":"რაოდენობა",placeholder:"0",inputmode:"decimal","data-f":ri+":q"}),
         inp(r.x.unit,v=>{ r.x.unit=v; changed(); },{class:"g-in g-un","aria-label":"განზ.",placeholder:"განზ.",list:"g-units","data-f":ri+":u"}))),
       h("td",{class:"g-fz f3"},inp(r.x.price??"",v=>{ r.x.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":rp"})),
-      h("td",{class:"g-fz f4 num"},dur(r.plan)),
+      h("td",{class:"g-fz f4 num"},dur(planDays(r.plan))),
       gridCells(r,ri));
   });
   const table=h("table",{class:"gtable z-"+zoom},thead,h("tbody",null,body));
