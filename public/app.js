@@ -1177,8 +1177,8 @@ function saveSchedule(){
 function schedStatus(t,bad){ const el=document.getElementById("sched-status"); if(el){ el.textContent=tr(t); el.style.color=bad?"var(--bad)":""; } }
 function gTip(){ let t=document.getElementById("g-tip"); if(!t){ t=h("div",{id:"g-tip",class:"g-tip",role:"tooltip",hidden:true}); document.body.append(t); } return t; }
 const planDays=pl=>Object.keys(pl||{}).filter(d=>num(pl[d])).sort();
-/* a position is worked on every day it has its own quantity or one of its resources is used */
-const posDays=r=>[...new Set([...planDays(r.plan),...r.sr.res.flatMap(x=>planDays(x.plan))])].sort();
+/* a position is worked on every day one of its resources is used (quantities are entered on the resources only) */
+const posDays=r=>[...new Set(r.sr.res.flatMap(x=>planDays(x.plan)))].sort();
 const ddmm=d=>d.slice(8)+"."+d.slice(5,7);
 function renderSchedule(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
@@ -1214,7 +1214,7 @@ function renderSchedule(p){
   const outline=h("div",{class:"g-lvls",role:"group","aria-label":"დაჯგუფების დონე"},h("span",{class:"hb-l"},"დონე"),
     levels.map(L=>h("button",{type:"button",class:"g-lvl tip","data-tip":tr(lvlName[L]),"aria-label":tr(lvlName[L]),onclick:()=>setLevel(L)},String(L))));
   const positions=all.filter(r=>r.kind==="pos"), planned=positions.filter(r=>posDays(r).length);
-  const editRows=rows.map((r,i)=>r.kind==="head"?-1:i).filter(i=>i>=0);
+  const editRows=rows.map((r,i)=>r.kind==="res"?i:-1).filter(i=>i>=0);
   const cls=r=>r.kind==="pos"?"pos":(RES_TYPES.find(t=>t[0]===r.x.type)||RES_TYPES[0])[1];
 
   /* period: chosen dates, else from today (or the earliest plan / BoQ date) for at least 60 days */
@@ -1261,7 +1261,7 @@ function renderSchedule(p){
     h("details",{class:"g-helpd"},h("summary",{"aria-label":"დახმარება",title:"დახმარება"},"?"),
       h("div",{class:"g-pop"},
         h("b",null,"როგორ შევავსო"),
-        h("p",null,"დღის უჯრაში ჩაწერეთ იმ დღეს შესასრულებელი მოცულობა — უჯრა გაფერადდება. „+ დაგეგმვა“ მოცულობას თანაბრად გაანაწილებს არჩეულ პერიოდზე."),
+        h("p",null,"რესურსის დღის უჯრაში ჩაწერეთ იმ დღის რაოდენობა — უჯრა გაფერადდება, პოზიციის ზოლი კი თავისით გამოჩნდება. „+ დაგეგმვა“ რესურსის რაოდენობას თანაბრად გაანაწილებს არჩეულ პერიოდზე."),
         h("p",null,"პოზიციის დასახელების წინ „+“ ამატებს მასალას, ტექნიკას ან შრომით რესურსს. რესურსის დღეებში პოზიციის ზოლი თავისით ფერადდება."),
         h("b",null,"კლავიატურა (დღის ხედში)"),
         h("ul",null,
@@ -1294,13 +1294,16 @@ function renderSchedule(p){
         on[ci]?h("div",{class:"gb sum"+(!on[ci-1]?" rs":"")+(!on[ci+1]?" re":"")}):null,
         ci===last+1&&last>=0?h("span",{class:"g-lbl"},ddmm(a)+" – "+ddmm(b)):null));
     }
-    const v=colVals(r.plan), c=cls(r);
-    /* a position's bar also covers the days its resources are used */
-    const resV=r.kind==="pos"?r.sr.res.map(x=>colVals(x.plan)):[];
-    const on=v.map((x,ci)=>!!x||resV.some(a=>a[ci])), last=on.lastIndexOf(true);
-    return cols.map((cl,ci)=>{ const x=v[ci];
-      return h("td",{class:"gc"+(isWe(cl)?" we":"")+(isTd(cl)?" td":"")+(on[ci]?" f":""),"data-ri":String(ri),"data-ci":String(ci)},
-        on[ci]?h("div",{class:"gb "+c+(r.kind==="pos"?(!on[ci-1]?" rs":"")+(!on[ci+1]?" re":""):"")},x?fmtNum(x):""):null,
+    const c=cls(r);
+    /* resources: editable quantities; positions: a thin bar over the days their resources are used */
+    if(r.kind==="res"){ const v=colVals(r.plan);
+      return cols.map((cl,ci)=>h("td",{class:"gc"+(isWe(cl)?" we":"")+(isTd(cl)?" td":"")+(v[ci]?" f":""),"data-ri":String(ri),"data-ci":String(ci)},
+        v[ci]?h("div",{class:"gb "+c},fmtNum(v[ci])):null)); }
+    const resV=r.sr.res.map(x=>colVals(x.plan));
+    const on=cols.map((cl,ci)=>resV.some(a=>a[ci])), last=on.lastIndexOf(true);
+    return cols.map((cl,ci)=>{
+      return h("td",{class:"gc gp"+(isWe(cl)?" we":"")+(isTd(cl)?" td":"")},
+        on[ci]?h("div",{class:"gb "+c+(!on[ci-1]?" rs":"")+(!on[ci+1]?" re":"")}):null,
         r.kind==="pos"&&ci===last+1&&last>=0?h("span",{class:"g-lbl"},lbl(posDays(r))):null,
         r.kind==="pos"&&last<0&&ci===0&&edit?h("button",{class:"g-planbtn",type:"button",onclick:()=>{ S.gplan={code:r.code}; render(); }},"+ დაგეგმვა"):null); });
   };
@@ -1426,42 +1429,58 @@ function renderSchedule(p){
     S.gplan?renderPlanDialog(sc,positions,from,to):null);
 }
 /* "+ დაგეგმვა": spread a quantity evenly over a date range (optionally skipping weekends) */
+/* "+ დაგეგმვა": spread a resource quantity evenly over a period (optionally skipping weekends);
+   the resource can be one the position already has or a new one */
 function renderPlanDialog(sc,positions,from,to){
   const pos=positions.find(r=>r.code===S.gplan.code)||positions[0];
   if(!pos){ S.gplan=null; return null; }
-  const ds=planDays(pos.plan);
   const close=()=>{ S.gplan=null; render(); };
-  const ids={p:uid(),a:uid(),b:uid(),q:uid(),w:uid()};
+  const ids={p:uid(),r:uid(),n:uid(),a:uid(),b:uid(),q:uid(),w:uid()};
+  const res=pos.sr.res;
+  const pick=S.gplan.res||(res[0]?res[0].id:"new:შრომა");
+  const target=res.find(x=>x.id===pick);
+  const ds=target?planDays(target.plan):[];
   const start=ds[0]||(todayISO()>=from&&todayISO()<=to?todayISO():from);
   const pSel=h("select",{id:ids.p,class:"inp",onchange:e=>{ S.gplan={code:e.target.value}; render(); }},
     positions.map(r=>{ const o=h("option",{value:r.code},r.it.code+" — "+String(r.it.name||"").slice(0,70)); if(r===pos) o.selected=true; return o; }));
+  const rSel=h("select",{id:ids.r,class:"inp",onchange:e=>{ S.gplan={code:pos.code,res:e.target.value}; render(); }},
+    res.map(x=>h("option",{value:x.id},tr(x.type)+" — "+(x.name||tr("დასახელება არაა")))),
+    RES_TYPES.map(([t])=>h("option",{value:"new:"+t},tr("ახალი რესურსი")+": "+tr(t))));
+  rSel.value=pick;
+  const nIn=pick.startsWith("new:")?h("input",{id:ids.n,class:"inp",placeholder:"მაგ. მუშა, ექსკავატორი, ბეტონი"}):null;
   const aIn=h("input",{id:ids.a,type:"date",class:"inp",value:start});
   const bIn=h("input",{id:ids.b,type:"date",class:"inp",value:ds[ds.length-1]||addDays(start,13)});
-  const qIn=h("input",{id:ids.q,class:"inp num",inputmode:"decimal",value:pos.qty?String(pos.qty):""});
+  const qIn=h("input",{id:ids.q,class:"inp num",inputmode:"decimal",value:target&&target.qty?String(target.qty):""});
   const wIn=h("input",{id:ids.w,type:"checkbox",checked:true});
   const info=h("div",{class:"small muted"});
+  const unit=()=>target?(target.unit||""):"";
   const workDays=()=>{ const out=[]; if(!aIn.value||!bIn.value||bIn.value<aIn.value) return out;
     for(let d=aIn.value; d<=bIn.value&&out.length<731; d=addDays(d,1)){ const w=new Date(d+"T00:00").getDay(); if(!wIn.checked||(w!==0&&w!==6)) out.push(d); } return out; };
-  const upd=()=>{ const n=workDays().length, q=num(qIn.value); info.textContent=n?(n+" "+tr("სამუშაო დღე")+(q?" · "+tr("დღეში ≈ ")+fmtNum(q/n)+" "+(pos.it.unit||""):"")):tr("აირჩიეთ სწორი პერიოდი"); };
+  const upd=()=>{ const n=workDays().length, q=num(qIn.value); info.textContent=n?(n+" "+tr("სამუშაო დღე")+(q?" · "+tr("დღეში ≈ ")+fmtNum(q/n)+" "+unit():"")):tr("აირჩიეთ სწორი პერიოდი"); };
   [aIn,bIn,qIn,wIn].forEach(x=>x.addEventListener("input",upd)); upd();
   const ok=()=>{ const list=workDays(), q=num(qIn.value);
     if(!list.length){ toast("აირჩიეთ სწორი პერიოდი"); return; } if(!(q>0)){ toast("მიუთითეთ მოცულობა"); qIn.focus(); return; }
-    for(const d of Object.keys(pos.plan)) if(d>=aIn.value&&d<=bIn.value) delete pos.plan[d];
+    let x=target;
+    if(!x){ x={id:Math.random().toString(36).slice(2,8),type:pick.slice(4),name:(nIn&&nIn.value.trim())||"",unit:"",qty:q,price:null,plan:{}}; res.push(x); (S.gshut||new Set()).delete(pos.code); }
+    else if(x.qty==null) x.qty=q;
+    for(const d of Object.keys(x.plan)) if(d>=aIn.value&&d<=bIn.value) delete x.plan[d];
     const per=Math.round(q/list.length*100)/100;
-    list.forEach((d,i)=>{ pos.plan[d]=i<list.length-1?per:Math.round((q-per*(list.length-1))*100)/100; });
+    list.forEach((d,i)=>{ x.plan[d]=i<list.length-1?per:Math.round((q-per*(list.length-1))*100)/100; });
     if(aIn.value<from) sc.start=aIn.value; if(bIn.value>to) sc.end=bIn.value;
     S.gplan=null; saveSchedule(); render(); };
   return h("div",{class:"g-modal",onkeydown:e=>{ if(e.key==="Escape") close(); },onclick:e=>{ if(e.target===e.currentTarget) close(); }},
     h("div",{class:"g-dlg",role:"dialog","aria-modal":"true","aria-labelledby":ids.p+"h"},
       h("h3",{id:ids.p+"h"},"დაგეგმვა"),
       h("div",{class:"field"},h("label",{for:ids.p},"პოზიცია"),pSel),
+      h("div",{class:"field"},h("label",{for:ids.r},"რესურსი"),rSel),
+      nIn?h("div",{class:"field"},h("label",{for:ids.n},"რესურსის დასახელება"),nIn):null,
       h("div",{class:"row",style:"gap:10px;flex-wrap:nowrap"},
         h("div",{class:"field",style:"flex:1"},h("label",{for:ids.a},"დან"),aIn),
         h("div",{class:"field",style:"flex:1"},h("label",{for:ids.b},"მდე"),bIn)),
-      h("div",{class:"field"},h("label",{for:ids.q},"მოცულობა"+(pos.it.unit?" ("+pos.it.unit+")":"")),qIn),
+      h("div",{class:"field"},h("label",{for:ids.q},"მოცულობა"+(unit()?" ("+unit()+")":"")),qIn),
       h("label",{class:"check",for:ids.w},wIn,"შაბათ-კვირის გარეშე"),
       info,
-      h("p",{class:"small muted",style:"margin:0"},"მოცულობა თანაბრად განაწილდება არჩეულ დღეებზე. ამ პერიოდში არსებული გეგმა ჩანაცვლდება."),
+      h("p",{class:"small muted",style:"margin:0"},"მოცულობა თანაბრად განაწილდება არჩეულ დღეებზე. ამ პერიოდში რესურსის არსებული გეგმა ჩანაცვლდება."),
       h("div",{class:"row",style:"justify-content:flex-end"},h("button",{class:"btn ghost",type:"button",onclick:close},"გაუქმება"),h("button",{class:"btn primary",type:"button",onclick:ok},"დაგეგმვა"))));
 }
 

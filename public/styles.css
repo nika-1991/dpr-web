@@ -745,3 +745,9 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
   .f1{box-shadow:3px 0 4px -2px rgba(15,23,42,.12)}
   .gm-l{left:424px}
 }
+/* item bar: thin, close to the cell edges */
+.gp .gb{height:10px;left:-1px;right:0}
+.gp .gb.rs{left:2px;border-radius:5px 0 0 5px}
+.gp .gb.re{right:2px;border-top-right-radius:5px;border-bottom-right-radius:5px}
+.gp .gb.rs.re{border-radius:5px}
+.gtable td.gp{cursor:default}
