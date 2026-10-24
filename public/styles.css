@@ -753,7 +753,6 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 /* execution plan table */
 .xtable .g-pos td,.xtable .g-head td{height:32px}
 .xtable th.x-date{width:84px;min-width:84px;max-width:84px;padding:0 2px;border-left:1px solid var(--g-line);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3;background:var(--surface)}
-.xtable thead th{height:40px}
 .x-dh{display:flex;align-items:center;gap:2px}
 .x-din{border:1px solid transparent;background:transparent;font:inherit;font-size:.76rem;color:var(--ink);font-weight:600;padding:3px 4px;border-radius:5px;width:100%;min-width:0}
 .x-din:hover:not(:disabled){border-color:var(--line)}
@@ -794,3 +793,12 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .xtable .x-in{font-size:.74rem;padding:1px 4px}
 .x-addw{position:relative;display:inline-block}
 .x-hidpick{position:absolute;left:0;bottom:0;width:100%;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+/* execution plan: month row above the dates, stronger line between months */
+.xtable thead tr:first-child th{top:0;height:24px}
+.xtable thead tr:nth-child(2) th{top:24px;height:30px}
+.xtable thead th.g-fz,.xtable thead th.x-add{top:0;height:54px}
+.xtable th.x-month{position:sticky;z-index:3;background:var(--surface);color:var(--ink);font-weight:600;font-size:.72rem;text-align:left;padding:0 8px;border-left:1px solid var(--g-line);border-bottom:1px solid var(--g-line);white-space:nowrap}
+.xtable th.ms,.xtable td.ms{border-left:2px solid color-mix(in srgb,var(--ink) 45%,var(--surface))}
+.xtable th.x-month{max-width:0;overflow:visible;text-overflow:clip}
+.xtable .x-month .gm-l{left:768px}
+@media (max-width:980px){.xtable .x-month .gm-l{left:424px}}

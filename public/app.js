@@ -1564,15 +1564,23 @@ function renderExec(p){
   /* Enter moves to the same date in the next position, like a spreadsheet */
   const onKey=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const all=[...document.querySelectorAll('.xtable input.x-in[data-col="'+e.target.dataset.col+'"]')];
     const i=all.indexOf(e.target); const n=all[i+(e.shiftKey?-1:1)]; if(n){ n.focus(); n.select(); } else e.target.blur(); };
+  /* month and year once above the dates of that month; a stronger line where a new month starts */
+  const MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
+  const months=[]; ex.dates.forEach(d=>{ const k=d.slice(0,7), l=months[months.length-1]; if(l&&l.k===k) l.n++; else months.push({k,n:1}); });
+  const ms=ex.dates.map((d,i)=>i>0&&d.slice(0,7)!==ex.dates[i-1].slice(0,7)?" ms":"");
   const thead=h("thead",null,h("tr",null,
-    ["BoQ","დასახელება",[h("span",null,"ჯამური"),h("br"),h("span",null,"რაოდ.")],"განზ.","ერთ. ფასი","სულ"].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":"")},l)),
-    ex.dates.map(d=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
+    ["BoQ","დასახელება",[h("span",null,"ჯამური"),h("br"),h("span",null,"რაოდ.")],"განზ.","ერთ. ფასი","სულ"].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":""),rowspan:"2"},l)),
+    months.map((m,i)=>{ const full=MN[+m.k.slice(5)-1]+" "+m.k.slice(0,4);
+      return h("th",{class:"x-month"+(i>0?" ms":""),colspan:String(m.n),title:full},h("span",{class:"gm-l"},m.n>1?full:MN[+m.k.slice(5)-1].slice(0,3)+". "+m.k.slice(0,4))); }),
+    edit&&pend.n?h("th",{class:"x-month ms",colspan:String(pend.n)}):null,
+    edit?h("th",{class:"x-add",rowspan:"2"},h("div",{class:"row",style:"gap:4px;flex-wrap:nowrap"},addBtn("btn sm"),seriesBtn("btn sm"))):null),
+    h("tr",null,
+    ex.dates.map((d,i)=>h("th",{class:"x-date"+ms[i]},h("div",{class:"x-dh"},
       dateBox(d,nw=>moveDate(d,nw),tr("თარიღი")+" "+fmtDate(d)),
       edit?h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა")+" "+fmtDate(d),onclick:()=>dropDate(d)},"✕"):null))),
     Array.from({length:edit?pend.n:0},()=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
       dateBox("",pickNew,tr("ახალი თარიღი")),
-      h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა"),onclick:()=>{ pend.n=Math.max(0,pend.n-1); redraw(); }},"✕")))),
-    edit?h("th",{class:"x-add"},h("div",{class:"row",style:"gap:4px;flex-wrap:nowrap"},addBtn("btn sm"),seriesBtn("btn sm"))):null));
+      h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა"),onclick:()=>{ pend.n=Math.max(0,pend.n-1); redraw(); }},"✕"))))));
   const body=rows.map(r=>{
     const it=r.it, head=it.type!=="პოზიცია";
     const toggle=head?h("button",{class:"g-fold",type:"button","aria-expanded":String(!fold.has(r.key)),"aria-label":(fold.has(r.key)?tr("გაშლა"):tr("აკეცვა"))+": "+(it.name||""),
@@ -1581,7 +1589,7 @@ function renderExec(p){
     if(head) return h("tr",{class:"g-head"+(it.type==="ქვეთავი"?" sub":"")},code,
       h("td",{class:"g-fz f1"},h("div",{class:"g-hname g-tipsrc","data-tip":it.name||""},it.name||"")),
       h("td",{class:"g-fz f2"}),h("td",{class:"g-fz f3"}),h("td",{class:"g-fz f4"}),h("td",{class:"g-fz f5"}),
-      ex.dates.map(()=>h("td",{class:"x-c"})),Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c"})),edit?h("td",{class:"x-add"}):null);
+      ex.dates.map((d,i)=>h("td",{class:"x-c"+ms[i]})),Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c"})),edit?h("td",{class:"x-add"}):null);
     const sr=sc.rows[r.code]||(sc.rows[r.code]={price:null,plan:{},res:[]});
     const v=ex.vals[r.code]||{}, tot=ex.dates.reduce((a,d)=>a+num(v[d]),0), q=num(it.qty);
     return h("tr",{class:"g-pos"},code,
@@ -1590,7 +1598,7 @@ function renderExec(p){
       h("td",{class:"g-fz f3"},it.unit||""),
       h("td",{class:"g-fz f4"},h("input",{class:"g-in num",value:sr.price??"",placeholder:"—",inputmode:"decimal",disabled:!edit,"aria-label":"ერთ. ფასი",onchange:e=>{ sr.price=numOrNull(e.target.value); save(); }})),
       h("td",{class:"g-fz f5 x-sum num"+(q&&tot>q+1e-9?" over":"")},tot?fmtNum(tot):""),
-      ex.dates.map((d,ci)=>h("td",{class:"x-c"},h("input",{class:"g-in num x-in",value:v[d]??"",inputmode:"decimal",disabled:!edit,"data-col":String(ci),"aria-label":(it.code||"")+" "+fmtDate(d),
+      ex.dates.map((d,ci)=>h("td",{class:"x-c"+ms[ci]},h("input",{class:"g-in num x-in",value:v[d]??"",inputmode:"decimal",disabled:!edit,"data-col":String(ci),"aria-label":(it.code||"")+" "+fmtDate(d),
         onkeydown:onKey,onchange:e=>{ setVal(r.code,d,e.target.value); const td=e.target.closest("tr").querySelector("td.x-sum"); const nv=ex.vals[r.code]||{}; const t=ex.dates.reduce((a,x)=>a+num(nv[x]),0); td.textContent=t?fmtNum(t):""; td.classList.toggle("over",!!q&&t>q+1e-9); }}))),
       Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c x-wait"})),
       edit?h("td",{class:"x-add"}):null);
