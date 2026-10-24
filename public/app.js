@@ -1600,7 +1600,11 @@ function renderExec(p){
   const MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
   const months=[]; ex.dates.forEach(d=>{ const k=d.slice(0,7), l=months[months.length-1]; if(l&&l.k===k) l.n++; else months.push({k,n:1}); });
   /* a date column is as wide as its longest quantity, at least as wide as the date */
-  const dpx=ex.dates.map(d=>{ let len=0; for(const v of Object.values(ex.vals)) if(v[d]!=null) len=Math.max(len,fmtNum(num(v[d])).length); return Math.max(78,Math.ceil(len*7.4+22)); });
+  const vm=S.xmode==="val", pr=code=>num((sc.rows[code]||{}).price);
+  const dpx=ex.dates.map(d=>{ let len=0, all$=0;
+    for(const [code,v] of Object.entries(ex.vals)) if(v[d]!=null){ const x=vm?num(v[d])*pr(code):num(v[d]); all$+=x; len=Math.max(len,fmtNum(x).length); }
+    if(vm) len=Math.max(len,fmtNum(all$).length);
+    return Math.max(78,Math.ceil(len*7.4+22)); });
   const ms=ex.dates.map((d,i)=>i>0&&d.slice(0,7)!==ex.dates[i-1].slice(0,7)?" ms":"");
   const thead=h("thead",null,h("tr",null,
     ["BoQ","დასახელება",[h("span",null,"ჯამური"),h("br"),h("span",null,"რაოდ.")],"განზ.","ერთ. ფასი","სულ"].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":""),rowspan:"2"},l)),
@@ -1615,6 +1619,13 @@ function renderExec(p){
     Array.from({length:edit?pend.n:0},()=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
       dateBox("",pickNew,tr("ახალი თარიღი")),
       h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა"),onclick:()=>{ pend.n=Math.max(0,pend.n-1); redraw(); }},"✕"))))));
+  /* quantities or values (quantity × unit price); in values the chapter and sub-chapter rows show sums */
+  const valMode=S.xmode==="val";
+  const priceOf=code=>num((sc.rows[code]||{}).price);
+  const cellVal=(code,d)=>{ const q=num((ex.vals[code]||{})[d]); return valMode?q*priceOf(code):q; };
+  const kidsOf=r=>all.filter(x=>x.code&&(x.chap===r||x.sub===r));
+  const mode=h("div",{class:"vswitch",role:"group","aria-label":"ჩვენება"},[["qty","რაოდენობა"],["val","ღირებულება"]].map(([k,l])=>
+    h("button",{type:"button",class:"vbtn vtxt"+((S.xmode||"qty")===k?" on":""),"aria-pressed":String((S.xmode||"qty")===k),onclick:()=>{ S.xmode=k; redraw(); }},l)));
   const body=rows.map(r=>{
     const it=r.it, head=it.type!=="პოზიცია";
     const toggle=head?h("button",{class:"g-fold",type:"button","aria-expanded":String(!fold.has(r.key)),"aria-label":(fold.has(r.key)?tr("გაშლა"):tr("აკეცვა"))+": "+(it.name||""),
@@ -1622,16 +1633,21 @@ function renderExec(p){
     const code=h("td",{class:"g-fz f0 mono"},h("div",{class:"g-code",style:"padding-left:"+r.d*14+"px"},toggle,h("span",{class:head?"g-chead":"g-cpos"},it.code||"")));
     if(head) return h("tr",{class:"g-head"+(it.type==="ქვეთავი"?" sub":"")},code,
       h("td",{class:"g-fz f1"},h("div",{class:"g-hname g-tipsrc","data-tip":it.name||""},it.name||"")),
-      h("td",{class:"g-fz f2"}),h("td",{class:"g-fz f3"}),h("td",{class:"g-fz f4"}),h("td",{class:"g-fz f5"}),
-      ex.dates.map((d,i)=>h("td",{class:"x-c"+ms[i]})),Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c"})),edit?h("td",{class:"x-add"}):null);
+      h("td",{class:"g-fz f2"}),h("td",{class:"g-fz f3"}),h("td",{class:"g-fz f4"}),
+      (()=>{ if(!valMode) return h("td",{class:"g-fz f5 x-sum"}); const k=kidsOf(r); const t=ex.dates.reduce((a,d)=>a+k.reduce((b,x)=>b+cellVal(x.code,d),0),0);
+        return h("td",{class:"g-fz f5 x-sum num"},t?fmtNum(t):""); })(),
+      ex.dates.map((d,i)=>{ if(!valMode) return h("td",{class:"x-c"+ms[i]}); const t=kidsOf(r).reduce((b,x)=>b+cellVal(x.code,d),0);
+        return h("td",{class:"x-c x-hv num"+ms[i]},t?fmtNum(t):""); }),Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c"})),edit?h("td",{class:"x-add"}):null);
     const sr=sc.rows[r.code]||(sc.rows[r.code]={price:null,plan:{},res:[]});
     const v=ex.vals[r.code]||{}, tot=ex.dates.reduce((a,d)=>a+num(v[d]),0), q=num(it.qty);
+    const vtot=ex.dates.reduce((a,d)=>a+cellVal(r.code,d),0);
     return h("tr",{class:"g-pos"},code,
       h("td",{class:"g-fz f1"},h("div",{class:"g-name g-tipsrc","data-tip":it.name||""},it.name||"")),
       h("td",{class:"g-fz f2 num"},q?fmtNum(q):"—"),
       h("td",{class:"g-fz f3"},it.unit||""),
       h("td",{class:"g-fz f4"},h("input",{class:"g-in num",value:sr.price??"",placeholder:"—",inputmode:"decimal",disabled:!edit,"aria-label":"ერთ. ფასი",onchange:e=>{ sr.price=numOrNull(e.target.value); save(); }})),
-      h("td",{class:"g-fz f5 x-sum num"+(q&&tot>q+1e-9?" over":"")},tot?fmtNum(tot):""),
+      valMode?h("td",{class:"g-fz f5 x-sum num"},vtot?fmtNum(vtot):""):h("td",{class:"g-fz f5 x-sum num"+(q&&tot>q+1e-9?" over":"")},tot?fmtNum(tot):""),
+      valMode?ex.dates.map((d,ci)=>{ const x=cellVal(r.code,d); return h("td",{class:"x-c x-v num"+ms[ci]+(num(v[d])&&!priceOf(r.code)?" noprice":""),title:num(v[d])&&!priceOf(r.code)?tr("ერთეულის ფასი არ არის მითითებული"):null},x?fmtNum(x):(num(v[d])?"—":"")); }):
       ex.dates.map((d,ci)=>h("td",{class:"x-c"+ms[ci]},h("input",{class:"g-in num x-in",value:v[d]??"",inputmode:"decimal",disabled:!edit,"data-col":String(ci),"aria-label":(it.code||"")+" "+fmtDate(d),
         onkeydown:onKey,onchange:e=>{ setVal(r.code,d,e.target.value);
           const th=document.querySelectorAll(".xtable thead th.x-date")[ci], need=Math.max(78,Math.ceil(String(e.target.value).trim().length*7.4+22));
@@ -1648,7 +1664,7 @@ function renderExec(p){
   requestAnimationFrame(()=>{ if(S.xscroll){ wrap.scrollLeft=S.xscroll.x; wrap.scrollTop=S.xscroll.y; S.xscroll=null; } });
   const top=h("div",{class:"g-top"},
     h("div",{class:"g-title"},h("h2",null,"შესრულების გეგმა"),h("div",{class:"small muted"},"თითო თარიღზე ჩაწერეთ, რა რაოდენობის შესრულებას გეგმავთ.")),
-    h("div",{class:"g-ctrls"},outline,h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
+    h("div",{class:"g-ctrls"},mode,outline,h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
       edit?addBtn("btn primary"):null,edit?seriesBtn("btn primary"):null));
   return h("div",{class:"sched"},top,
     !all.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))
