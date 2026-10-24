@@ -752,7 +752,7 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gtable td.gp{cursor:default}
 /* execution plan table */
 .xtable .g-pos td,.xtable .g-head td{height:32px}
-.xtable th.x-date{width:132px;min-width:132px;padding:0 6px;border-left:1px solid var(--g-line);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3;background:var(--surface)}
+.xtable th.x-date{width:84px;min-width:84px;max-width:84px;padding:0 2px;border-left:1px solid var(--g-line);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3;background:var(--surface)}
 .xtable thead th{height:40px}
 .x-dh{display:flex;align-items:center;gap:2px}
 .x-din{border:1px solid transparent;background:transparent;font:inherit;font-size:.76rem;color:var(--ink);font-weight:600;padding:3px 4px;border-radius:5px;width:100%;min-width:0}
@@ -784,3 +784,11 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .x-din{cursor:pointer}
 .x-din.pending::placeholder{color:var(--muted);opacity:1;font-weight:500}
 .xtable td.x-wait{background:repeating-linear-gradient(45deg,transparent 0 6px,color-mix(in srgb,var(--sunk) 80%,transparent) 6px 12px)}
+/* narrow date columns: the delete cross shows on hover, the date picker widens only while editing */
+.x-dh{position:relative;justify-content:center}
+.x-din{font-size:.72rem;text-align:center;padding:3px 2px}
+.x-din[type="date"]{position:absolute;left:0;top:50%;transform:translateY(-50%);width:136px;z-index:6;background:var(--surface);border-color:var(--accent);text-align:left}
+.x-dh .g-del{position:absolute;right:-2px;top:-8px;opacity:0;font-size:.62rem;padding:1px 3px;background:var(--surface)}
+.xtable th.x-date:hover .g-del,.x-dh .g-del:focus{opacity:1}
+.xtable td.x-c{padding:0 2px}
+.xtable .x-in{font-size:.74rem;padding:1px 4px}
