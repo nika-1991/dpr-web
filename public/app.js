@@ -1521,7 +1521,7 @@ function renderExec(p){
   const addBtn=(cls)=>{ const picker=h("input",{type:"date",class:"x-hidpick",tabindex:"-1","aria-hidden":"true",onchange:e=>pickNew(e.target.value)});
     return h("span",{class:"x-addw"},h("button",{class:cls,type:"button",onclick:()=>{ picker.value=ex.dates[ex.dates.length-1]||""; try{ picker.showPicker(); }catch(e){ pend.n++; redraw(); } }},"+ თარიღი"),picker); };
   /* several dates at once: N more dates every K days after the last one */
-  const seriesBtn=()=>h("button",{class:"btn",type:"button",onclick:()=>{ S.xseries=true; redraw(); }},"+ რამდენიმე თარიღი");
+  const seriesBtn=cls=>h("button",{class:cls,type:"button",title:tr("რამდენიმე თარიღის დამატება"),onclick:()=>{ S.xseries=true; redraw(); }},"+ თარიღები");
   const seriesDlg=()=>{
     const ids={n:uid(),k:uid(),s:uid()};
     const last=ex.dates[ex.dates.length-1];
@@ -1572,7 +1572,7 @@ function renderExec(p){
     Array.from({length:edit?pend.n:0},()=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
       dateBox("",pickNew,tr("ახალი თარიღი")),
       h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა"),onclick:()=>{ pend.n=Math.max(0,pend.n-1); redraw(); }},"✕")))),
-    edit?h("th",{class:"x-add"},addBtn("btn sm")):null));
+    edit?h("th",{class:"x-add"},h("div",{class:"row",style:"gap:4px;flex-wrap:nowrap"},addBtn("btn sm"),seriesBtn("btn sm"))):null));
   const body=rows.map(r=>{
     const it=r.it, head=it.type!=="პოზიცია";
     const toggle=head?h("button",{class:"g-fold",type:"button","aria-expanded":String(!fold.has(r.key)),"aria-label":(fold.has(r.key)?tr("გაშლა"):tr("აკეცვა"))+": "+(it.name||""),
@@ -1603,7 +1603,7 @@ function renderExec(p){
   const top=h("div",{class:"g-top"},
     h("div",{class:"g-title"},h("h2",null,"შესრულების გეგმა"),h("div",{class:"small muted"},"თითო თარიღზე ჩაწერეთ, რა რაოდენობის შესრულებას გეგმავთ.")),
     h("div",{class:"g-ctrls"},outline,h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
-      edit?seriesBtn():null,edit?addBtn("btn primary"):null));
+      edit?addBtn("btn primary"):null,edit?seriesBtn("btn primary"):null));
   return h("div",{class:"sched"},top,
     !all.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))
     :null,S.xseries&&edit?seriesDlg():null,
