@@ -1519,7 +1519,34 @@ function renderExec(p){
   /* "+ თარიღი" opens the calendar right away (an invisible date field under the button);
      browsers without showPicker get an empty "თარიღი" column to pick the date in */
   const addBtn=(cls)=>{ const picker=h("input",{type:"date",class:"x-hidpick",tabindex:"-1","aria-hidden":"true",onchange:e=>pickNew(e.target.value)});
-    return h("span",{class:"x-addw"},h("button",{class:cls,type:"button",onclick:()=>{ try{ picker.showPicker(); }catch(e){ pend.n++; redraw(); } }},"+ თარიღი"),picker); };
+    return h("span",{class:"x-addw"},h("button",{class:cls,type:"button",onclick:()=>{ picker.value=ex.dates[ex.dates.length-1]||""; try{ picker.showPicker(); }catch(e){ pend.n++; redraw(); } }},"+ თარიღი"),picker); };
+  /* several dates at once: N more dates every K days after the last one */
+  const seriesBtn=()=>h("button",{class:"btn",type:"button",onclick:()=>{ S.xseries=true; redraw(); }},"+ რამდენიმე თარიღი");
+  const seriesDlg=()=>{
+    const ids={n:uid(),k:uid(),s:uid()};
+    const last=ex.dates[ex.dates.length-1];
+    const close=()=>{ S.xseries=false; redraw(); };
+    const nIn=h("input",{id:ids.n,class:"inp num",type:"number",min:"1",max:"60",value:String(S.xserN||4)});
+    const kIn=h("input",{id:ids.k,class:"inp num",type:"number",min:"1",max:"365",value:String(S.xserK||7)});
+    const sIn=h("input",{id:ids.s,type:"date",class:"inp",value:last?addDays(last,S.xserK||7):todayISO()});
+    const prev=h("div",{class:"small muted"});
+    const list=()=>{ const n=Math.min(60,Math.max(0,parseInt(nIn.value,10)||0)), k=Math.max(1,parseInt(kIn.value,10)||1), out=[];
+      if(!sIn.value) return out; for(let i=0;i<n;i++){ const d=addDays(sIn.value,i*k); if(!ex.dates.includes(d)) out.push(d); } return out; };
+    const upd=()=>{ const l=list(); prev.textContent=l.length?l.map(d=>fmtDate(d)).join(", "):tr("ახალი თარიღი არ დაემატება"); };
+    kIn.addEventListener("input",()=>{ if(last) sIn.value=addDays(last,Math.max(1,parseInt(kIn.value,10)||1)); upd(); });
+    [nIn,sIn].forEach(x=>x.addEventListener("input",upd)); upd();
+    const ok=()=>{ const l=list(); if(!l.length){ toast("ახალი თარიღი არ დაემატება"); return; }
+      S.xserN=parseInt(nIn.value,10); S.xserK=parseInt(kIn.value,10);
+      ex.dates=[...ex.dates,...l].sort(); S.xseries=false; save(); redraw(); };
+    return h("div",{class:"g-modal",onkeydown:e=>{ if(e.key==="Escape") close(); },onclick:e=>{ if(e.target===e.currentTarget) close(); }},
+      h("div",{class:"g-dlg",role:"dialog","aria-modal":"true","aria-labelledby":ids.n+"h"},
+        h("h3",{id:ids.n+"h"},"რამდენიმე თარიღის დამატება"),
+        h("div",{class:"row",style:"gap:10px;flex-wrap:nowrap"},
+          h("div",{class:"field",style:"flex:1"},h("label",{for:ids.n},"რამდენი თარიღი"),nIn),
+          h("div",{class:"field",style:"flex:1"},h("label",{for:ids.k},"რამდენ დღეში ერთხელ"),kIn)),
+        h("div",{class:"field"},h("label",{for:ids.s},last?"პირველი ახალი თარიღი (ბოლოს შემდეგ)":"პირველი თარიღი"),sIn),
+        h("div",null,h("div",{class:"hb-l"},"დაემატება"),prev),
+        h("div",{class:"row",style:"justify-content:flex-end"},h("button",{class:"btn ghost",type:"button",onclick:close},"გაუქმება"),h("button",{class:"btn primary",type:"button",onclick:ok},"დამატება")))); };
   const pickNew=nw=>{ if(!nw) return; if(ex.dates.includes(nw)){ toast("ეს თარიღი უკვე დამატებულია"); return; }
     pend.n=Math.max(0,pend.n-1); ex.dates=[...ex.dates,nw].sort(); save(); redraw(); };
   /* a date cell shows dd.mm.yyyy and turns into a date picker while it has focus */
@@ -1576,10 +1603,11 @@ function renderExec(p){
   const top=h("div",{class:"g-top"},
     h("div",{class:"g-title"},h("h2",null,"შესრულების გეგმა"),h("div",{class:"small muted"},"თითო თარიღზე ჩაწერეთ, რა რაოდენობის შესრულებას გეგმავთ.")),
     h("div",{class:"g-ctrls"},outline,h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
-      edit?addBtn("btn primary"):null));
+      edit?seriesBtn():null,edit?addBtn("btn primary"):null));
   return h("div",{class:"sched"},top,
     !all.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))
-    :!ex.dates.length&&!pend.n?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+ თარიღი“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);
+    :null,S.xseries&&edit?seriesDlg():null,
+    !all.length?null:!ex.dates.length&&!pend.n?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+ თარიღი“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);
 }
 
 /* ---------- TEAM ---------- */
