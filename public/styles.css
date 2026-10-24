@@ -802,3 +802,9 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .xtable th.x-month{max-width:0;overflow:visible;text-overflow:clip}
 .xtable .x-month .gm-l{left:768px}
 @media (max-width:980px){.xtable .x-month .gm-l{left:424px}}
+/* "+" (one date) and "++" (several dates) as square buttons; tall ones at the end of the date columns */
+.x-sq{width:38px;min-width:38px;height:38px;padding:0;justify-content:center;font-size:1rem;font-weight:700;letter-spacing:-.04em}
+.x-addrow{display:flex;gap:4px;align-items:stretch;height:46px}
+.x-addrow .x-addw{display:flex}
+.btn.x-tall{height:46px;width:34px;min-width:34px;border-radius:7px}
+.xtable th.x-add{padding:0 8px;vertical-align:middle}

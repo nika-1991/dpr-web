@@ -1519,9 +1519,9 @@ function renderExec(p){
   /* "+ თარიღი" opens the calendar right away (an invisible date field under the button);
      browsers without showPicker get an empty "თარიღი" column to pick the date in */
   const addBtn=(cls)=>{ const picker=h("input",{type:"date",class:"x-hidpick",tabindex:"-1","aria-hidden":"true",onchange:e=>pickNew(e.target.value)});
-    return h("span",{class:"x-addw"},h("button",{class:cls,type:"button",onclick:()=>{ picker.value=ex.dates[ex.dates.length-1]||""; try{ picker.showPicker(); }catch(e){ pend.n++; redraw(); } }},"+ თარიღი"),picker); };
+    return h("span",{class:"x-addw"},h("button",{class:cls+" x-sq tip",type:"button","data-tip":tr("თარიღის დამატება"),"aria-label":tr("თარიღის დამატება"),onclick:()=>{ picker.value=ex.dates[ex.dates.length-1]||""; try{ picker.showPicker(); }catch(e){ pend.n++; redraw(); } }},"+"),picker); };
   /* several dates at once: N more dates every K days after the last one */
-  const seriesBtn=cls=>h("button",{class:cls,type:"button",title:tr("რამდენიმე თარიღის დამატება"),onclick:()=>{ S.xseries=true; redraw(); }},"+ თარიღები");
+  const seriesBtn=cls=>h("button",{class:cls+" x-sq tip",type:"button","data-tip":tr("რამდენიმე თარიღის დამატება"),"aria-label":tr("რამდენიმე თარიღის დამატება"),onclick:()=>{ S.xseries=true; redraw(); }},"++");
   const seriesDlg=()=>{
     const ids={n:uid(),k:uid(),s:uid()};
     const last=ex.dates[ex.dates.length-1];
@@ -1573,7 +1573,7 @@ function renderExec(p){
     months.map((m,i)=>{ const full=MN[+m.k.slice(5)-1]+" "+m.k.slice(0,4);
       return h("th",{class:"x-month"+(i>0?" ms":""),colspan:String(m.n),title:full},h("span",{class:"gm-l"},m.n>1?full:MN[+m.k.slice(5)-1].slice(0,3)+". "+m.k.slice(0,4))); }),
     edit&&pend.n?h("th",{class:"x-month ms",colspan:String(pend.n)}):null,
-    edit?h("th",{class:"x-add",rowspan:"2"},h("div",{class:"row",style:"gap:4px;flex-wrap:nowrap"},addBtn("btn sm"),seriesBtn("btn sm"))):null),
+    edit?h("th",{class:"x-add",rowspan:"2"},h("div",{class:"x-addrow"},addBtn("btn x-tall"),seriesBtn("btn x-tall"))):null),
     h("tr",null,
     ex.dates.map((d,i)=>h("th",{class:"x-date"+ms[i]},h("div",{class:"x-dh"},
       dateBox(d,nw=>moveDate(d,nw),tr("თარიღი")+" "+fmtDate(d)),
@@ -1615,7 +1615,7 @@ function renderExec(p){
   return h("div",{class:"sched"},top,
     !all.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))
     :null,S.xseries&&edit?seriesDlg():null,
-    !all.length?null:!ex.dates.length&&!pend.n?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+ თარიღი“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);
+    !all.length?null:!ex.dates.length&&!pend.n?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);
 }
 
 /* ---------- TEAM ---------- */
