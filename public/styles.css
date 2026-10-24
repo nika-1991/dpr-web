@@ -635,8 +635,7 @@ a.btn{text-decoration:none}
 .g-lvl:hover{border-color:var(--accent);color:var(--accent)}
 .gwrap{overflow:auto;max-height:calc(100vh - 230px);min-height:260px;border:1px solid var(--line);border-radius:12px;background:var(--surface);outline:none;position:relative}
 .gwrap:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent)}
-.gtable{border-collapse:separate;border-spacing:0;font-size:.8rem;width:max-content;--cw:40px}
-.gtable.z-week{--cw:66px}.gtable.z-month{--cw:96px}
+.gtable{border-collapse:separate;border-spacing:0;font-size:.8rem;width:max-content}
 .gtable th,.gtable td{border-bottom:1px solid var(--g-line);padding:0;white-space:nowrap}
 .gtable thead th{position:sticky;z-index:3;background:var(--surface);color:var(--muted);font-weight:500;font-size:.74rem}
 .gtable thead tr:first-child th{top:0;height:28px}
@@ -645,7 +644,7 @@ a.btn{text-decoration:none}
 .gtable thead th.f2,.gtable thead th.f3,.gtable thead th.f4{text-align:right}
 .gtable th.gm{text-align:left;padding:0 10px;color:var(--ink);font-weight:600;border-left:1px solid var(--g-line)}
 .gm-l{position:sticky;display:inline-block}
-.gtable th.gd{width:var(--cw);min-width:var(--cw);max-width:var(--cw);text-align:center;line-height:1.1;border-bottom:1px solid var(--line)}
+.gtable th.gd{text-align:center;line-height:1.1;border-bottom:1px solid var(--line)}
 .gtable th.gd b{display:block;font-size:.8rem;color:var(--ink);font-weight:600}
 .gtable th.gd span{font-size:.64rem}
 .gtable th.gd.we{background:var(--g-we)}
@@ -653,7 +652,7 @@ a.btn{text-decoration:none}
 .gtable th.gd.td b,.gtable th.gd.td span{color:#fff}
 /* frozen left columns */
 .g-fz{position:sticky;z-index:2;background:var(--surface)}
-.f4{border-right:1px solid var(--line)}
+.gtable .f5{border-right:1px solid var(--line)}
 .gtable td.g-fz{padding:0 12px;overflow:hidden;text-overflow:ellipsis}
 .gtable td.f3{padding:0 4px}
 .gtable td.num{text-align:right}
@@ -694,12 +693,12 @@ a.btn{text-decoration:none}
 .g-in:focus{outline:none;border-color:var(--accent);background:var(--surface)}
 .g-in.num{text-align:right}
 .g-rn::placeholder{color:var(--bad);font-style:italic;opacity:.8;font-size:.68rem}
-.g-qu{display:flex;gap:2px}
-.g-qu .num{flex:1 1 50px;min-width:0}.g-qu .g-un{flex:0 0 52px}
+.gtable td.g-unit{text-align:center;color:var(--muted);font-size:.74rem}
+.g-unit .g-in{text-align:center}
 .g-del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:.72rem;padding:2px 4px;border-radius:4px;flex:none}
 .g-del:hover{color:var(--bad);background:var(--bad-soft)}
 /* day cells and bars */
-.gtable td.gc{width:var(--cw);min-width:var(--cw);max-width:var(--cw);position:relative;border-left:1px solid var(--g-line);cursor:cell;user-select:none}
+.gtable td.gc{position:relative;border-left:1px solid var(--g-line);cursor:cell;user-select:none}
 .gtable td.gc.we{background:var(--g-we)}
 .gtable td.gc.td{box-shadow:inset 2px 0 0 var(--g-today)}
 .gtable td.gh{cursor:default}
@@ -747,7 +746,7 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gtable td.gp{cursor:default}
 /* execution plan table */
 .xtable .g-pos td,.xtable .g-head td{height:32px}
-.xtable th.x-date{width:var(--dw);min-width:var(--dw);max-width:var(--dw);padding:0 2px;border-left:1px solid var(--g-line);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3;background:var(--surface)}
+.xtable th.x-date{padding:0 2px;border-left:1px solid var(--g-line);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3;background:var(--surface)}
 .x-dh{display:flex;align-items:center;gap:2px}
 .x-din{border:1px solid transparent;background:transparent;font:inherit;font-size:.76rem;color:var(--ink);font-weight:600;padding:3px 4px;border-radius:5px;width:100%;min-width:0}
 .x-din:hover:not(:disabled){border-color:var(--line)}
@@ -756,7 +755,6 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .xtable .x-in{text-align:right}
 .xtable td.x-sum{font-weight:600}
 .xtable td.x-sum.over{color:var(--bad)}
-.xtable .f4{border-right:0}
 .xtable .f5{border-right:1px solid var(--line);text-align:right}
 .xtable thead th.f5{text-align:right}
 .xtable .x-add{padding:0 10px;border-left:1px solid var(--g-line)}
@@ -801,8 +799,8 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .tabs button .ico{width:22px;height:22px;flex:none}
 .tabs button>span{white-space:normal;max-width:92px;font-size:.7rem;line-height:1.2;text-align:left}
 /* frozen column widths are variables so columns can be resized (drag the header edge, double-click to fit) */
-.gtable{--w0:116px;--w1:300px;--w2:130px;--w3:90px;--w4:80px;--w5:90px;--dw:84px;--fz:calc(var(--w0) + var(--w1) + var(--w2) + var(--w3) + var(--w4))}
-.gtable.xtable{--w2:84px;--fz:calc(var(--w0) + var(--w1) + var(--w2) + var(--w3) + var(--w4) + var(--w5))}
+.gtable{--w0:116px;--w1:300px;--w2:94px;--w3:62px;--w4:90px;--w5:80px;--fz:calc(var(--w0) + var(--w1) + var(--w2) + var(--w3) + var(--w4) + var(--w5))}
+.gtable.xtable{--w2:84px;--w3:90px;--w4:80px;--w5:96px}
 .gtable .f0{left:0;width:var(--w0);min-width:var(--w0);max-width:var(--w0)}
 .gtable .f1{left:var(--w0);width:var(--w1);min-width:var(--w1);max-width:var(--w1)}
 .gtable .f2{left:calc(var(--w0) + var(--w1));width:var(--w2);min-width:var(--w2);max-width:var(--w2)}
@@ -818,4 +816,3 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gtable.fitting .fitc *{overflow:visible!important;text-overflow:clip!important}
 .gtable.fitting .fitc .g-in,.gtable.fitting .fitc .x-din{field-sizing:content;width:auto;min-width:3ch}
 @media (max-width:980px){.gtable .gm-l{left:calc(var(--w0) + var(--w1) + 8px)}}
-.gtable.z-day{--cw-day:40px}.gtable.z-week{--cw-week:66px}.gtable.z-month{--cw-month:96px}

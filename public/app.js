@@ -1277,11 +1277,15 @@ function renderSchedule(p){
 
   /* header: months (years in month view) above, days / weeks / months below */
   const grp=[]; for(const c of cols){ const k=zoom==="month"?c.from.slice(0,4):c.from.slice(0,7); const l=grp[grp.length-1]; if(l&&l.k===k) l.n++; else grp.push({k,n:1}); }
-  const fz=["BoQ","დასახელება","რაოდენობა","ერთ. ფასი","ვადა"];
+  const fz=["BoQ","დასახელება","რაოდენობა","განზ.","ერთ. ფასი","ვადა"];
+  /* each date column is as wide as its longest number (and never narrower than the header) */
+  const base=dayMode?36:zoom==="week"?60:84;
+  const colPx=cols.map(c=>{ let len=0; for(const r of all) if(r.kind==="res"){ const v=c.days.reduce((a,d)=>a+num(r.plan[d]),0); if(v) len=Math.max(len,fmtNum(v).length); }
+    return Math.max(base,Math.ceil(len*6.6+14)); });
   const thead=h("thead",null,
-    h("tr",null,fz.map((l,i)=>h("th",{class:"g-fz f"+i+(i===4?" g-fz-last":""),rowspan:"2"},l)),
+    h("tr",null,fz.map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":""),rowspan:"2"},l)),
       grp.map(x=>h("th",{class:"gm",colspan:String(x.n)},h("span",{class:"gm-l"},zoom==="month"?x.k:MN[+x.k.slice(5)-1]+" "+x.k.slice(0,4))))),
-    h("tr",null,cols.map((c,ci)=>h("th",{class:"gd"+(isWe(c)?" we":"")+(isTd(c)?" td":""),"data-ci":String(ci),title:dayMode?fmtDate(c.from):fmtDate(c.from)+" – "+fmtDate(c.to)},
+    h("tr",null,cols.map((c,ci)=>h("th",{class:"gd"+(isWe(c)?" we":"")+(isTd(c)?" td":""),"data-ci":String(ci),style:"width:"+colPx[ci]+"px;min-width:"+colPx[ci]+"px;max-width:"+colPx[ci]+"px",title:dayMode?fmtDate(c.from):fmtDate(c.from)+" – "+fmtDate(c.to)},
       dayMode?[h("b",null,String(+c.from.slice(8))),h("span",null,WD[wd(c.from)])]
       :zoom==="week"?[h("b",null,ddmm(c.from)),h("span",null,"– "+ddmm(c.to))]
       :[h("b",null,MN[+c.from.slice(5,7)-1])]))));
@@ -1323,7 +1327,7 @@ function renderSchedule(p){
       return h("tr",{class:"g-head"+(r.it.type==="ქვეთავი"?" sub":"")},
         codeCell(r,tri(!fold.has(r.key),()=>{ fold.has(r.key)?fold.delete(r.key):fold.add(r.key); rebuild(); },r.it.name)),
         h("td",{class:"g-fz f1"},h("div",{class:"g-hname g-tipsrc","data-tip":r.it.name||""},r.it.name||"")),
-        h("td",{class:"g-fz g-hsum",colspan:"3"},r.kids.length?[String(n)," / ",String(r.kids.length)," ",h("span",null,"დაგეგმილი")]:""),
+        h("td",{class:"g-fz g-hsum",colspan:"4"},r.kids.length?[String(n)," / ",String(r.kids.length)," ",h("span",null,"დაგეგმილი")]:""),
         gridCells(r,ri)); }
     if(r.kind==="pos"){ const n=r.sr.res.length, open=!shut.has(r.code);
       return h("tr",{class:"g-pos"},
@@ -1331,9 +1335,10 @@ function renderSchedule(p){
         h("td",{class:"g-fz f1"},h("div",{class:"g-pname"},
           edit?h("button",{class:"g-plus",type:"button",title:tr("რესურსის დამატება"),"aria-label":tr("რესურსის დამატება")+": "+(r.it.name||""),onclick:()=>{ const id=Math.random().toString(36).slice(2,8); r.sr.res.push({id,type:"შრომა",name:"",unit:"",qty:null,price:null,plan:{}}); shut.delete(r.code); S.gfocusNew=id; changed(); }},"+"):null,
           h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name))),
-        h("td",{class:"g-fz f2 num"},r.qty?fmtNum(r.qty):"—"," ",h("small",{class:"muted"},r.it.unit||"")),
-        h("td",{class:"g-fz f3"},inp(r.sr.price??"",v=>{ r.sr.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":p"})),
-        h("td",{class:"g-fz f4 num"},dur(posDays(r))),
+        h("td",{class:"g-fz f2 num"},r.qty?fmtNum(r.qty):"—"),
+        h("td",{class:"g-fz f3 g-unit"},r.it.unit||""),
+        h("td",{class:"g-fz f4"},inp(r.sr.price??"",v=>{ r.sr.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":p"})),
+        h("td",{class:"g-fz f5 num"},dur(posDays(r))),
         gridCells(r,ri)); }
     const c=cls(r), isNew=!!S.gfocusNew&&S.gfocusNew===r.x.id;
     return h("tr",{class:"g-res"},
@@ -1343,16 +1348,14 @@ function renderSchedule(p){
           RES_TYPES.map(([t])=>{ const o=h("option",{value:t},t); if(t===r.x.type) o.selected=true; return o; })),
         inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა","aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
         edit?h("button",{class:"g-del",type:"button",tabindex:"-1","aria-label":"რესურსის წაშლა",title:"წაშლა",onclick:()=>{ r.sr.res.splice(r.sr.res.indexOf(r.x),1); changed(); }},"✕"):null)),
-      h("td",{class:"g-fz f2"},h("div",{class:"g-qu"},
-        inp(r.x.qty??"",v=>{ r.x.qty=numOrNull(v); changed(); },{class:"g-in num","aria-label":"რაოდენობა",placeholder:"0",inputmode:"decimal","data-f":ri+":q"}),
-        inp(r.x.unit,v=>{ r.x.unit=v; changed(); },{class:"g-in g-un","aria-label":"განზ.",placeholder:"განზ.",list:"g-units","data-f":ri+":u"}))),
-      h("td",{class:"g-fz f3"},inp(r.x.price??"",v=>{ r.x.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":rp"})),
-      h("td",{class:"g-fz f4 num"},dur(planDays(r.plan))),
+      h("td",{class:"g-fz f2"},inp(r.x.qty??"",v=>{ r.x.qty=numOrNull(v); changed(); },{class:"g-in num","aria-label":"რაოდენობა",placeholder:"0",inputmode:"decimal","data-f":ri+":q"})),
+      h("td",{class:"g-fz f3 g-unit"},inp(r.x.unit,v=>{ r.x.unit=v; changed(); },{class:"g-in g-un","aria-label":"განზ.",placeholder:"—",list:"g-units","data-f":ri+":u"})),
+      h("td",{class:"g-fz f4"},inp(r.x.price??"",v=>{ r.x.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":rp"})),
+      h("td",{class:"g-fz f5 num"},dur(planDays(r.plan))),
       gridCells(r,ri));
   });
   const table=h("table",{class:"gtable z-"+zoom},thead,h("tbody",null,body));
-  colResize(table,"sched","th.gd","--cw-"+zoom);
-  table.style.setProperty("--cw","var(--cw-"+zoom+")");
+  colResize(table,"sched2");
 
   /* selection and editing (day view) */
   const wrap=h("div",{class:"gwrap",tabindex:"0","aria-label":"გეგმა-გრაფიკის ბადე",onscroll:()=>{ S.gscroll={x:wrap.scrollLeft,y:wrap.scrollTop}; gTip().hidden=true; }},table);
@@ -1436,8 +1439,8 @@ function renderSchedule(p){
 /* "+ დაგეგმვა": spread a quantity evenly over a date range (optionally skipping weekends) */
 /* Excel-like column resizing for the schedule and execution plan tables: drag the right edge of a header
    to resize, double-click it to fit the content. Frozen columns are CSS variables --w0…--w5 on the table;
-   date columns share one width (dateVar). Widths are remembered per table in this browser. */
-function colResize(table,kind,dateSel,dateVar){
+   date columns size themselves to their content. Widths are remembered per table in this browser. */
+function colResize(table,kind){
   const key="dpr.colw."+kind;
   let saved={}; try{ saved=JSON.parse(localStorage.getItem(key)||"{}")||{}; }catch(e){}
   for(const [v,w] of Object.entries(saved)) if(/^--/.test(v)&&w>0) table.style.setProperty(v,w+"px");
@@ -1460,7 +1463,6 @@ function colResize(table,kind,dateSel,dateVar){
   };
   table.querySelectorAll("thead th.g-fz").forEach(th=>{ const m=/\bf(\d)\b/.exec(th.className); if(!m) return;
     handle(th,"--w"+m[1],()=>[...table.querySelectorAll(".f"+m[1])]); });
-  if(dateSel) table.querySelectorAll("thead "+dateSel).forEach(th=>handle(th,dateVar,()=>[...table.querySelectorAll("thead "+dateSel+",tbody td.gc,tbody td.x-c")]));
 }
 /* "+ დაგეგმვა": spread a resource quantity evenly over a period (optionally skipping weekends);
    the resource can be one the position already has or a new one */
@@ -1597,6 +1599,8 @@ function renderExec(p){
   /* month and year once above the dates of that month; a stronger line where a new month starts */
   const MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
   const months=[]; ex.dates.forEach(d=>{ const k=d.slice(0,7), l=months[months.length-1]; if(l&&l.k===k) l.n++; else months.push({k,n:1}); });
+  /* a date column is as wide as its longest quantity, at least as wide as the date */
+  const dpx=ex.dates.map(d=>{ let len=0; for(const v of Object.values(ex.vals)) if(v[d]!=null) len=Math.max(len,fmtNum(num(v[d])).length); return Math.max(78,Math.ceil(len*7.4+22)); });
   const ms=ex.dates.map((d,i)=>i>0&&d.slice(0,7)!==ex.dates[i-1].slice(0,7)?" ms":"");
   const thead=h("thead",null,h("tr",null,
     ["BoQ","დასახელება",[h("span",null,"ჯამური"),h("br"),h("span",null,"რაოდ.")],"განზ.","ერთ. ფასი","სულ"].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":""),rowspan:"2"},l)),
@@ -1605,7 +1609,7 @@ function renderExec(p){
     edit&&pend.n?h("th",{class:"x-month ms",colspan:String(pend.n)}):null,
     edit?h("th",{class:"x-add",rowspan:"2"},h("div",{class:"x-addrow"},addBtn("btn x-tall"),seriesBtn("btn x-tall"))):null),
     h("tr",null,
-    ex.dates.map((d,i)=>h("th",{class:"x-date"+ms[i]},h("div",{class:"x-dh"},
+    ex.dates.map((d,i)=>h("th",{class:"x-date"+ms[i],style:"width:"+dpx[i]+"px;min-width:"+dpx[i]+"px"},h("div",{class:"x-dh"},
       dateBox(d,nw=>moveDate(d,nw),tr("თარიღი")+" "+fmtDate(d)),
       edit?h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა")+" "+fmtDate(d),onclick:()=>dropDate(d)},"✕"):null))),
     Array.from({length:edit?pend.n:0},()=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
@@ -1629,12 +1633,14 @@ function renderExec(p){
       h("td",{class:"g-fz f4"},h("input",{class:"g-in num",value:sr.price??"",placeholder:"—",inputmode:"decimal",disabled:!edit,"aria-label":"ერთ. ფასი",onchange:e=>{ sr.price=numOrNull(e.target.value); save(); }})),
       h("td",{class:"g-fz f5 x-sum num"+(q&&tot>q+1e-9?" over":"")},tot?fmtNum(tot):""),
       ex.dates.map((d,ci)=>h("td",{class:"x-c"+ms[ci]},h("input",{class:"g-in num x-in",value:v[d]??"",inputmode:"decimal",disabled:!edit,"data-col":String(ci),"aria-label":(it.code||"")+" "+fmtDate(d),
-        onkeydown:onKey,onchange:e=>{ setVal(r.code,d,e.target.value); const td=e.target.closest("tr").querySelector("td.x-sum"); const nv=ex.vals[r.code]||{}; const t=ex.dates.reduce((a,x)=>a+num(nv[x]),0); td.textContent=t?fmtNum(t):""; td.classList.toggle("over",!!q&&t>q+1e-9); }}))),
+        onkeydown:onKey,onchange:e=>{ setVal(r.code,d,e.target.value);
+          const th=document.querySelectorAll(".xtable thead th.x-date")[ci], need=Math.max(78,Math.ceil(String(e.target.value).trim().length*7.4+22));
+          if(th&&th.getBoundingClientRect().width<need){ th.style.width=need+"px"; th.style.minWidth=need+"px"; } const td=e.target.closest("tr").querySelector("td.x-sum"); const nv=ex.vals[r.code]||{}; const t=ex.dates.reduce((a,x)=>a+num(nv[x]),0); td.textContent=t?fmtNum(t):""; td.classList.toggle("over",!!q&&t>q+1e-9); }}))),
       Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c x-wait"})),
       edit?h("td",{class:"x-add"}):null);
   });
   const xt=h("table",{class:"gtable xtable"},thead,h("tbody",null,body));
-  colResize(xt,"exec","th.x-date","--dw");
+  colResize(xt,"exec");
   const wrap=h("div",{class:"gwrap",onscroll:()=>{ gTip().hidden=true; }},xt);
   wrap.addEventListener("mouseover",e=>{ const t=e.target.closest(".g-tipsrc"), tip=gTip();
     if(t&&t.dataset.tip){ const r=t.getBoundingClientRect(); tip.textContent=t.dataset.tip; tip.hidden=false; tip.style.left=Math.min(r.left,window.innerWidth-tip.offsetWidth-12)+"px"; tip.style.top=(r.bottom+6)+"px"; } else tip.hidden=true; });
