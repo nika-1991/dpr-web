@@ -1514,13 +1514,13 @@ function renderExec(p){
   const setLevel=L=>{ fold.clear(); for(const r of all) if(r.key&&((L===1&&r.lvl===1)||(hasSub&&L===2&&r.lvl===2))) fold.add(r.key); redraw(); };
   const outline=h("div",{class:"g-lvls",role:"group","aria-label":"დაჯგუფების დონე"},h("span",{class:"hb-l"},"დონე"),
     [...Array(maxL).keys()].map(i=>i+1).map(L=>h("button",{type:"button",class:"g-lvl tip","data-tip":tr(lvlName[L]),"aria-label":tr(lvlName[L]),onclick:()=>setLevel(L)},String(L))));
-  /* "+ თარიღი" adds an empty column (red dd.mm.yyyy); it becomes a real date column once a date is picked */
+  /* "+ თარიღი" adds an empty column labelled "თარიღი"; it becomes a real date column once a date is picked */
   const pend=S.xpend&&S.xpend.pid===S.pid?S.xpend:(S.xpend={pid:S.pid,n:0});
   const addDate=()=>{ pend.n++; redraw(); };
   const pickNew=nw=>{ if(!nw) return; if(ex.dates.includes(nw)){ toast("ეს თარიღი უკვე დამატებულია"); redraw(); return; }
     pend.n=Math.max(0,pend.n-1); ex.dates=[...ex.dates,nw].sort(); save(); redraw(); };
   /* a date cell shows dd.mm.yyyy and turns into a date picker while it has focus */
-  const dateBox=(d,onPick,label)=>h("input",{type:"text",class:"x-din"+(d?"":" pending"),value:d?fmtDate(d):"",placeholder:"dd.mm.yyyy",readonly:true,disabled:!edit,"aria-label":label,
+  const dateBox=(d,onPick,label)=>h("input",{type:"text",class:"x-din"+(d?"":" pending"),value:d?fmtDate(d):"",placeholder:tr("თარიღი"),readonly:true,disabled:!edit,"aria-label":label,
     onfocus:e=>{ const t=e.target; t.readOnly=false; t.type="date"; t.value=d||""; try{ t.showPicker&&t.showPicker(); }catch(x){} },
     onblur:e=>{ const t=e.target; if(t.type==="date"&&(t.value||"")===(d||"")){ t.type="text"; t.readOnly=true; t.value=d?fmtDate(d):""; } },
     onchange:e=>onPick(e.target.value)});

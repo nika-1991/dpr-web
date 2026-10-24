@@ -774,7 +774,7 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .g-pos .g-name{font-weight:400;font-size:.76rem;color:color-mix(in srgb,var(--ink) 72%,var(--surface))}
 .g-cpos{font-weight:500;font-size:.74rem;color:color-mix(in srgb,var(--ink) 62%,var(--surface))}
 @media (max-width:980px){.f5{position:static}}
-/* execution plan: narrower quantity column with a two-line header, unit centred, empty date columns in red */
+/* execution plan: narrower quantity column with a two-line header, unit centred, empty date columns hatched */
 .xtable .f2{width:84px;min-width:84px;max-width:84px}
 .xtable .f3{left:500px;text-align:center}
 .xtable thead th.f3{text-align:center}
@@ -782,6 +782,5 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .xtable .f5{left:670px}
 .xtable thead th.f2{line-height:1.2;white-space:normal}
 .x-din{cursor:pointer}
-.x-din.pending{color:var(--bad)}
-.x-din.pending::placeholder{color:var(--bad);opacity:1;font-weight:600}
+.x-din.pending::placeholder{color:var(--muted);opacity:1;font-weight:500}
 .xtable td.x-wait{background:repeating-linear-gradient(45deg,transparent 0 6px,color-mix(in srgb,var(--sunk) 80%,transparent) 6px 12px)}
