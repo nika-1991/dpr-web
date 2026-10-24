@@ -1514,8 +1514,16 @@ function renderExec(p){
   const setLevel=L=>{ fold.clear(); for(const r of all) if(r.key&&((L===1&&r.lvl===1)||(hasSub&&L===2&&r.lvl===2))) fold.add(r.key); redraw(); };
   const outline=h("div",{class:"g-lvls",role:"group","aria-label":"დაჯგუფების დონე"},h("span",{class:"hb-l"},"დონე"),
     [...Array(maxL).keys()].map(i=>i+1).map(L=>h("button",{type:"button",class:"g-lvl tip","data-tip":tr(lvlName[L]),"aria-label":tr(lvlName[L]),onclick:()=>setLevel(L)},String(L))));
-  const addDate=()=>{ const last=ex.dates[ex.dates.length-1]; let d=last?addDays(last,30):todayISO(); while(ex.dates.includes(d)) d=addDays(d,1);
-    ex.dates=[...ex.dates,d].sort(); save(); redraw(); };
+  /* "+ თარიღი" adds an empty column (red dd.mm.yyyy); it becomes a real date column once a date is picked */
+  const pend=S.xpend&&S.xpend.pid===S.pid?S.xpend:(S.xpend={pid:S.pid,n:0});
+  const addDate=()=>{ pend.n++; redraw(); };
+  const pickNew=nw=>{ if(!nw) return; if(ex.dates.includes(nw)){ toast("ეს თარიღი უკვე დამატებულია"); redraw(); return; }
+    pend.n=Math.max(0,pend.n-1); ex.dates=[...ex.dates,nw].sort(); save(); redraw(); };
+  /* a date cell shows dd.mm.yyyy and turns into a date picker while it has focus */
+  const dateBox=(d,onPick,label)=>h("input",{type:"text",class:"x-din"+(d?"":" pending"),value:d?fmtDate(d):"",placeholder:"dd.mm.yyyy",readonly:true,disabled:!edit,"aria-label":label,
+    onfocus:e=>{ const t=e.target; t.readOnly=false; t.type="date"; t.value=d||""; try{ t.showPicker&&t.showPicker(); }catch(x){} },
+    onblur:e=>{ const t=e.target; if(t.type==="date"&&(t.value||"")===(d||"")){ t.type="text"; t.readOnly=true; t.value=d?fmtDate(d):""; } },
+    onchange:e=>onPick(e.target.value)});
   const moveDate=(old,nw)=>{ if(!nw||nw===old) return; if(ex.dates.includes(nw)){ toast("ეს თარიღი უკვე დამატებულია"); redraw(); return; }
     ex.dates=ex.dates.map(d=>d===old?nw:d).sort();
     for(const v of Object.values(ex.vals)) if(old in v){ v[nw]=v[old]; delete v[old]; }
@@ -1527,10 +1535,13 @@ function renderExec(p){
   const onKey=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const all=[...document.querySelectorAll('.xtable input.x-in[data-col="'+e.target.dataset.col+'"]')];
     const i=all.indexOf(e.target); const n=all[i+(e.shiftKey?-1:1)]; if(n){ n.focus(); n.select(); } else e.target.blur(); };
   const thead=h("thead",null,h("tr",null,
-    ["BoQ","დასახელება","ჯამური რაოდ.","განზ.","ერთ. ფასი","სულ"].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":"")},l)),
+    ["BoQ","დასახელება",[h("span",null,"ჯამური"),h("br"),h("span",null,"რაოდ.")],"განზ.","ერთ. ფასი","სულ"].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":"")},l)),
     ex.dates.map(d=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
-      h("input",{type:"date",class:"x-din",value:d,disabled:!edit,"aria-label":"თარიღი",onchange:e=>moveDate(d,e.target.value)}),
+      dateBox(d,nw=>moveDate(d,nw),tr("თარიღი")+" "+fmtDate(d)),
       edit?h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა")+" "+fmtDate(d),onclick:()=>dropDate(d)},"✕"):null))),
+    Array.from({length:edit?pend.n:0},()=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
+      dateBox("",pickNew,tr("ახალი თარიღი")),
+      h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა"),onclick:()=>{ pend.n=Math.max(0,pend.n-1); redraw(); }},"✕")))),
     edit?h("th",{class:"x-add"},h("button",{class:"btn sm",type:"button",onclick:addDate},"+ თარიღი")):null));
   const body=rows.map(r=>{
     const it=r.it, head=it.type!=="პოზიცია";
@@ -1540,7 +1551,7 @@ function renderExec(p){
     if(head) return h("tr",{class:"g-head"+(it.type==="ქვეთავი"?" sub":"")},code,
       h("td",{class:"g-fz f1"},h("div",{class:"g-hname g-tipsrc","data-tip":it.name||""},it.name||"")),
       h("td",{class:"g-fz f2"}),h("td",{class:"g-fz f3"}),h("td",{class:"g-fz f4"}),h("td",{class:"g-fz f5"}),
-      ex.dates.map(()=>h("td",{class:"x-c"})),edit?h("td",{class:"x-add"}):null);
+      ex.dates.map(()=>h("td",{class:"x-c"})),Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c"})),edit?h("td",{class:"x-add"}):null);
     const sr=sc.rows[r.code]||(sc.rows[r.code]={price:null,plan:{},res:[]});
     const v=ex.vals[r.code]||{}, tot=ex.dates.reduce((a,d)=>a+num(v[d]),0), q=num(it.qty);
     return h("tr",{class:"g-pos"},code,
@@ -1551,6 +1562,7 @@ function renderExec(p){
       h("td",{class:"g-fz f5 x-sum num"+(q&&tot>q+1e-9?" over":"")},tot?fmtNum(tot):""),
       ex.dates.map((d,ci)=>h("td",{class:"x-c"},h("input",{class:"g-in num x-in",value:v[d]??"",inputmode:"decimal",disabled:!edit,"data-col":String(ci),"aria-label":(it.code||"")+" "+fmtDate(d),
         onkeydown:onKey,onchange:e=>{ setVal(r.code,d,e.target.value); const td=e.target.closest("tr").querySelector("td.x-sum"); const nv=ex.vals[r.code]||{}; const t=ex.dates.reduce((a,x)=>a+num(nv[x]),0); td.textContent=t?fmtNum(t):""; td.classList.toggle("over",!!q&&t>q+1e-9); }}))),
+      Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c x-wait"})),
       edit?h("td",{class:"x-add"}):null);
   });
   const wrap=h("div",{class:"gwrap",onscroll:()=>{ gTip().hidden=true; }},h("table",{class:"gtable xtable"},thead,h("tbody",null,body)));
@@ -1564,7 +1576,7 @@ function renderExec(p){
       edit?h("button",{class:"btn primary",type:"button",onclick:addDate},"+ თარიღი"):null));
   return h("div",{class:"sched"},top,
     !all.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))
-    :!ex.dates.length?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+ თარიღი“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);
+    :!ex.dates.length&&!pend.n?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+ თარიღი“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);
 }
 
 /* ---------- TEAM ---------- */
