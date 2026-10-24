@@ -472,13 +472,10 @@ function renderProject(){
   const p=P();
   const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
   if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
-  // left sidebar: codes, name, client/location, status, quick figures, the completed toggle
+  // left sidebar: client/location, status, quick figures, the completed toggle (codes and name sit beside the tabs)
   const st=p.stats||{};
   const fact=(l,v)=>h("div",{class:"pside-fact"},h("span",null,l),h("b",null,v));
   const side=h("aside",{class:"pside"},
-    [p.companyCode,p.projectCode,p.accountingCode].some(Boolean)?h("div",null,h("div",{class:"hb-l"},"კოდები"),
-      h("div",{class:"row",style:"gap:6px"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c)))):null,
-    h("h1",{class:"pside-name"},p.name),
     p.client||p.location?h("div",{class:"pside-card"},
       p.client?h("div",{class:"pside-li"},icon("building"),h("span",null,p.client)):null,
       p.location?h("div",{class:"pside-li muted"},icon("pin"),h("span",null,p.location)):null):null,
@@ -500,8 +497,15 @@ function renderProject(){
   else if(S.tab==="schedule") body=renderSchedule(p);
   else if(S.tab==="exec") body=renderExec(p);
   else body=renderInfo(p);
-  if(S.tab==="schedule"||S.tab==="exec") return h("div",{class:"proj-main"},tabBar,body);
-  return h("div",{class:"proj-layout"},side,h("div",{class:"proj-main"},tabBar,body));
+  /* codes and name beside the tabs; the row stays put (and frozen under the top bar) on every tab */
+  const pid=h("div",{class:"pid"},
+    h("div",{class:"pid-codes"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c))),
+    h("h1",{class:"pid-name",title:p.name},p.name));
+  const tabRow=h("div",{class:"ptabs"},pid,tabBar);
+  if(S.tab==="schedule"||S.tab==="exec") return h("div",{class:"proj-main"},tabRow,body);
+  /* on a phone the sidebar stacks above the tabs, so the codes and name go first */
+  if(window.matchMedia("(max-width:980px)").matches) return h("div",{class:"proj-layout"},pid,side,h("div",{class:"proj-main"},h("div",{class:"ptabs"},tabBar),body));
+  return h("div",{class:"proj-layout"},side,h("div",{class:"proj-main"},tabRow,body));
 }
 
 function canCreateOn(date){ return S.admin || date<=todayISO(); }
