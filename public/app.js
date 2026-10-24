@@ -237,8 +237,9 @@ function renderBar(){
 /* ---------- render root ---------- */
 function render(){
   const projView=!!(S.me&&!S.me.mustChange&&S.view==="project"&&P());
-  document.body.classList.toggle("has-side",projView&&S.tab!=="schedule");
-  document.body.classList.toggle("wide",projView&&S.tab==="schedule");
+  const wideTab=S.tab==="schedule"||S.tab==="exec";
+  document.body.classList.toggle("has-side",projView&&!wideTab);
+  document.body.classList.toggle("wide",projView&&wideTab);
   renderBar();
   let v;
   if(!S.me) v=renderLogin();
@@ -466,10 +467,10 @@ function renderProjectForm(pid){
 }
 
 /* ---------- PROJECT ---------- */
-const TAB_ICONS={reports:"report",progress:"chart",boq:"list",schedule:"calendar",info:"info",team:"personnel"};
+const TAB_ICONS={reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
-  const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
+  const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
   if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
   // left sidebar: codes, name, client/location, status, quick figures, the completed toggle
   const st=p.stats||{};
@@ -497,8 +498,9 @@ function renderProject(){
   else if(S.tab==="boq") body=renderBoq(p);
   else if(S.tab==="team") body=renderTeam(p);
   else if(S.tab==="schedule") body=renderSchedule(p);
+  else if(S.tab==="exec") body=renderExec(p);
   else body=renderInfo(p);
-  if(S.tab==="schedule") return h("div",{class:"proj-main"},tabBar,body);
+  if(S.tab==="schedule"||S.tab==="exec") return h("div",{class:"proj-main"},tabBar,body);
   return h("div",{class:"proj-layout"},side,h("div",{class:"proj-main"},tabBar,body));
 }
 
@@ -574,6 +576,7 @@ function autoItem(field,missing="ვერ მოიძებნა"){ return (r
 const listOpt=k=>()=>S.lists[k]||[];
 /* small line icons (24x24, stroke) for section headers and fields */
 const ICONS={
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
   calendar:'<rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M7 13.5h4M7 17h7"/>',
   building:'<path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M2 21h20M8 7h4M8 11h4M8 15h4"/>',
   pin:'<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
@@ -1170,7 +1173,7 @@ async function loadSchedule(pid){
 function saveSchedule(){
   clearTimeout(S.schedTimer); const pid=S.schedPid; schedStatus("ინახება…");
   S.schedTimer=setTimeout(async()=>{
-    try{ const sc=S.sched; await api("PUT","/projects/"+encodeURIComponent(pid)+"/schedule",{start:sc.start,end:sc.end,rows:sc.rows}); schedStatus("შენახულია"); }
+    try{ const sc=S.sched; await api("PUT","/projects/"+encodeURIComponent(pid)+"/schedule",{start:sc.start,end:sc.end,rows:sc.rows,exec:sc.exec}); schedStatus("შენახულია"); }
     catch(e){ schedStatus("ვერ შეინახა: "+errMsg(e),true); }
   },600);
 }
@@ -1482,6 +1485,73 @@ function renderPlanDialog(sc,positions,from,to){
       info,
       h("p",{class:"small muted",style:"margin:0"},"მოცულობა თანაბრად განაწილდება არჩეულ დღეებზე. ამ პერიოდში რესურსის არსებული გეგმა ჩანაცვლდება."),
       h("div",{class:"row",style:"justify-content:flex-end"},h("button",{class:"btn ghost",type:"button",onclick:close},"გაუქმება"),h("button",{class:"btn primary",type:"button",onclick:ok},"დაგეგმვა"))));
+}
+
+/* ---------- EXECUTION PLAN (შესრულების გეგმა) ---------- */
+/* BoQ chapters and positions on the left; on the right one column per chosen date with the quantity
+   planned to be executed by then. Kept in the project's schedule document (sc.exec) and saved with it. */
+function renderExec(p){
+  if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
+  const sc=S.sched; sc.rows=sc.rows||{};
+  const ex=sc.exec||(sc.exec={dates:[],vals:{}}); ex.dates=ex.dates||[]; ex.vals=ex.vals||{};
+  const edit=canReview(p)&&!p.archived;
+  const items=(p.boq||[]).filter(it=>["თავი","ქვეთავი","პოზიცია"].includes(it.type));
+  const save=()=>{ saveSchedule(); };
+  const redraw=()=>{ const w=document.querySelector(".gwrap"); S.xscroll=w?{x:w.scrollLeft,y:w.scrollTop}:null; render(); };
+  const numOrNull=v=>v.trim()===""?null:num(v);
+  /* depth for indentation of the BoQ number */
+  let inSub=false;
+  const rows=items.map(it=>{ if(it.type==="თავი"){ inSub=false; return {it,d:0}; } if(it.type==="ქვეთავი"){ inSub=true; return {it,d:1}; } return {it,d:inSub?2:1,code:normCode(it.code)}; });
+  const addDate=()=>{ const last=ex.dates[ex.dates.length-1]; let d=last?addDays(last,30):todayISO(); while(ex.dates.includes(d)) d=addDays(d,1);
+    ex.dates=[...ex.dates,d].sort(); save(); redraw(); };
+  const moveDate=(old,nw)=>{ if(!nw||nw===old) return; if(ex.dates.includes(nw)){ toast("ეს თარიღი უკვე დამატებულია"); redraw(); return; }
+    ex.dates=ex.dates.map(d=>d===old?nw:d).sort();
+    for(const v of Object.values(ex.vals)) if(old in v){ v[nw]=v[old]; delete v[old]; }
+    save(); redraw(); };
+  const dropDate=d=>{ const has=Object.values(ex.vals).some(v=>num(v[d])); if(has&&!confirm(tr("წავშალო სვეტი")+" "+fmtDate(d)+"? "+tr("მასში ჩაწერილი რაოდენობები წაიშლება."))) return;
+    ex.dates=ex.dates.filter(x=>x!==d); for(const v of Object.values(ex.vals)) delete v[d]; save(); redraw(); };
+  const setVal=(code,d,raw)=>{ const n=numOrNull(raw); const v=ex.vals[code]||(ex.vals[code]={}); if(n==null||n===0) delete v[d]; else v[d]=n; save(); };
+  /* Enter moves to the same date in the next position, like a spreadsheet */
+  const onKey=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const all=[...document.querySelectorAll('.xtable input.x-in[data-col="'+e.target.dataset.col+'"]')];
+    const i=all.indexOf(e.target); const n=all[i+(e.shiftKey?-1:1)]; if(n){ n.focus(); n.select(); } else e.target.blur(); };
+  const thead=h("thead",null,h("tr",null,
+    ["BoQ","დასახელება","ჯამური რაოდ.","განზ.","ერთ. ფასი"].map((l,i)=>h("th",{class:"g-fz f"+i+(i===4?" g-fz-last":"")},l)),
+    ex.dates.map(d=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
+      h("input",{type:"date",class:"x-din",value:d,disabled:!edit,"aria-label":"თარიღი",onchange:e=>moveDate(d,e.target.value)}),
+      edit?h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა")+" "+fmtDate(d),onclick:()=>dropDate(d)},"✕"):null))),
+    h("th",{class:"x-sum"},"სულ"),
+    edit?h("th",{class:"x-add"},h("button",{class:"btn sm",type:"button",onclick:addDate},"+ თარიღი")):null));
+  const body=rows.map(r=>{
+    const it=r.it, head=it.type!=="პოზიცია";
+    const code=h("td",{class:"g-fz f0 mono"},h("div",{class:"g-code",style:"padding-left:"+r.d*14+"px"},h("span",{class:head?"g-chead":"g-cpos"},it.code||"")));
+    if(head) return h("tr",{class:"g-head"+(it.type==="ქვეთავი"?" sub":"")},code,
+      h("td",{class:"g-fz f1"},h("div",{class:"g-hname g-tipsrc","data-tip":it.name||""},it.name||"")),
+      h("td",{class:"g-fz f2"}),h("td",{class:"g-fz f3"}),h("td",{class:"g-fz f4"}),
+      ex.dates.map(()=>h("td",{class:"x-c"})),h("td",{class:"x-sum"}),edit?h("td",{class:"x-add"}):null);
+    const sr=sc.rows[r.code]||(sc.rows[r.code]={price:null,plan:{},res:[]});
+    const v=ex.vals[r.code]||{}, tot=ex.dates.reduce((a,d)=>a+num(v[d]),0), q=num(it.qty);
+    return h("tr",{class:"g-pos"},code,
+      h("td",{class:"g-fz f1"},h("div",{class:"g-name g-tipsrc","data-tip":it.name||""},it.name||"")),
+      h("td",{class:"g-fz f2 num"},q?fmtNum(q):"—"),
+      h("td",{class:"g-fz f3"},it.unit||""),
+      h("td",{class:"g-fz f4"},h("input",{class:"g-in num",value:sr.price??"",placeholder:"—",inputmode:"decimal",disabled:!edit,"aria-label":"ერთ. ფასი",onchange:e=>{ sr.price=numOrNull(e.target.value); save(); }})),
+      ex.dates.map((d,ci)=>h("td",{class:"x-c"},h("input",{class:"g-in num x-in",value:v[d]??"",inputmode:"decimal",disabled:!edit,"data-col":String(ci),"aria-label":(it.code||"")+" "+fmtDate(d),
+        onkeydown:onKey,onchange:e=>{ setVal(r.code,d,e.target.value); const td=e.target.closest("tr").querySelector("td.x-sum"); const nv=ex.vals[r.code]||{}; const t=ex.dates.reduce((a,x)=>a+num(nv[x]),0); td.textContent=t?fmtNum(t):""; td.classList.toggle("over",!!q&&t>q+1e-9); }}))),
+      h("td",{class:"x-sum num"+(q&&tot>q+1e-9?" over":"")},tot?fmtNum(tot):""),
+      edit?h("td",{class:"x-add"}):null);
+  });
+  const wrap=h("div",{class:"gwrap",onscroll:()=>{ gTip().hidden=true; }},h("table",{class:"gtable xtable"},thead,h("tbody",null,body)));
+  wrap.addEventListener("mouseover",e=>{ const t=e.target.closest(".g-tipsrc"), tip=gTip();
+    if(t&&t.dataset.tip){ const r=t.getBoundingClientRect(); tip.textContent=t.dataset.tip; tip.hidden=false; tip.style.left=Math.min(r.left,window.innerWidth-tip.offsetWidth-12)+"px"; tip.style.top=(r.bottom+6)+"px"; } else tip.hidden=true; });
+  wrap.addEventListener("mouseleave",()=>{ gTip().hidden=true; });
+  requestAnimationFrame(()=>{ if(S.xscroll){ wrap.scrollLeft=S.xscroll.x; wrap.scrollTop=S.xscroll.y; S.xscroll=null; } });
+  const top=h("div",{class:"g-top"},
+    h("div",{class:"g-title"},h("h2",null,"შესრულების გეგმა"),h("div",{class:"small muted"},"თითო თარიღზე ჩაწერეთ, რა რაოდენობის შესრულებას გეგმავთ.")),
+    h("div",{class:"g-ctrls"},h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
+      edit?h("button",{class:"btn primary",type:"button",onclick:addDate},"+ თარიღი"):null));
+  return h("div",{class:"sched"},top,
+    !rows.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))
+    :!ex.dates.length?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+ თარიღი“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);
 }
 
 /* ---------- TEAM ---------- */

@@ -556,7 +556,15 @@ function cleanSchedule(b) {
       })),
     };
   }
-  return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows };
+  /* execution plan (შესრულების გეგმა): chosen dates and the quantity planned per position for each date */
+  const ex = b && typeof b.exec === "object" && b.exec ? b.exec : {};
+  const dates = [...new Set((Array.isArray(ex.dates) ? ex.dates : []).filter((d) => ISO_RE.test(d)))].sort().slice(0, 400);
+  const vals = {};
+  for (const [code, v] of Object.entries(ex.vals && typeof ex.vals === "object" ? ex.vals : {}).slice(0, 5000)) {
+    const pl = Object.fromEntries(Object.entries(cleanPlan(v)).filter(([d]) => dates.includes(d)));
+    if (Object.keys(pl).length) vals[str(code, 40)] = pl;
+  }
+  return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows, exec: { dates, vals } };
 }
 api.get("/projects/:id/schedule", auth, (req, res) => {
   if (!canSee(getProject(req.params.id), req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });

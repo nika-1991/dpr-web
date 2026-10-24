@@ -751,3 +751,19 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gp .gb.re{right:2px;border-top-right-radius:5px;border-bottom-right-radius:5px}
 .gp .gb.rs.re{border-radius:5px}
 .gtable td.gp{cursor:default}
+/* execution plan table */
+.xtable .g-pos td,.xtable .g-head td{height:32px}
+.xtable th.x-date{width:132px;min-width:132px;padding:0 6px;border-left:1px solid var(--g-line);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3;background:var(--surface)}
+.xtable thead th{height:40px}
+.x-dh{display:flex;align-items:center;gap:2px}
+.x-din{border:1px solid transparent;background:transparent;font:inherit;font-size:.76rem;color:var(--ink);font-weight:600;padding:3px 4px;border-radius:5px;width:100%;min-width:0}
+.x-din:hover:not(:disabled){border-color:var(--line)}
+.x-din:focus{outline:none;border-color:var(--accent)}
+.xtable td.x-c{border-left:1px solid var(--g-line);padding:0 4px}
+.xtable .x-in{text-align:right}
+.xtable .x-sum{width:96px;min-width:96px;padding:0 10px;text-align:right;border-left:1px solid var(--line);font-weight:600}
+.xtable th.x-sum{position:sticky;top:0;z-index:3;background:var(--surface)}
+.xtable td.x-sum.over{color:var(--bad)}
+.xtable .x-add{padding:0 10px;border-left:1px solid var(--g-line)}
+.xtable th.x-add{position:sticky;top:0;z-index:3;background:var(--surface)}
+.xtable .g-head td.x-c,.xtable .g-head td.x-sum,.xtable .g-head td.x-add{background:color-mix(in srgb,var(--sunk) 70%,var(--surface))}
