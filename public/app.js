@@ -1516,8 +1516,11 @@ function renderExec(p){
     [...Array(maxL).keys()].map(i=>i+1).map(L=>h("button",{type:"button",class:"g-lvl tip","data-tip":tr(lvlName[L]),"aria-label":tr(lvlName[L]),onclick:()=>setLevel(L)},String(L))));
   /* "+ თარიღი" adds an empty column labelled "თარიღი"; it becomes a real date column once a date is picked */
   const pend=S.xpend&&S.xpend.pid===S.pid?S.xpend:(S.xpend={pid:S.pid,n:0});
-  const addDate=()=>{ pend.n++; redraw(); };
-  const pickNew=nw=>{ if(!nw) return; if(ex.dates.includes(nw)){ toast("ეს თარიღი უკვე დამატებულია"); redraw(); return; }
+  /* "+ თარიღი" opens the calendar right away (an invisible date field under the button);
+     browsers without showPicker get an empty "თარიღი" column to pick the date in */
+  const addBtn=(cls)=>{ const picker=h("input",{type:"date",class:"x-hidpick",tabindex:"-1","aria-hidden":"true",onchange:e=>pickNew(e.target.value)});
+    return h("span",{class:"x-addw"},h("button",{class:cls,type:"button",onclick:()=>{ try{ picker.showPicker(); }catch(e){ pend.n++; redraw(); } }},"+ თარიღი"),picker); };
+  const pickNew=nw=>{ if(!nw) return; if(ex.dates.includes(nw)){ toast("ეს თარიღი უკვე დამატებულია"); return; }
     pend.n=Math.max(0,pend.n-1); ex.dates=[...ex.dates,nw].sort(); save(); redraw(); };
   /* a date cell shows dd.mm.yyyy and turns into a date picker while it has focus */
   const dateBox=(d,onPick,label)=>h("input",{type:"text",class:"x-din"+(d?"":" pending"),value:d?fmtDate(d):"",placeholder:tr("თარიღი"),readonly:true,disabled:!edit,"aria-label":label,
@@ -1542,7 +1545,7 @@ function renderExec(p){
     Array.from({length:edit?pend.n:0},()=>h("th",{class:"x-date"},h("div",{class:"x-dh"},
       dateBox("",pickNew,tr("ახალი თარიღი")),
       h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა"),onclick:()=>{ pend.n=Math.max(0,pend.n-1); redraw(); }},"✕")))),
-    edit?h("th",{class:"x-add"},h("button",{class:"btn sm",type:"button",onclick:addDate},"+ თარიღი")):null));
+    edit?h("th",{class:"x-add"},addBtn("btn sm")):null));
   const body=rows.map(r=>{
     const it=r.it, head=it.type!=="პოზიცია";
     const toggle=head?h("button",{class:"g-fold",type:"button","aria-expanded":String(!fold.has(r.key)),"aria-label":(fold.has(r.key)?tr("გაშლა"):tr("აკეცვა"))+": "+(it.name||""),
@@ -1573,7 +1576,7 @@ function renderExec(p){
   const top=h("div",{class:"g-top"},
     h("div",{class:"g-title"},h("h2",null,"შესრულების გეგმა"),h("div",{class:"small muted"},"თითო თარიღზე ჩაწერეთ, რა რაოდენობის შესრულებას გეგმავთ.")),
     h("div",{class:"g-ctrls"},outline,h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
-      edit?h("button",{class:"btn primary",type:"button",onclick:addDate},"+ თარიღი"):null));
+      edit?addBtn("btn primary"):null));
   return h("div",{class:"sched"},top,
     !all.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))
     :!ex.dates.length&&!pend.n?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+ თარიღი“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);

@@ -792,3 +792,5 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .xtable th.x-date:hover .g-del,.x-dh .g-del:focus{opacity:1}
 .xtable td.x-c{padding:0 2px}
 .xtable .x-in{font-size:.74rem;padding:1px 4px}
+.x-addw{position:relative;display:inline-block}
+.x-hidpick{position:absolute;left:0;bottom:0;width:100%;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
