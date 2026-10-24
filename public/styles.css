@@ -812,3 +812,23 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .tabs button{padding:8px 12px;gap:8px;align-items:center}
 .tabs button .ico{width:22px;height:22px;flex:none}
 .tabs button>span{white-space:normal;max-width:92px;font-size:.7rem;line-height:1.2;text-align:left}
+/* accent palette: dark teal header bar with a thin orange edge; orange for small highlights; company green stays the main colour */
+:root{--brand-dark:#0a252a;--brand-orange:#eb7523;--g-today:var(--brand-orange)}
+.bar{background:var(--brand-dark);border-bottom:2px solid var(--brand-orange);box-shadow:0 2px 12px -6px rgba(10,37,42,.5)}
+.bar .logo-l{display:none}
+.bar .logo-d{display:block}
+.bar .brand-sep{background:rgba(255,255,255,.22)}
+.bar .brand-name{color:#fff}
+.bar .crumbs{color:rgba(255,255,255,.88)}
+.bar .crumbs button{color:rgba(255,255,255,.66)}
+.bar .crumbs button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.bar .crumbs .sep{color:rgba(255,255,255,.3)}
+.bar .me,.bar .me-btn{color:rgba(255,255,255,.82)}
+.bar .me-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.bar .lang-btn{background:transparent;border-color:rgba(255,255,255,.3);color:#fff}
+.bar .lang-btn:hover{background:rgba(255,255,255,.08)}
+.bar .avatar{background:#2c5560;color:#fff}
+.bar .role-tag{border-color:rgba(255,255,255,.3)}
+.eyebrow{color:var(--brand-orange)}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--brand-orange)}
+.bar .crumbs .muted{color:rgba(255,255,255,.9)}
