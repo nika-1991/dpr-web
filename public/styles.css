@@ -808,3 +808,7 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .x-addrow .x-addw{display:flex}
 .btn.x-tall{height:32px;width:28px;min-width:28px;border-radius:6px}
 .xtable th.x-add{padding:0 8px;vertical-align:middle}
+/* project tabs: small type that may wrap to two lines, larger icons */
+.tabs button{padding:8px 12px;gap:8px;align-items:center}
+.tabs button .ico{width:22px;height:22px;flex:none}
+.tabs button>span{white-space:normal;max-width:92px;font-size:.7rem;line-height:1.2;text-align:left}
