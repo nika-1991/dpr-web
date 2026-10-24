@@ -1351,6 +1351,8 @@ function renderSchedule(p){
       gridCells(r,ri));
   });
   const table=h("table",{class:"gtable z-"+zoom},thead,h("tbody",null,body));
+  colResize(table,"sched","th.gd","--cw-"+zoom);
+  table.style.setProperty("--cw","var(--cw-"+zoom+")");
 
   /* selection and editing (day view) */
   const wrap=h("div",{class:"gwrap",tabindex:"0","aria-label":"გეგმა-გრაფიკის ბადე",onscroll:()=>{ S.gscroll={x:wrap.scrollLeft,y:wrap.scrollTop}; gTip().hidden=true; }},table);
@@ -1432,6 +1434,34 @@ function renderSchedule(p){
     S.gplan?renderPlanDialog(sc,positions,from,to):null);
 }
 /* "+ დაგეგმვა": spread a quantity evenly over a date range (optionally skipping weekends) */
+/* Excel-like column resizing for the schedule and execution plan tables: drag the right edge of a header
+   to resize, double-click it to fit the content. Frozen columns are CSS variables --w0…--w5 on the table;
+   date columns share one width (dateVar). Widths are remembered per table in this browser. */
+function colResize(table,kind,dateSel,dateVar){
+  const key="dpr.colw."+kind;
+  let saved={}; try{ saved=JSON.parse(localStorage.getItem(key)||"{}")||{}; }catch(e){}
+  for(const [v,w] of Object.entries(saved)) if(/^--/.test(v)&&w>0) table.style.setProperty(v,w+"px");
+  const store=(v,w)=>{ saved[v]=Math.round(w); try{ localStorage.setItem(key,JSON.stringify(saved)); }catch(e){} };
+  const handle=(th,v,cells)=>{
+    const rs=h("span",{class:"col-rs","aria-hidden":"true",title:tr("გაწევა; ორჯერ დაჭერა — მორგება")});
+    rs.addEventListener("mousedown",e=>{ e.preventDefault(); e.stopPropagation(); const x0=e.clientX, w0=th.getBoundingClientRect().width; rs.classList.add("on");
+      const move=ev=>{ const w=Math.max(28,Math.min(900,w0+ev.clientX-x0)); table.style.setProperty(v,w+"px"); };
+      const up=()=>{ document.removeEventListener("mousemove",move); document.removeEventListener("mouseup",up); rs.classList.remove("on");
+        store(v,th.getBoundingClientRect().width); };
+      document.addEventListener("mousemove",move); document.addEventListener("mouseup",up); });
+    rs.addEventListener("click",e=>e.stopPropagation());
+    rs.addEventListener("dblclick",e=>{ e.preventDefault(); e.stopPropagation();
+      /* fit: let the column take its natural width for a moment, measure it, then fix it */
+      const list=cells(); list.forEach(c=>c.classList.add("fitc")); table.classList.add("fitting");
+      const w=Math.max(28,Math.min(900,Math.ceil(Math.max(...list.map(c=>c.getBoundingClientRect().width)))+2));
+      table.classList.remove("fitting"); list.forEach(c=>c.classList.remove("fitc"));
+      table.style.setProperty(v,w+"px"); store(v,w); });
+    th.append(rs);
+  };
+  table.querySelectorAll("thead th.g-fz").forEach(th=>{ const m=/\bf(\d)\b/.exec(th.className); if(!m) return;
+    handle(th,"--w"+m[1],()=>[...table.querySelectorAll(".f"+m[1])]); });
+  if(dateSel) table.querySelectorAll("thead "+dateSel).forEach(th=>handle(th,dateVar,()=>[...table.querySelectorAll("thead "+dateSel+",tbody td.gc,tbody td.x-c")]));
+}
 /* "+ დაგეგმვა": spread a resource quantity evenly over a period (optionally skipping weekends);
    the resource can be one the position already has or a new one */
 function renderPlanDialog(sc,positions,from,to){
@@ -1603,7 +1633,9 @@ function renderExec(p){
       Array.from({length:edit?pend.n:0},()=>h("td",{class:"x-c x-wait"})),
       edit?h("td",{class:"x-add"}):null);
   });
-  const wrap=h("div",{class:"gwrap",onscroll:()=>{ gTip().hidden=true; }},h("table",{class:"gtable xtable"},thead,h("tbody",null,body)));
+  const xt=h("table",{class:"gtable xtable"},thead,h("tbody",null,body));
+  colResize(xt,"exec","th.x-date","--dw");
+  const wrap=h("div",{class:"gwrap",onscroll:()=>{ gTip().hidden=true; }},xt);
   wrap.addEventListener("mouseover",e=>{ const t=e.target.closest(".g-tipsrc"), tip=gTip();
     if(t&&t.dataset.tip){ const r=t.getBoundingClientRect(); tip.textContent=t.dataset.tip; tip.hidden=false; tip.style.left=Math.min(r.left,window.innerWidth-tip.offsetWidth-12)+"px"; tip.style.top=(r.bottom+6)+"px"; } else tip.hidden=true; });
   wrap.addEventListener("mouseleave",()=>{ gTip().hidden=true; });
