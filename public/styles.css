@@ -676,7 +676,6 @@ a.btn{text-decoration:none}
 .g-fold-gap{width:18px;flex:none}
 .gtable td.f0{padding:0 6px 0 8px}
 .g-code{display:flex;align-items:center;gap:3px;white-space:nowrap}
-.g-cpos{font-weight:600}
 .g-chead{font-weight:700}
 .g-pcell{min-width:0;flex:1}
 .g-hrow{min-width:0}
@@ -761,9 +760,17 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .x-din:focus{outline:none;border-color:var(--accent)}
 .xtable td.x-c{border-left:1px solid var(--g-line);padding:0 4px}
 .xtable .x-in{text-align:right}
-.xtable .x-sum{width:96px;min-width:96px;padding:0 10px;text-align:right;border-left:1px solid var(--line);font-weight:600}
-.xtable th.x-sum{position:sticky;top:0;z-index:3;background:var(--surface)}
+.xtable td.x-sum{font-weight:600}
 .xtable td.x-sum.over{color:var(--bad)}
+.f5{left:716px;width:90px;min-width:90px;max-width:90px}
+.xtable .f4{border-right:0}
+.xtable .f5{border-right:1px solid var(--line);text-align:right}
+.xtable thead th.f5{text-align:right}
+.xtable .gm-l{left:818px}
 .xtable .x-add{padding:0 10px;border-left:1px solid var(--g-line)}
 .xtable th.x-add{position:sticky;top:0;z-index:3;background:var(--surface)}
-.xtable .g-head td.x-c,.xtable .g-head td.x-sum,.xtable .g-head td.x-add{background:color-mix(in srgb,var(--sunk) 70%,var(--surface))}
+.xtable .g-head td.x-c,.xtable .g-head td.x-add{background:color-mix(in srgb,var(--sunk) 70%,var(--surface))}
+/* items lighter and a little smaller than chapters (schedule and execution plan) */
+.g-pos .g-name{font-weight:400;font-size:.76rem;color:color-mix(in srgb,var(--ink) 72%,var(--surface))}
+.g-cpos{font-weight:500;font-size:.74rem;color:color-mix(in srgb,var(--ink) 62%,var(--surface))}
+@media (max-width:980px){.f5{position:static}}
