@@ -2094,7 +2094,7 @@ const plPct=v=>v==null||!isFinite(v)?"—":fmtNum(Math.round(v*1000)/10||0)+"%";
 function renderPLTable(D,m,view){
   const open=S.plOpen||(S.plOpen=new Set()), tot=a=>a.reduce((x,y)=>x+y,0);
   const sel=S.plMonth==null||S.plMonth>=D.N?-1:S.plMonth, idx=sel<0?D.periods.map((_,i)=>i):[sel];
-  const rows=plRows(D,m,view);
+  const all=plRows(D,m,view), rows=all.filter(r=>r.k!=="ratio"&&r.k!=="gap"), ratios=all.filter(r=>r.k==="ratio");
   const td=(v,cls)=>h("td",{class:"num"+(v<-0.5?" neg":"")+(cls?" "+cls:"")},plMoney(v));
   const nC=idx.length+2;
   const body=rows.flatMap(r=>{
@@ -2116,6 +2116,9 @@ function renderPLTable(D,m,view){
       h("h2",{class:"pr-title"},tr("პროექტის მოგება-ზარალი")+" ",h("span",null,"("+tr(view==="plan"?"გეგმა":"ფაქტი")+", "+tr("ლარი")+")"))),
       h("div",{class:"pr-cur"},tr("ვალუტა")+": ",h("b",null,"GEL (₾)"))),
     h("div",{class:"pr-wrap"},finResize(table,"pr."+(sel<0?"all":"one"))),
+    /* ratios as small coloured boxes: the chosen month (if one) and the whole project */
+    h("div",{class:"pr-ratios"},ratios.map((r,j)=>h("div",{class:"pr-rbox pr-r"+j},h("div",{class:"pr-rl"},r.l),
+      h("div",{class:"pr-rv"},sel>=0?h("span",null,h("em",null,D.periods[sel].label),plPct(r.f(sel))):null,h("span",null,h("em",null,"სულ"),plPct(r.f(-1))))))),
     h("div",{class:"pr-foot"},h("span",null,h("span",{class:"pr-dot"}),src),h("span",null,tr("გენერირებულია ავტომატურად")+" · "+fmtDate(isoDay(new Date())))));
 }
 /* P&L to Excel: the statement as shown (chosen month or all months) */

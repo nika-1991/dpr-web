@@ -1216,3 +1216,19 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .pr-table .pr-item td.neg{color:color-mix(in srgb,#be123c 70%,var(--surface))}
 .pr-table .pr-line th{padding-left:34px!important}
 .pr-table .pr-item .pl-tg{margin-left:0;width:14px}
+/* statement v3: one font size, no tinted rows, rules above totals, double rule under the result */
+.pr-table,.pr-table th,.pr-table td,.pr-table thead th.num,.pr-net td,.pr-net th,.pr-line th,.pr-line td{font-size:.72rem!important}
+.pr-table .pr-rev th,.pr-table .pr-rev td,.pr-table .pr-cost th,.pr-table .pr-cost td,.pr-table .pr-gross th,.pr-table .pr-gross td,.pr-table .pr-ind th,.pr-table .pr-ind td{
+  background:var(--surface)!important;border-top:1px solid var(--ink);border-bottom:0!important;padding-top:4px;padding-bottom:4px}
+.pr-table tbody tr.pr-rev+tr th,.pr-table tbody tr.pr-rev+tr td,.pr-table tbody tr.pr-cost+tr th,.pr-table tbody tr.pr-cost+tr td,
+.pr-table tbody tr.pr-gross+tr th,.pr-table tbody tr.pr-gross+tr td,.pr-table tbody tr.pr-ind+tr th,.pr-table tbody tr.pr-ind+tr td{padding-top:14px}
+.pr-table .pr-net th,.pr-table .pr-net td{background:var(--surface)!important;border-top:1px solid var(--ink);border-bottom:3px double var(--ink)!important;padding-top:6px!important;padding-bottom:6px!important}
+.pr-table .pr-net td{color:var(--ink)}
+.pr-table .pr-net td.neg{color:#9f1239}
+.pr-ratios{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.pr-rbox{--c:#0284c7;flex:1 1 180px;max-width:260px;border:1px solid color-mix(in srgb,var(--c) 30%,var(--surface));background:color-mix(in srgb,var(--c) 7%,var(--surface));border-radius:10px;padding:8px 12px}
+.pr-r0{--c:#059669}.pr-r1{--c:#d97706}.pr-r2{--c:#7c3aed}
+.pr-rl{font-size:.66rem;color:color-mix(in srgb,var(--c) 75%,var(--ink));font-weight:600;margin-bottom:4px}
+.pr-rv{display:flex;gap:14px;align-items:baseline}
+.pr-rv span{display:flex;flex-direction:column;font-size:.9rem;font-weight:800;color:var(--c);font-variant-numeric:tabular-nums}
+.pr-rv em{font-style:normal;font-size:.6rem;font-weight:500;color:var(--muted)}
