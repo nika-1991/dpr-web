@@ -1188,6 +1188,8 @@ const normTerms=raw=>{ raw=raw||{}; const types={}, items={};
   return {types,items}; };
 const partsLabel=parts=>parts&&parts.length?parts.map(x=>(parts.length>1||x.pct!==100?fmtNum(x.pct)+"% ":"")+dueLabel(x.t)).join(" + "):"—";
 /* an item's unit price is not typed: it is the cost of all its resources (qty × unit price) divided by the item's quantity */
+/* money in Georgian lari: 2 880,00 ₾ */
+const gel=n=>{ const neg=n<0, [i,d]=Math.abs(Math.round(n*100)/100).toFixed(2).split("."); return (neg?"−":"")+i.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00a0")+","+d+"\u00a0₾"; };
 const posUnitPrice=(sr,q)=>{ const t=((sr&&sr.res)||[]).reduce((a,x)=>a+num(x.qty)*num(x.price),0); return q>0&&t>0?t/q:null; };
 const MONTHS_KA=["იანვარი","თებერვალი","მარტი","აპრილი","მაისი","ივნისი","ივლისი","აგვისტო","სექტემბერი","ოქტომბერი","ნოემბერი","დეკემბერი"];
 const MONTHS_EN=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -1288,7 +1290,7 @@ function renderSchedule(p){
         const list=positions.flatMap(r=>r.sr.res.filter(x=>x.type===t));
         const cost=list.reduce((a,x)=>a+num(x.qty)*num(x.price),0), miss=list.filter(x=>!num(x.price)).length;
         return h("div",{class:"gh-term"},h("i",{class:"g-sw "+c}),h("span",{class:"gh-tn"},t),
-        h("span",{class:"gh-cost"},list.length?fmtNum(cost):"—",
+        h("span",{class:"gh-cost"},list.length?gel(cost):"—",
           miss?h("span",{class:"gh-warn tip","data-tip":miss+" "+tr("რესურსზე ფასი შევსებული არაა"),"aria-label":miss+" "+tr("რესურსზე ფასი შევსებული არაა")},"!"):null),
         h("span",{class:"gh-tv"},partsLabel(T.types[t])+(Object.keys(T.items[t]||{}).length?" (+"+Object.keys(T.items[t]).length+" "+tr("ცალკე")+")":""))); })),
     h("span",{class:"spacer"}),

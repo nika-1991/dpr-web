@@ -895,7 +895,7 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-stats b{color:var(--ink);font-family:var(--f-mono)}
 .gh-terms{border:0;border-left:1px solid var(--line);background:none;padding:0 0 0 22px;font:inherit;text-align:left;cursor:pointer;gap:3px;color:var(--muted);border-radius:0}
 .gh-terms:hover .gh-tv{color:var(--ink);text-decoration:underline}
-.gh-term{display:grid;grid-template-columns:10px 112px 96px auto;align-items:center;gap:6px;font-size:.74rem}
+.gh-term{display:grid;grid-template-columns:10px 112px 124px auto;align-items:center;gap:6px;font-size:.74rem}
 .gh-term .g-sw{width:9px;height:9px}
 .gh-tn{color:var(--ink)}
 .gh-tv{white-space:nowrap}
