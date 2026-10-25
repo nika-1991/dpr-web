@@ -467,11 +467,13 @@ function renderProjectForm(pid){
 }
 
 /* ---------- PROJECT ---------- */
-const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]]];
-const TAB_ICONS={reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
+const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]],["ფინანსები",["pl","bs","cf","othercost"]]];
+/* finance tabs (admins and reviewers); pages are empty for now */
+const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["bs","შემოკლებული ბალანსი"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"]];
+const TAB_ICONS={pl:"table",bs:"layers",cf:"pulse",othercost:"expenses",reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
-  const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[])];
+  const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?FIN_TABS:[])];
   if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
   // left sidebar: client/location, status, quick figures, the completed toggle (codes and name sit beside the tabs)
   const st=p.stats||{};
@@ -501,6 +503,7 @@ function renderProject(){
   else if(S.tab==="team") body=renderTeam(p);
   else if(S.tab==="schedule") body=renderSchedule(p);
   else if(S.tab==="exec") body=renderExec(p);
+  else if(TAB_ICONS[S.tab]&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=h("div",{class:"empty"},icon(TAB_ICONS[S.tab]),h("p",null,h("b",null,tr(FIN_TABS.find(([k])=>k===S.tab)[1]))),h("p",{class:"muted"},"გვერდი მზადდება."));
   else body=renderInfo(p);
   /* codes and name beside the tabs; the row stays put (and frozen under the top bar) on every tab */
   const pid=h("div",{class:"pid"},
