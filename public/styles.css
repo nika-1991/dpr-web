@@ -1123,3 +1123,12 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .as-row{display:grid;grid-template-columns:minmax(0,1fr) 120px 140px 140px 34px;gap:6px;width:100%;align-items:center}
 .as-hd .cd-l{margin:0}
 @media (max-width:700px){.as-row{grid-template-columns:1fr 1fr}.as-hd{display:none}}
+/* cash flow */
+.cf-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.cf-kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:var(--shadow)}
+.cf-kpi b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums;margin-top:2px}
+.cf-kpi.neg b{color:#b42318}.cf-kpi.pos b{color:#067647}
+.cf-cum th,.cf-cum td{font-style:italic}
+.as-g4{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px}
+.as-g4 .cd-cell{display:flex;flex-direction:column}.as-g4 .cd-cell>.cd-l{flex:1}
+@media (max-width:800px){.cf-kpis,.as-g4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
