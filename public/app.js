@@ -2041,7 +2041,9 @@ function finResize(table,kind){
   requestAnimationFrame(()=>{ if(!table.isConnected) return;
     const ths=[...table.querySelectorAll("thead tr:first-child th")];
     const ks=ths.map((th,i)=>i===0?"#0":th.textContent.trim()||"#"+i);
-    const w=ths.map((th,i)=>saved[ks[i]]||Math.ceil(th.getBoundingClientRect().width));
+    /* by default each column is as wide as its content (the names column at most 420px) */
+    table.style.width="max-content";
+    const w=ths.map((th,i)=>saved[ks[i]]||Math.min(i===0?420:300,Math.ceil(th.getBoundingClientRect().width)+2));
     const cg=h("colgroup",null,w.map(x=>h("col",{style:"width:"+x+"px"}))); table.prepend(cg);
     const total=()=>{ table.style.width=w.reduce((a,b)=>a+b,0)+"px"; };
     table.classList.add("fin-fixed"); total();
@@ -2067,22 +2069,20 @@ const MONTHS_FULL=d=>(LANG==="en"?MONTHS_EN:MONTHS_KA)[+d.slice(5,7)-1]+" "+d.sl
 function plRows(D,m,view){
   const T=plTotals(D,m), tot=a=>a.reduce((x,y)=>x+y,0), out=[];
   const R=(k,l,v,extra)=>out.push({k,l,v,...extra});
-  R("sec","ამონაგები");
   D.chapters.filter(c=>m.rev[c.key]).forEach(c=>R("item",c.name,m.rev[c.key]));
   R("rev","სულ ამონაგები",T.rev);
-  R("sec","პირდაპირი ხარჯი");
   D.chapters.filter(c=>m.cost[c.key]).forEach(c=>{ const L=m.lines[c.key]||new Map();
     R("item",c.name,m.cost[c.key],{key:view+c.key,lines:[...L.entries()].sort((a,b)=>tot(a[1])-tot(b[1]))}); });
   R("cost","სულ პირდაპირი ხარჯი",T.cost);
-  R("sec","საერთო მოგება სექციებით");
   D.chapters.forEach(c=>{ const v=D.z(); (m.rev[c.key]||[]).forEach((x,i)=>v[i]+=x); (m.cost[c.key]||[]).forEach((x,i)=>v[i]+=x); if(tot(v.map(Math.abs))) R("item",c.name,v); });
-  R("gross","საერთო მოგება",T.gross);
+  R("gross","სულ საერთო მოგება",T.gross);
   if(view==="plan"){
-    R("sec","არაპირდაპირი ხარჯი"); m.ind.forEach(x=>R("item",x.name,x.vals)); R("ind","სულ არაპირდაპირი ხარჯი",T.ind);
-    R("sec","სხვა ხარჯები"); R("item","გაუთვალისწინებელი ხარჯი",m.cont); R("item","მობილიზაცია / დემობილიზაცია",m.mob);
+    m.ind.forEach(x=>R("item",x.name,x.vals)); R("ind","სულ არაპირდაპირი ხარჯი",T.ind);
+    R("item","გაუთვალისწინებელი ხარჯი",m.cont); R("item","მობილიზაცია / დემობილიზაცია",m.mob);
+    R("ind","სულ სხვა ხარჯი",m.cont.map((v,i)=>v+m.mob[i]));
   } else R("note","არაპირდაპირი ხარჯის ფაქტი „სხვა ხარჯების“ გვერდიდან დაემატება.");
   R("net","სულ პროექტის მოგება (ზარალი)",T.net);
-  R("sec","კოეფიციენტები");
+  R("gap","");
   const ratio=(l,a,b,sign)=>R("ratio",l,null,{f:i=>{ const x=i<0?tot(a):a[i], y=i<0?tot(b):b[i]; return y?sign*x/y:null; }});
   ratio("მოგების მარჟა (მოგება / შემოსავალი)",T.net,T.rev,1);
   ratio("ხარჯის წილი (ხარჯი / შემოსავალი)",T.allCost,T.rev,-1);
@@ -2099,6 +2099,7 @@ function renderPLTable(D,m,view){
   const nC=idx.length+2;
   const body=rows.flatMap(r=>{
     if(r.k==="sec") return [h("tr",{class:"pr-sec"},h("th",{colspan:String(nC)},r.l))];
+    if(r.k==="gap") return [h("tr",{class:"pr-gap"},h("td",{colspan:String(nC)}))];
     if(r.k==="note") return [h("tr",{class:"pr-note"},h("td",{colspan:String(nC)},r.l))];
     if(r.k==="ratio") return [h("tr",{class:"pr-ratio"},h("th",{scope:"row"},r.l),idx.map(i=>h("td",{class:"num"},plPct(r.f(i)))),h("td",{class:"num pr-t"},plPct(r.f(-1))))];
     const isOpen=r.key&&open.has(r.key);
@@ -2124,7 +2125,8 @@ function exportPL(p,D,m,view){
   const aoa=[[tr("პროექტის მოგება-ზარალი")+" — "+tr(view==="plan"?"გეგმა":"ფაქტი")],[p.name],[],[tr("მუხლი / დასახელება"),...idx.map(i=>D.periods[i].label),tr("სულ")]];
   const rnd=v=>Math.round(v*100)/100;
   for(const r of plRows(D,m,view)){
-    if(r.k==="sec"||r.k==="note") aoa.push([tr(r.l)]);
+    if(r.k==="gap") aoa.push([]);
+    else if(r.k==="sec"||r.k==="note") aoa.push([tr(r.l)]);
     else if(r.k==="ratio") aoa.push([tr(r.l),...idx.map(i=>{ const x=r.f(i); return x==null?"":Math.round(x*1000)/1000; }),(x=>x==null?"":Math.round(x*1000)/1000)(r.f(-1))]);
     else { aoa.push([(r.k==="item"?"   ":"")+tr(r.l),...idx.map(i=>rnd(r.v[i])),rnd(tot(r.v))]);
       for(const [n,v] of r.lines||[]) aoa.push(["      "+n,...idx.map(i=>rnd(v[i])),rnd(tot(v))]); }

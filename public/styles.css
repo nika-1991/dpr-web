@@ -1202,3 +1202,8 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 /* many months: the line names stay in view while scrolling sideways */
 .pr-table tbody th,.pr-table thead th.pl-c0{position:sticky!important;left:0;z-index:1;background:var(--surface)}
 .pr-table tbody .pr-sec th{background:var(--surface)!important}
+/* no section headings: a little air after each total instead */
+.pr-rev td,.pr-rev th,.pr-cost td,.pr-cost th,.pr-gross td,.pr-gross th,.pr-ind td,.pr-ind th{border-bottom:14px solid var(--surface)!important}
+.pr-table tbody tr:first-child th,.pr-table tbody tr:first-child td{padding-top:14px}
+.pr-gap td{height:10px;padding:0!important}
+.pr-net th,.pr-net td{border-bottom:10px solid var(--surface)!important}
