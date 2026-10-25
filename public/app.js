@@ -468,11 +468,11 @@ function renderProjectForm(pid){
 
 /* ---------- PROJECT ---------- */
 /* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
-const tabIcon=k=>{ const n=TAB_ICONS[k]||""; return n.startsWith("txt:")?h("span",{class:"ico tico","aria-hidden":"true"},n.slice(4)):icon(n); };
-const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]],["ფინანსები",["assume","pl","cf","othercost"]]];
+const tabIcon=k=>{ const n=TAB_ICONS[k]||""; return n.startsWith("txt:")?h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)):icon(n); };
+const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]],["ფინანსები",["pl","cf","othercost","assume"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
-const FIN_TABS=[["assume","დაშვებები"],["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"]];
-const TAB_ICONS={assume:"gear",pl:"txt:P&L",cf:"txt:CF",othercost:"expenses",reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
+const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"],["assume","დაშვებები"]];
+const TAB_ICONS={assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"expenses",reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
   const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?FIN_TABS:[])];
