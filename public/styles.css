@@ -839,3 +839,12 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
   body.has-side .pside{padding-top:90px}
 }
 @media (min-width:981px) and (max-width:1180px){ body.wide{--side-w:232px} }
+/* row shading by level: chapters darkest, sub-chapters lighter, items lighter still, resources white */
+.gtable .g-head td,.gtable .g-head td.g-fz{background:color-mix(in srgb,var(--ink) 10%,var(--surface))}
+.gtable .g-head.sub td,.gtable .g-head.sub td.g-fz{background:color-mix(in srgb,var(--ink) 5%,var(--surface))}
+.gtable .g-pos td,.gtable .g-pos td.g-fz{background:color-mix(in srgb,var(--ink) 2.2%,var(--surface))}
+.gtable .g-res td,.gtable .g-res td.g-fz{background:var(--surface)}
+.gtable td.gc.we{background-image:linear-gradient(rgba(100,116,139,.07),rgba(100,116,139,.07))}
+.xtable .g-head td.x-c,.xtable .g-head td.x-add{background:color-mix(in srgb,var(--ink) 10%,var(--surface))}
+.xtable .g-head.sub td.x-c,.xtable .g-head.sub td.x-add{background:color-mix(in srgb,var(--ink) 5%,var(--surface))}
+.g-top{align-items:center}

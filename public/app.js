@@ -1249,11 +1249,9 @@ function renderSchedule(p){
   const seg=h("div",{class:"vswitch g-zoom"},[["day","დღე"],["week","კვირა"],["month","თვე"]].map(([k,l])=>
     h("button",{type:"button",class:"vbtn vtxt"+(zoom===k?" on":""),"aria-pressed":String(zoom===k),onclick:()=>{ S.gzoom=k; S.gscroll=null; S.gsel=null; render(); }},l)));
   const top=h("div",{class:"g-top"},
-    h("div",{class:"g-title"},h("h2",null,"გეგმა-გრაფიკი"),
+    h("div",{class:"g-title"},
       h("div",{class:"small muted"},h("span",null,"პოზიციები:")," "+positions.length+" · ",h("span",null,"დაგეგმილი:")," "+planned.length+" · ",h("span",null,"დაუგეგმავი:")," "+(positions.length-planned.length))),
     h("div",{class:"g-ctrls"},
-      h("label",{class:"g-per"},h("span",{class:"hb-l"},"დან"),h("input",{type:"date",class:"inp",value:from,disabled:!edit,onchange:e=>{ sc.start=e.target.value; changed(); }})),
-      h("label",{class:"g-per"},h("span",{class:"hb-l"},"მდე"),h("input",{type:"date",class:"inp",value:to,disabled:!edit,onchange:e=>{ sc.end=e.target.value; changed(); }})),
       seg,
       h("button",{class:"btn",type:"button",onclick:()=>scrollToday(true)},"დღეს"),
       edit?h("button",{class:"btn primary",type:"button",onclick:()=>{ S.gplan={code:(positions.find(r=>!posDays(r).length)||positions[0]||{}).code}; render(); }},"+ დაგეგმვა"):null));
