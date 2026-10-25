@@ -2018,12 +2018,18 @@ function renderPL(p){
   const note={plan:"შემოსავალი — შესრულების გეგმა × ერთ. ფასი; პირდაპირი ხარჯი — გეგმა-გრაფიკის რესურსები; დანარჩენი — „დაშვებებიდან“.",
     fact:"დადასტურებული DPR-ები: ფასიანი სამუშაოები (შემოსავალი) და ფასიანი ხარჯები, BoQ კოდის თავის მიხედვით.",
     cmp:"ფაქტი გეგმასთან შედარებით; მწვანე — გეგმაზე უკეთესი, წითელი — უარესი."}[view];
-  const head=h("div",{class:"pl-head"},sw,h("div",{class:"pl-note muted small"},note),
+  const m=view==="plan"?D.plan:D.fact;
+  /* toolbar: plan / actual / comparison, the month, print and Excel */
+  const per=view==="cmp"?null:h("label",{class:"pr-chip"},icon("calendar"),h("span",null,tr("პერიოდი")+":"),
+    h("select",{"aria-label":"პერიოდი",onchange:e=>{S.plMonth=+e.target.value;render();}},[h("option",{value:"-1"},"ყველა თვე"),...D.periods.map((x,i)=>h("option",{value:String(i)},MONTHS_FULL(x.from)))]));
+  if(per) per.querySelector("select").value=String(S.plMonth==null||S.plMonth>=D.N?-1:S.plMonth);
+  const head=h("div",{class:"pl-head pr-bar"},sw,view==="cmp"?h("div",{class:"pl-note muted small"},note):h("div",{class:"pl-note"}),per,
+    view==="cmp"?null:h("button",{class:"btn sm",type:"button",onclick:printPL},icon("print"),"ბეჭდვა"),
+    view==="cmp"?null:h("button",{class:"btn sm pr-dark",type:"button",onclick:()=>exportPL(p,D,m,view)},icon("pdf"),"ექსპორტი (Excel)"),
     h("button",{class:"btn sm ghost",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ დაშვებები"));
   if(!D.periods.length) return [head,h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
   const factLoading=!S.plFact||S.plFact.pid!==S.pid;
   if(view==="cmp") return [head,renderPLCompare(D)];
-  const m=view==="plan"?D.plan:D.fact;
   return [head,factLoading&&view==="fact"?h("p",{class:"muted"},"იტვირთება…"):renderPLTable(D,m,view),
     view==="fact"&&D.unpriced?h("p",{class:"muted small"},D.unpriced+" "+tr("სამუშაოს ფასი ჯერ არ აქვს და შემოსავალში არ ითვლება.")):null];
 }
@@ -2055,38 +2061,82 @@ function finResize(table,kind){
   });
   return table;
 }
+/* "ოქტომბერი 2026" */
+const MONTHS_FULL=d=>(LANG==="en"?MONTHS_EN:MONTHS_KA)[+d.slice(5,7)-1]+" "+d.slice(0,4);
+/* the P&L statement as rows: {k:kind, l:label, v:values per period, key?, lines?}; used by the page, print and Excel */
+function plRows(D,m,view){
+  const T=plTotals(D,m), tot=a=>a.reduce((x,y)=>x+y,0), out=[];
+  const R=(k,l,v,extra)=>out.push({k,l,v,...extra});
+  R("sec","ამონაგები");
+  D.chapters.filter(c=>m.rev[c.key]).forEach(c=>R("item",c.name,m.rev[c.key]));
+  R("rev","სულ ამონაგები",T.rev);
+  R("sec","პირდაპირი ხარჯი");
+  D.chapters.filter(c=>m.cost[c.key]).forEach(c=>{ const L=m.lines[c.key]||new Map();
+    R("item",c.name,m.cost[c.key],{key:view+c.key,lines:[...L.entries()].sort((a,b)=>tot(a[1])-tot(b[1]))}); });
+  R("cost","სულ პირდაპირი ხარჯი",T.cost);
+  R("sec","საერთო მოგება სექციებით");
+  D.chapters.forEach(c=>{ const v=D.z(); (m.rev[c.key]||[]).forEach((x,i)=>v[i]+=x); (m.cost[c.key]||[]).forEach((x,i)=>v[i]+=x); if(tot(v.map(Math.abs))) R("item",c.name,v); });
+  R("gross","საერთო მოგება",T.gross);
+  if(view==="plan"){
+    R("sec","არაპირდაპირი ხარჯი"); m.ind.forEach(x=>R("item",x.name,x.vals)); R("ind","სულ არაპირდაპირი ხარჯი",T.ind);
+    R("sec","სხვა ხარჯები"); R("item","გაუთვალისწინებელი ხარჯი",m.cont); R("item","მობილიზაცია / დემობილიზაცია",m.mob);
+  } else R("note","არაპირდაპირი ხარჯის ფაქტი „სხვა ხარჯების“ გვერდიდან დაემატება.");
+  R("net","სულ პროექტის მოგება (ზარალი)",T.net);
+  R("sec","კოეფიციენტები");
+  const ratio=(l,a,b,sign)=>R("ratio",l,null,{f:i=>{ const x=i<0?tot(a):a[i], y=i<0?tot(b):b[i]; return y?sign*x/y:null; }});
+  ratio("მოგების მარჟა (მოგება / შემოსავალი)",T.net,T.rev,1);
+  ratio("ხარჯის წილი (ხარჯი / შემოსავალი)",T.allCost,T.rev,-1);
+  ratio("ხარჯის ამოგება (მოგება / ხარჯი)",T.net,T.allCost.map(x=>-x),1);
+  return out;
+}
+const plMoney=v=>Math.abs(v)<0.5?"—":v<0?"("+fmtNum(Math.round(-v))+")":fmtNum(Math.round(v));
+const plPct=v=>v==null||!isFinite(v)?"—":fmtNum(Math.round(v*1000)/10||0)+"%";
 function renderPLTable(D,m,view){
-  const T=plTotals(D,m), open=S.plOpen||(S.plOpen=new Set());
-  const cell=(v,cls)=>h("td",{class:"num"+(v<0?" neg":"")+(cls?" "+cls:"")},Math.abs(v)<0.005?"—":fmtNum(Math.round(v)));
-  const tot=a=>a.reduce((x,y)=>x+y,0);
-  const row=(label,vals,cls,extra)=>h("tr",{class:cls||""},h("th",{scope:"row"},extra||null,label),vals.map(v=>cell(v)),cell(tot(vals),"pl-tot"));
-  const sec=t=>h("tr",{class:"pl-sec"},h("th",{colspan:String(D.N+2)},t));
-  const pct=(a,b)=>{ if(!b) return "—"; const v=Math.round(a/b*1000)/10; return fmtNum(v||0)+"%"; };
-  const ratio=(label,f)=>h("tr",{class:"pl-ratio"},h("th",{scope:"row"},label),D.periods.map((_,i)=>h("td",{class:"num"},f(i))),h("td",{class:"num pl-tot"},f(-1)));
-  const at=(a,i)=>i<0?tot(a):a[i];
-  const body=[
-    sec("შემოსავლები"),
-    ...D.chapters.filter(c=>m.rev[c.key]).map(c=>row(c.name,m.rev[c.key])),
-    row("სულ ამონაგები",T.rev,"pl-sum"),
-    sec("პირდაპირი ხარჯები"),
-    ...D.chapters.filter(c=>m.cost[c.key]).flatMap(c=>{ const L=(m.lines[c.key]||new Map()), isOpen=open.has(view+c.key);
-      const tg=L.size?h("button",{class:"pl-tg",type:"button","aria-expanded":String(isOpen),"aria-label":(isOpen?"აკეცვა":"გაშლა")+": "+c.name,onclick:()=>{ isOpen?open.delete(view+c.key):open.add(view+c.key); render(); }},isOpen?"▾":"▸"):h("span",{class:"pl-tg"});
-      return [row(c.name,m.cost[c.key],"pl-ch",tg),...(isOpen?[...L.entries()].sort((a,b)=>tot(a[1])-tot(b[1])).map(([n,v])=>row(n,v,"pl-line")):[])]; }),
-    row("სულ პირდაპირი ხარჯი",T.cost,"pl-sum"),
-    sec("საერთო მოგება"),
-    ...D.chapters.map(c=>{ const v=D.z(); (m.rev[c.key]||[]).forEach((x,i)=>v[i]+=x); (m.cost[c.key]||[]).forEach((x,i)=>v[i]+=x); return tot(v.map(Math.abs))?row(c.name,v):null; }),
-    row("სულ საერთო მოგება",T.gross,"pl-sum"),
-    view==="plan"?[sec("არაპირდაპირი ხარჯები"),...m.ind.map(x=>row(x.name,x.vals)),row("სულ არაპირდაპირი ხარჯი",T.ind,"pl-sum"),
-      row("გაუთვალისწინებელი ხარჯი",m.cont,"pl-sum"),row("მობილიზაცია / დემობილიზაცია",m.mob,"pl-sum")]
-      :[h("tr",{class:"pl-sec"},h("th",{colspan:String(D.N+2)},h("span",null,"არაპირდაპირი ხარჯები"),h("span",{class:"muted small pl-sn"},"ფაქტი „სხვა ხარჯების“ გვერდიდან დაემატება.")))],
-    row("სულ პროექტის მოგება (ზარალი)",T.net,"pl-net"),
-    sec("კოეფიციენტები"),
-    ratio("მოგების მარჟა (მოგება / შემოსავალი)",i=>pct(at(T.net,i),at(T.rev,i))),
-    ratio("ხარჯის წილი (ხარჯი / შემოსავალი)",i=>pct(-at(T.allCost,i),at(T.rev,i))),
-    ratio("ხარჯის ამოგება (მოგება / ხარჯი)",i=>pct(at(T.net,i),-at(T.allCost,i)))];
-  return h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table"},
-    h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),D.periods.map(x=>h("th",{class:"num",title:fmtDate(x.from)+" — "+fmtDate(x.to)},x.label)),h("th",{class:"num pl-tot"},"სულ"))),
-    h("tbody",null,body)),"pl"));
+  const open=S.plOpen||(S.plOpen=new Set()), tot=a=>a.reduce((x,y)=>x+y,0);
+  const sel=S.plMonth==null||S.plMonth>=D.N?-1:S.plMonth, idx=sel<0?D.periods.map((_,i)=>i):[sel];
+  const rows=plRows(D,m,view);
+  const td=(v,cls)=>h("td",{class:"num"+(v<-0.5?" neg":"")+(cls?" "+cls:"")},plMoney(v));
+  const nC=idx.length+2;
+  const body=rows.flatMap(r=>{
+    if(r.k==="sec") return [h("tr",{class:"pr-sec"},h("th",{colspan:String(nC)},r.l))];
+    if(r.k==="note") return [h("tr",{class:"pr-note"},h("td",{colspan:String(nC)},r.l))];
+    if(r.k==="ratio") return [h("tr",{class:"pr-ratio"},h("th",{scope:"row"},r.l),idx.map(i=>h("td",{class:"num"},plPct(r.f(i)))),h("td",{class:"num pr-t"},plPct(r.f(-1))))];
+    const isOpen=r.key&&open.has(r.key);
+    const tg=r.lines&&r.lines.length?h("button",{class:"pl-tg",type:"button","aria-expanded":String(!!isOpen),"aria-label":(isOpen?"აკეცვა":"გაშლა")+": "+r.l,onclick:()=>{ isOpen?open.delete(r.key):open.add(r.key); render(); }},isOpen?"▾":"▸"):null;
+    const tr_=h("tr",{class:"pr-"+r.k},h("th",{scope:"row"},tg,r.l),idx.map(i=>td(r.v[i])),td(tot(r.v),"pr-t"));
+    return [tr_,...(isOpen?r.lines.map(([n,v])=>h("tr",{class:"pr-line"},h("th",{scope:"row"},n),idx.map(i=>td(v[i])),td(tot(v),"pr-t"))):[])];
+  });
+  const table=h("table",{class:"pl-table pr-table"},
+    h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"მუხლი / დასახელება"),idx.map(i=>h("th",{class:"num",title:fmtDate(D.periods[i].from)+" — "+fmtDate(D.periods[i].to)},D.periods[i].label)),h("th",{class:"num pr-t"},"სულ"))),
+    h("tbody",null,body));
+  const src=view==="plan"?"გეგმა: შესრულების გეგმა × ერთ. ფასი, გეგმა-გრაფიკის რესურსები, „დაშვებები“":"ფაქტი: დადასტურებული DPR-ები (ფასიანი სამუშაოები და ხარჯები)";
+  return h("article",{class:"pr-card"},
+    h("div",{class:"pr-top"},h("div",null,h("div",{class:"pr-eyebrow"},"საფინანსო ანგარიშგება"),
+      h("h2",{class:"pr-title"},tr("პროექტის მოგება-ზარალი")+" ",h("span",null,"("+tr(view==="plan"?"გეგმა":"ფაქტი")+", "+tr("ლარი")+")"))),
+      h("div",{class:"pr-cur"},tr("ვალუტა")+": ",h("b",null,"GEL (₾)"))),
+    h("div",{class:"pr-wrap"},finResize(table,"pr."+(sel<0?"all":"one"))),
+    h("div",{class:"pr-foot"},h("span",null,h("span",{class:"pr-dot"}),src),h("span",null,tr("გენერირებულია ავტომატურად")+" · "+fmtDate(isoDay(new Date())))));
+}
+/* P&L to Excel: the statement as shown (chosen month or all months) */
+function exportPL(p,D,m,view){
+  if(!window.XLSX){ toast("Excel-ის ბიბლიოთეკა ვერ ჩაიტვირთა"); return; }
+  const sel=S.plMonth==null||S.plMonth>=D.N?-1:S.plMonth, idx=sel<0?D.periods.map((_,i)=>i):[sel], tot=a=>a.reduce((x,y)=>x+y,0);
+  const aoa=[[tr("პროექტის მოგება-ზარალი")+" — "+tr(view==="plan"?"გეგმა":"ფაქტი")],[p.name],[],[tr("მუხლი / დასახელება"),...idx.map(i=>D.periods[i].label),tr("სულ")]];
+  const rnd=v=>Math.round(v*100)/100;
+  for(const r of plRows(D,m,view)){
+    if(r.k==="sec"||r.k==="note") aoa.push([tr(r.l)]);
+    else if(r.k==="ratio") aoa.push([tr(r.l),...idx.map(i=>{ const x=r.f(i); return x==null?"":Math.round(x*1000)/1000; }),(x=>x==null?"":Math.round(x*1000)/1000)(r.f(-1))]);
+    else { aoa.push([(r.k==="item"?"   ":"")+tr(r.l),...idx.map(i=>rnd(r.v[i])),rnd(tot(r.v))]);
+      for(const [n,v] of r.lines||[]) aoa.push(["      "+n,...idx.map(i=>rnd(v[i])),rnd(tot(v))]); }
+  }
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,sheet(aoa,[48,...idx.map(()=>14),16]),"P&L");
+  XLSX.writeFile(wb,"PL "+(p.shortName||p.name||"")+" "+(view==="plan"?"plan":"actual")+".xlsx");
+}
+function printPL(){
+  const card=document.querySelector(".pr-card"); if(!card) return;
+  const doc=h("div",{class:"print-doc pr-print"}); doc.append(card.cloneNode(true)); document.body.append(doc);
+  const done=()=>{ doc.remove(); window.removeEventListener("afterprint",done); }; window.addEventListener("afterprint",done);
+  window.print(); setTimeout(done,1500);
 }
 function renderPLCompare(D){
   /* -2 = up to today (periods that have started), -1 = all periods, otherwise one period */

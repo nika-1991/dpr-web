@@ -1150,3 +1150,55 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .pl-table thead th.fin-th{position:sticky}
 .pl-table thead th .col-rs{z-index:4}
 .fs-box .pside-fact>span:first-child{overflow-wrap:anywhere}
+/* P&L as a financial statement */
+.pr-bar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 12px;box-shadow:var(--shadow)}
+.pr-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:.78rem;color:var(--muted);background:var(--surface)}
+.pr-chip .ico{width:15px;height:15px}
+.pr-chip select{border:0;background:none;font:inherit;font-weight:700;color:var(--ink);padding:2px 0;cursor:pointer}
+.pr-bar .btn .ico{width:15px;height:15px}
+.btn.pr-dark{background:#0f172a;color:#fff;border-color:#0f172a}
+.btn.pr-dark:hover{background:#1e293b}
+.pr-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:30px 38px 22px;max-width:1100px}
+.pr-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.pr-eyebrow{font-size:.68rem;font-weight:800;color:#0284c7;letter-spacing:.04em;margin-bottom:8px}
+.pr-title{margin:0;font-size:1.3rem;font-weight:800;color:var(--ink)}
+.pr-title span{font-weight:400;color:var(--muted);font-size:1rem}
+.pr-cur{font-size:.72rem;color:var(--muted)}
+.pr-cur b{color:var(--ink)}
+.pr-wrap{overflow:auto}
+.pr-table{font-size:.82rem}
+.pr-table th,.pr-table td{border-bottom:0;padding:6px 12px}
+.pr-table thead th{position:static;background:none!important;color:var(--muted);font-weight:600;font-size:.72rem;border-bottom:1px solid var(--line);padding:14px 12px}
+.pr-table thead th.num{color:var(--ink);font-weight:800;font-size:.76rem}
+.pr-table tbody th{position:static;background:none;min-width:0}
+.pr-table td.neg{color:#be123c}
+.pr-sec th{padding-top:20px!important;font-weight:800;font-size:.84rem;color:var(--ink);background:none!important}
+.pr-item th,.pr-line th{font-weight:400;font-style:italic;padding-left:26px!important;color:var(--ink)}
+.pr-item td,.pr-line td{font-style:italic}
+.pr-line th{padding-left:52px!important;color:var(--muted);font-size:.76rem}
+.pr-line td{color:var(--muted);font-size:.76rem}
+.pr-rev th,.pr-rev td,.pr-gross th,.pr-gross td{background:#f4f8fc!important;font-weight:800}
+.pr-cost th,.pr-cost td{background:#fff5f6!important;font-weight:800}
+.pr-cost td.neg,.pr-ind td.neg{color:#9f1239}
+.pr-ind th,.pr-ind td{font-weight:800}
+.pr-net th,.pr-net td{background:#effaf5!important;font-weight:800;font-size:.95rem;padding-top:14px!important;padding-bottom:14px!important}
+.pr-net td{font-size:1.05rem;color:#14532d}
+.pr-net td.neg{color:#9f1239}
+.pr-ratio th{font-weight:400;font-style:italic;padding-left:26px!important}
+.pr-ratio td{font-style:italic;font-weight:700}
+.pr-note td{font-size:.74rem;color:var(--muted);padding:8px 26px!important}
+.pr-table .pl-tg{margin-left:-20px}
+.pr-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:18px;padding-top:12px;font-size:.7rem;color:var(--muted)}
+.pr-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:8px}
+@media (max-width:700px){.pr-card{padding:18px 14px}}
+@media print{ .pr-print .pr-card{border:0;box-shadow:none;padding:0;max-width:none} .pr-print .col-rs,.pr-print .pl-tg{display:none} .pr-print .pr-wrap{overflow:visible} }
+.pr-table .pr-t{background:inherit}
+.pr-title,.pr-table,.pr-table th,.pr-table td{font-family:var(--f-body);letter-spacing:0}
+.pr-title{text-transform:none}
+.pr-table td.num{font-variant-numeric:tabular-nums}
+.pr-table .pr-sec th,.pr-table .pr-rev th,.pr-table .pr-cost th,.pr-table .pr-gross th,.pr-table .pr-ind th,.pr-table .pr-net th{font-weight:800}
+.pr-table .pr-item th,.pr-table .pr-line th,.pr-table .pr-ratio th{font-weight:400}
+.pr-bar .pl-note{min-width:0}
+/* many months: the line names stay in view while scrolling sideways */
+.pr-table tbody th,.pr-table thead th.pl-c0{position:sticky!important;left:0;z-index:1;background:var(--surface)}
+.pr-table tbody .pr-sec th{background:var(--surface)!important}
