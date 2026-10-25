@@ -945,3 +945,8 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .g-head2>.gh-checks{justify-content:flex-start}
 .g-head2>.gh-checks-x{padding-left:14px;border-left:1px solid var(--line)}
 .g-head2>.g-ctrls{align-self:flex-start}
+/* execution plan: items are the last level, so their rows are white; the column under the + buttons stays empty */
+.xtable .g-pos td,.xtable .g-pos td.g-fz{background:var(--surface)}
+.xtable td.x-add,.xtable .g-head td.x-add,.xtable .g-head.sub td.x-add{background:var(--surface)!important;border:0!important}
+.xtable th.x-add{border-bottom:0!important;border-left:0!important}
+.xtable td.x-add,.xtable th.x-add{width:84px;min-width:84px}

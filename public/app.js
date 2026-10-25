@@ -1727,7 +1727,7 @@ function renderExec(p){
     months.map((m,i)=>{ const full=MN[+m.k.slice(5)-1]+" "+m.k.slice(0,4);
       return h("th",{class:"x-month"+(i>0?" ms":""),colspan:String(m.n),title:full},h("span",{class:"gm-l"},m.n>1?full:MN[+m.k.slice(5)-1].slice(0,3)+". "+m.k.slice(0,4))); }),
     edit&&pend.n?h("th",{class:"x-month ms",colspan:String(pend.n)}):null,
-    edit?h("th",{class:"x-add",rowspan:"2"},h("div",{class:"x-addrow"},addBtn("btn x-tall"),seriesBtn("btn x-tall"))):null),
+    edit?h("th",{class:"x-add",rowspan:"2"},h("div",{class:"x-addrow"},addBtn("btn primary"),seriesBtn("btn primary"))):null),
     h("tr",null,
     ex.dates.map((d,i)=>h("th",{class:"x-date"+ms[i],style:"width:"+dpx[i]+"px;min-width:"+dpx[i]+"px"},h("div",{class:"x-dh"},
       dateBox(d,nw=>moveDate(d,nw),tr("თარიღი")+" "+fmtDate(d)),
