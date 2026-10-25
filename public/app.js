@@ -1290,6 +1290,7 @@ function renderSchedule(p){
       h("div",null,h("span",null,"დაგეგმილი:")," ",h("b",null,String(planned.length))),
       h("div",null,h("span",null,"დაუგეგმავი:")," ",h("b",null,String(positions.length-planned.length)))),
     h("button",{class:"gh-col gh-terms",type:"button",title:tr("ანაზღაურების პირობების შეცვლა"),onclick:()=>{ S.gview="terms"; render(); window.scrollTo(0,0); }},
+      h("div",{class:"gh-term gh-thead"},h("span",{class:"gh-th1"},"რესურსები"),h("span",{class:"gh-cost"},"ღირებულება"),h("span",null,"ანაზღაურების პირობები")),
       RES_TYPES.map(([t,c])=>{
         /* cost of this resource type (qty × unit price) and how many of its resources still have no price */
         const list=positions.flatMap(r=>r.sr.res.filter(x=>x.type===t));

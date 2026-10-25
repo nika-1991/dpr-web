@@ -920,3 +920,6 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-stats,.gh-terms{justify-content:center}
 .g-head2>.g-ctrls{align-self:center}
 .gh-terms{padding-right:22px;border-right:1px solid var(--line)}
+.gh-thead{font-size:.62rem;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;margin-bottom:1px}
+.gh-thead .gh-th1{grid-column:1 / span 2}
+.gh-thead .gh-cost{font-family:inherit;color:var(--muted)}
