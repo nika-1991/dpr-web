@@ -1079,3 +1079,9 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 /* the track spans the whole header row, as before */
 .ptabs>.tabs.tgroups{flex:1;align-self:stretch;margin:0;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:6px 8px;align-items:center}
 .tabs.tgroups .tgrp+.tgrp::before{top:4px;bottom:4px;width:2px;background:#fff;box-shadow:0 0 0 .5px color-mix(in srgb,var(--ink) 6%,transparent)}
+/* the grey panel starts right where the codes + name block ends; on wide pages that block takes the panel colour */
+@media (min-width:981px){
+  .pid{margin-right:0}
+  .ptabs>.tabs.tgroups{padding-left:14px}
+  body.wide .pid{background:color-mix(in srgb,var(--ink) 7%,var(--surface));border-right-color:var(--surface);border-right-width:2px}
+}
