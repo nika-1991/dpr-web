@@ -1503,17 +1503,22 @@ function renderChecks(positions,T){
   const lbl=x=>(x.r.it.code||"")+" · "+(x.x.name||tr("დასახელება არაა"));
   const issues=[];
   const add=(text,list)=>{ if(list.length) issues.push({text,n:list.length,tip:list.slice(0,8).join("\n")+(list.length>8?"\n…":"")}); };
-  add("ფასი არ აქვს",res.filter(x=>!num(x.x.price)).map(lbl));
-  add("დასახელება არ აქვს",res.filter(x=>!(x.x.name||"").trim()).map(x=>(x.r.it.code||"")+" · "+tr(x.x.type)));
-  add("განზომილება არ აქვს",res.filter(x=>!(x.x.unit||"").trim()).map(lbl));
-  add("ბადეში არ არის დაგეგმილი",res.filter(x=>!resQty(x.x)).map(lbl));
+  const plbl=r=>(r.it.code||"")+" · "+String(r.it.name||"").slice(0,50);
+  add("დასაგეგმი პოზიცია",positions.filter(r=>!posDays(r).length).map(plbl));
+  add("პოზიციას რაოდენობა არ აქვს",positions.filter(r=>!num(r.it.qty)).map(plbl));
+  add("პოზიციას განზომილება არ აქვს",positions.filter(r=>!(r.it.unit||"").trim()).map(plbl));
+  add("რესურსს ფასი არ აქვს",res.filter(x=>!num(x.x.price)).map(lbl));
+  add("რესურსს დასახელება არ აქვს",res.filter(x=>!(x.x.name||"").trim()).map(x=>(x.r.it.code||"")+" · "+tr(x.x.type)));
+  add("რესურსს განზომილება არ აქვს",res.filter(x=>!(x.x.unit||"").trim()).map(lbl));
+  add("რესურსი არ არის დაგეგმილი",res.filter(x=>!resQty(x.x)).map(lbl));
   const usedTypes=[...new Set(res.map(x=>x.x.type))];
   add("ანაზღაურების პირობა არ აქვს",usedTypes.filter(t=>!(T.types[t]||[]).length).map(t=>tr(t)));
   add("გეგმა სცდება BoQ-ის ვადას",positions.filter(r=>{ const ds=posDays(r); return r.it.end&&ds.length&&ds[ds.length-1]>r.it.end; }).map(r=>(r.it.code||"")+" · "+tr("ვადა")+" "+fmtDate(r.it.end)));
   return h("div",{class:"gh-col gh-checks"},
     h("div",{class:"gh-thead"},"კონტროლი"),
-    issues.length?issues.map(i=>h("div",{class:"gh-chk bad",title:i.tip},h("span",{class:"gh-ci"},"!"),h("span",null,tr(i.text)+": "),h("b",null,String(i.n))))
-      :h("div",{class:"gh-chk ok"},h("span",{class:"gh-ci"},"✓"),h("span",null,"ყველაფერი შევსებულია")));
+    /* at most four lines per column, then the list continues in the next column */
+    h("div",{class:"gh-chks"},issues.length?issues.map(i=>h("div",{class:"gh-chk bad",title:i.tip},h("span",{class:"gh-ci"},"!"),h("span",null,tr(i.text)+": "),h("b",null,String(i.n))))
+      :h("div",{class:"gh-chk ok"},h("span",{class:"gh-ci"},"✓"),h("span",null,"ყველაფერი შევსებულია"))));
 }
 /* payment terms page (opened from the schedule): a card per resource type with parts (%, due point);
    individual resources (by name) can get their own terms, the rest share the type's */
