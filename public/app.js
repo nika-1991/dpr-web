@@ -1296,7 +1296,7 @@ function renderSchedule(p){
         const list=positions.flatMap(r=>r.sr.res.filter(x=>x.type===t));
         const cost=list.reduce((a,x)=>a+resQty(x)*num(x.price),0), miss=list.filter(x=>!num(x.price)).length;
         return h("div",{class:"gh-term"},h("i",{class:"g-sw "+c}),h("span",{class:"gh-tn"},t),
-        h("span",{class:"gh-cost"},list.length?gel(cost):"—",
+        h("span",{class:"gh-cost"+(cost?"":" nil")},cost?gel(cost):"—",
           miss?h("span",{class:"gh-warn tip","data-tip":miss+" "+tr("რესურსზე ფასი შევსებული არაა"),"aria-label":miss+" "+tr("რესურსზე ფასი შევსებული არაა")},"!"):null),
         h("span",{class:"gh-tv"},partsLabel(T.types[t])+(Object.keys(T.items[t]||{}).length?" (+"+Object.keys(T.items[t]).length+" "+tr("ცალკე")+")":""))); })),
     renderChecks(positions,T),
