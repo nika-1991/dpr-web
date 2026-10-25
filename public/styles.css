@@ -942,3 +942,4 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-chks{display:grid;grid-auto-flow:column;grid-template-rows:repeat(4,auto);column-gap:22px;row-gap:3px;align-content:start}
 .gh-checks{justify-content:flex-start}
 .gh-cost.nil{justify-content:space-between;color:var(--muted)}
+.g-head2>.gh-checks{justify-content:flex-start}
