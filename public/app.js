@@ -467,7 +467,7 @@ function renderProjectForm(pid){
 }
 
 /* ---------- PROJECT ---------- */
-const TAB_GROUPS=[["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]]];
+const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]]];
 const TAB_ICONS={reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
