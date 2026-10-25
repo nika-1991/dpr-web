@@ -969,3 +969,11 @@ button.gh-chk.on{background:color-mix(in srgb,var(--signal,#c98a00) 16%,var(--su
 .tabs.tgroups button .ico{width:22px;height:22px}
 .tabs.tgroups button.tip::after{z-index:30;font-family:var(--f-body);letter-spacing:0}
 .tabs.tgroups .tgrp-l{font-family:var(--f-body);text-transform:none}
+/* the open section and tab stand out: section name in accent, the tab as a filled tile */
+.tabs.tgroups button{border-bottom:0;border-radius:8px;margin-bottom:5px;color:var(--muted)}
+.tabs.tgroups button:hover{background:var(--sunk);color:var(--ink)}
+.tabs.tgroups button[aria-selected="true"]{background:var(--accent);color:#fff}
+.tabs.tgroups button[aria-selected="true"] .ico{opacity:1}
+.tabs.tgroups .tgrp.on .tgrp-l{color:var(--accent);font-weight:700}
+.tgrp.on{background:color-mix(in srgb,var(--accent) 6%,transparent);border-radius:10px 10px 0 0}
+.tgrp{padding-top:4px}

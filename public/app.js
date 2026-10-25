@@ -493,7 +493,7 @@ function renderProject(){
   const tabName=new Map(tabs);
   const tabBtn=k=>h("button",{type:"button",role:"tab",class:"tip","data-tip":tr(tabName.get(k)),"aria-label":tr(tabName.get(k)),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},icon(TAB_ICONS[k]));
   const tabBar=h("div",{class:"tabs tgroups",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
-    return b.length?h("div",{class:"tgrp"},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }));
+    return b.length?h("div",{class:"tgrp"+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }));
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
   else if(S.tab==="progress") body=renderProgress(p);
