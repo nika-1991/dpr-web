@@ -1740,7 +1740,7 @@ function renderExec(p){
   const priceOf=pr;
   const cellVal=(code,d)=>{ const q=num((ex.vals[code]||{})[d]); return valMode?q*priceOf(code):q; };
   const kidsOf=r=>all.filter(x=>x.code&&(x.chap===r||x.sub===r));
-  const mode=h("div",{class:"vswitch",role:"group","aria-label":"ჩვენება"},[["qty","რაოდენობა"],["val","ღირებულება"]].map(([k,l])=>
+  const mode=h("div",{class:"vswitch",role:"group","aria-label":"ჩვენება"},[["qty","რაოდ."],["val","ღირ."]].map(([k,l])=>
     h("button",{type:"button",class:"vbtn vtxt"+((S.xmode||"qty")===k?" on":""),"aria-pressed":String((S.xmode||"qty")===k),onclick:()=>{ S.xmode=k; redraw(); }},l)));
   const body=rows.map(r=>{
     const it=r.it, head=it.type!=="პოზიცია";
@@ -1778,9 +1778,30 @@ function renderExec(p){
     if(t&&t.dataset.tip){ const r=t.getBoundingClientRect(); tip.textContent=t.dataset.tip; tip.hidden=false; tip.style.left=Math.min(r.left,window.innerWidth-tip.offsetWidth-12)+"px"; tip.style.top=(r.bottom+6)+"px"; } else tip.hidden=true; });
   wrap.addEventListener("mouseleave",()=>{ gTip().hidden=true; });
   requestAnimationFrame(()=>{ if(S.xscroll){ wrap.scrollLeft=S.xscroll.x; wrap.scrollTop=S.xscroll.y; S.xscroll=null; } });
-  const top=h("div",{class:"g-top"},
-    h("div",{class:"g-title"},h("h2",null,"შესრულების გეგმა"),h("div",{class:"small muted"},"თითო თარიღზე ჩაწერეთ, რა რაოდენობის შესრულებას გეგმავთ.")),
-    h("div",{class:"g-ctrls"},mode,outline,h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
+  /* header like the schedule's: view and levels | item counts | checks | add dates */
+  const posAll=all.filter(r=>r.code);
+  const plannedX=posAll.filter(r=>ex.dates.some(d=>num((ex.vals[r.code]||{})[d])));
+  const issues=[];
+  const plbl=r=>(r.it.code||"")+" · "+String(r.it.name||"").slice(0,50);
+  const add=(text,list)=>{ if(list.length) issues.push({text,n:list.length,tip:list.slice(0,8).join("\n")+(list.length>8?"\n…":"")}); };
+  if(ex.dates.length) add("დასაგეგმი პოზიცია",posAll.filter(r=>!plannedX.includes(r)).map(plbl));
+  add("ჯამი აჭარბებს რაოდენობას",posAll.filter(r=>{ const q=num(r.it.qty), t=ex.dates.reduce((a,d)=>a+num((ex.vals[r.code]||{})[d]),0); return q&&t>q+1e-9; }).map(plbl));
+  add("პოზიციას ფასი არ აქვს",plannedX.filter(r=>!pr(r.code)).map(plbl));
+  add("პოზიციას რაოდენობა არ აქვს",posAll.filter(r=>!num(r.it.qty)).map(plbl));
+  add("პოზიციას განზომილება არ აქვს",posAll.filter(r=>!(r.it.unit||"").trim()).map(plbl));
+  if(!ex.dates.length) issues.push({text:"თარიღი არ არის დამატებული",n:0,tip:""});
+  const top=h("div",{class:"g-head2"},
+    h("div",{class:"gh-col gh-left"},mode,outline),
+    h("div",{class:"gh-col gh-stats"},
+      h("div",null,h("span",null,"სულ პოზიცია:")," ",h("b",null,String(posAll.length))),
+      h("div",null,h("span",null,"დაგეგმილი:")," ",h("b",null,String(plannedX.length))),
+      h("div",null,h("span",null,"დაუგეგმავი:")," ",h("b",null,String(posAll.length-plannedX.length)))),
+    h("div",{class:"gh-col gh-checks gh-checks-x"},
+      h("div",{class:"gh-thead"},"კონტროლი"),
+      h("div",{class:"gh-chks"},issues.length?issues.map(i=>h("div",{class:"gh-chk bad",title:i.tip||null},h("span",{class:"gh-ci"},"!"),h("span",null,tr(i.text)+(i.n?": ":"")),i.n?h("b",null,String(i.n)):null))
+        :h("div",{class:"gh-chk ok"},h("span",{class:"gh-ci"},"✓"),h("span",null,"ყველაფერი შევსებულია")))),
+    h("span",{class:"spacer"}),
+    h("div",{class:"g-ctrls"},h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
       edit?addBtn("btn primary"):null,edit?seriesBtn("btn primary"):null));
   return h("div",{class:"sched"},top,
     !all.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))

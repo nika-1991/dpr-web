@@ -943,3 +943,5 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-checks{justify-content:flex-start}
 .gh-cost.nil{justify-content:space-between;color:var(--muted)}
 .g-head2>.gh-checks{justify-content:flex-start}
+.g-head2>.gh-checks-x{padding-left:14px;border-left:1px solid var(--line)}
+.g-head2>.g-ctrls{align-self:flex-start}
