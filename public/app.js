@@ -461,8 +461,6 @@ function renderProjectForm(pid){
 /* ---------- PROJECT ---------- */
 /* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
 const tabIcon=k=>{ const n=TAB_ICONS[k]||""; return n.startsWith("txt:")?h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)):icon(n); };
-/* each section has its own colour, as on the project data cards */
-const TAB_TONES={"შესრულება":"blue","ზოგადი ინფო":"green","დაგეგმვა":"violet","ფინანსები":"orange"};
 const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]],["ფინანსები",["pl","cf","othercost","assume"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
 const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"],["assume","დაშვებები"]];
@@ -491,7 +489,7 @@ function renderProject(){
   const tabName=new Map(tabs);
   const tabBtn=k=>h("button",{type:"button",role:"tab",class:"tip","data-tip":tr(tabName.get(k)),"aria-label":tr(tabName.get(k)),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},tabIcon(k));
   const tabBar=h("div",{class:"tabs tgroups",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
-    return b.length?h("div",{class:"tgrp tg-"+(TAB_TONES[l]||"blue")+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }));
+    return b.length?h("div",{class:"tgrp"+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }));
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
   else if(S.tab==="progress") body=renderProgress(p);

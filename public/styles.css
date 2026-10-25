@@ -1018,12 +1018,3 @@ input.cd-v:focus{outline:2px solid color-mix(in srgb,var(--tone) 45%,transparent
 .cd-page .hse-ed .inp{background:var(--surface)}
 @media (max-width:1100px){.cd-two{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.cd-row{grid-template-columns:minmax(0,1fr);gap:6px}.cd-card{padding:14px}}
-/* tab sections in colour: icons on a tinted tile, the selected one filled */
-.tgrp{--tone:#2563eb}
-.tg-green{--tone:#059669}.tg-violet{--tone:#7c3aed}.tg-orange{--tone:#ea580c}.tg-blue{--tone:#2563eb}
-.tabs.tgroups .tgrp-b{gap:6px}
-.tabs.tgroups button{padding:7px;color:var(--tone);background:color-mix(in srgb,var(--tone) 9%,var(--surface));border-radius:10px}
-.tabs.tgroups button:hover{background:color-mix(in srgb,var(--tone) 18%,var(--surface));color:var(--tone)}
-.tabs.tgroups button[aria-selected="true"]{background:var(--tone);color:#fff}
-.tabs.tgroups .tgrp.on .tgrp-l{color:var(--tone)}
-.tgrp.on{background:color-mix(in srgb,var(--tone) 6%,transparent)}
