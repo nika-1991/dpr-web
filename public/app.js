@@ -444,9 +444,14 @@ function renderProjectForm(pid){
     h("div",{class:"cd-subh"},"ქვეკონტრაქტორები"),subBox);
   const dur=h("div",{class:"cd-v"},"—");
   const upDur=()=>{ const d=durDays(f.startDate.value,f.endDate.value); dur.textContent=d?String(d):"—"; };
-  const dIn=(k,l)=>{ const el=inp(f,k,p[k],tr(l)); el.type="date"; el.classList.add("cd-v"); el.onchange=upDur; return [k,l,el]; };
+  const dIn=(k,l)=>{ const el=inp(f,k,p[k],tr(l)); el.type="date"; el.classList.add("cd-v"); el.onchange=upDur; el.onclick=()=>{ try{ el.showPicker(); }catch(e){} }; return [k,l,el]; };
   const valIn=inp(f,"contractValue",p.contractValue??"",tr("პროექტის ღირებულება")); valIn.classList.add("cd-v"); valIn.inputMode="decimal"; valIn.placeholder="0.00 ₾";
-  const when=termsCard([dIn("contractDate","ხელშ. დადება"),dIn("contractEnd","ხელშ. დასრულება"),dIn("startDate","სამუშაოს დაწყება"),dIn("endDate","სამუშაოს დასრულება"),["duration","სამუშაო დღეები",dur],["contractValue","ღირებულება, ₾",valIn]]);
+  const pctIn=(k,l)=>{ const el=inp(f,k,p[k]??"",tr(l)); el.classList.add("cd-v","num"); el.inputMode="decimal"; el.placeholder="0"; return el; };
+  const when=termsCard([dIn("contractDate","ხელშ. დადება"),dIn("contractEnd","ხელშ. დასრულება"),dIn("startDate","სამუშაოს დაწყება"),dIn("endDate","სამუშაოს დასრულება"),["duration","სამუშაო დღეები",dur],
+    ["contractValue","ღირებულება, ₾",valIn],["advancePct","ავანსი",h("div",{class:"cd-pct"},pctIn("advancePct","ავანსი, %"),h("span",null,"%"))],
+    ["advDed","ავანსის გაქვითვა (შესრულების %)",h("div",{class:"cd-pct"},pctIn("advFrom","გაქვითვა იწყება, %"),h("span",null,"% –"),pctIn("advTo","გაქვითვა მთავრდება, %"),h("span",null,"%"))],
+    ["retShort","მოკლევადიანი დაკავება",h("div",{class:"cd-pct"},pctIn("retShort","მოკლევადიანი დაკავება, %"),h("span",null,"%"))],
+    ["retLong","გრძელვადიანი დაკავება",h("div",{class:"cd-pct"},pctIn("retLong","გრძელვადიანი დაკავება, %"),h("span",null,"%"))]]);
   upDur();
   const codes=codesCard(["accountingCode","companyCode","projectCode","dprStart"].map(k=>{ const el=inp(f,k,k==="dprStart"?(p[k]||1):p[k],tr(CODE_LABELS[k]));
     el.classList.add("cd-v"); if(k==="dprStart"){ el.type="number"; el.min="1"; el.step="1"; } return [k,el]; }));
@@ -930,7 +935,11 @@ function renderProjectSheet(p){
   const dd=durDays(p.startDate,p.endDate);
   const dv=k=>h("div",{class:"cd-v"},p[k]?fmtDate(p[k]):"—");
   const when=termsCard([["contractDate","ხელშ. დადება",dv("contractDate")],["contractEnd","ხელშ. დასრულება",dv("contractEnd")],["startDate","სამუშაოს დაწყება",dv("startDate")],["endDate","სამუშაოს დასრულება",dv("endDate")],
-    ["duration","სამუშაო დღეები",h("div",{class:"cd-v"},dd?String(dd):"—")],["contractValue","ღირებულება",h("div",{class:"cd-v"},p.contractValue!=null?gel(p.contractValue):"—")]]);
+    ["duration","სამუშაო დღეები",h("div",{class:"cd-v"},dd?String(dd):"—")],["contractValue","ღირებულება",h("div",{class:"cd-v"},p.contractValue!=null?gel(p.contractValue):"—")],
+    ["advancePct","ავანსი",h("div",{class:"cd-v",title:p.advancePct&&p.contractValue?gel(p.contractValue*p.advancePct/100):null},p.advancePct?fmtNum(p.advancePct)+"%":"—")],
+    ["advDed","ავანსის გაქვითვა (შესრულების %)",h("div",{class:"cd-v"},p.advancePct?(p.advFrom!=null||p.advTo!=null?fmtNum(p.advFrom||0)+"% – "+fmtNum(p.advTo??100)+"%":tr("ყოველი ჩარიცხვიდან თანაბრად")):"—")],
+    ["retShort","მოკლევადიანი დაკავება",h("div",{class:"cd-v"},p.retShort!=null?fmtNum(p.retShort)+"%":"—")],
+    ["retLong","გრძელვადიანი დაკავება",h("div",{class:"cd-v"},p.retLong!=null?fmtNum(p.retLong)+"%":"—")]]);
   const codes=codesCard([["accountingCode",h("div",{class:"cd-v"},p.accountingCode||"—")],["companyCode",h("div",{class:"cd-v"},p.companyCode||"—")],
     ["projectCode",h("div",{class:"cd-v"},p.projectCode||"—")],["dprStart",h("div",{class:"cd-v"},"DPR-"+String(p.dprStart||1).padStart(3,"0"))]]);
   const hse=pcard("hse","orange","უსაფრთხოების (HSE) პუნქტები","ყოველი ახალი ანგარიში ამ პუნქტებით იწყება.",
@@ -2187,14 +2196,28 @@ function cfData(p){
   const vatIn={}, vatOut={}; const mk=d=>d.slice(0,7);
   /* receipts from executed works: each execution-plan period is invoiced on its date */
   const invs=Object.entries(PL.revByDate).sort((a,b)=>a[0].localeCompare(b[0]));
-  if(num(f.adv)&&num(p.contractValue)&&p.contractDate) put("advIn",p.contractDate,num(p.contractValue)*num(f.adv)/100);
+  /* advance: % of the contract value (project data), received on signing; recovered either evenly from every payment
+     or, when a window is set, between those percentages of cumulative progress (invoiced ÷ contract value) */
+  const CV=num(p.contractValue), advPct=p.advancePct!=null?num(p.advancePct):num(f.adv), A=CV*advPct/100;
+  const win=CV&&(p.advFrom!=null||p.advTo!=null)?{a:num(p.advFrom)/100*CV,b:(p.advTo!=null?num(p.advTo):100)/100*CV}:null;
+  if(A&&p.contractDate) put("advIn",p.contractDate,A);
+  let cumInv=0;
+  /* retention: short-term and long-term % (project data) held from every payment; short-term returned after the works
+     finish, long-term after the contract ends (each + the payment lag); without them the assumptions' single % */
+  const hasRet=p.retShort!=null||p.retLong!=null, retPct=hasRet?num(p.retShort)+num(p.retLong):num(f.ret), retHeld={s:0,l:0};
   let held=0; const holds=[];
   invs.forEach(([d,v])=>{ if(!v) return; const pay=addDays(d,num(f.lag));
     vatOut[mk(d)]=(vatOut[mk(d)]||0)+v*r/(1+r);
-    const adv=-v*num(f.adv)/100, ret=-v*num(f.ret)/100, cover=Math.abs(adv)*num(f.cover)/100;
+    const c0=cumInv; cumInv+=v;
+    const adv=win&&win.b>win.a?-A*Math.max(0,Math.min(cumInv,win.b)-Math.max(c0,win.a))/(win.b-win.a):-v*advPct/100;
+    const ret=-v*retPct/100, cover=Math.abs(adv)*num(f.cover)/100; retHeld.s+=v*num(p.retShort)/100; retHeld.l+=v*num(p.retLong)/100;
     put("works",pay,v); put("advDed",pay,adv); put("ret",pay,ret); put("cover",pay,cover);
     const hold=-(v+adv+ret+cover)*num(f.hold)/100; put("hold",pay,hold); holds.push({date:pay,v:-hold});
     put("cont",pay,-v*num(f.cont)/100); put("mob",pay,-v*num(f.mob)/100); });
+  if(hasRet){ const last=invs.length?invs[invs.length-1][0]:null;
+    const at=(d,fb)=>addDays(d||fb,num(f.lag));
+    if(retHeld.s&&last) put("retRel",at(p.endDate&&p.endDate>last?p.endDate:last),retHeld.s);
+    if(retHeld.l&&last) put("retRel",at(p.contractEnd&&p.contractEnd>last?p.contractEnd:last),retHeld.l); }
   /* resources by their payment terms */
   const chOf=new Map(); let cur=null;
   for(const it of p.boq||[]){ if(it.type==="თავი") cur=it.name||it.code||""; else if(it.type==="პოზიცია") chOf.set(normCode(it.code),cur||tr("კოდის გარეშე")); }
@@ -2240,8 +2263,8 @@ function renderCF(p){
     if(x.sub){ const m=subs[x.row]||(subs[x.row]=new Map()); if(!m.has(x.sub)) m.set(x.sub,z()); m.get(x.sub)[i]+=x.v; } }
   const sum=keys=>{ const t=z(); for(const k of keys) (rows[k]||[]).forEach((v,i)=>t[i]+=v); return t; };
   const costKeys=Object.keys(rows).filter(k=>k.startsWith("cost:"));
-  const recFromWorks=sum(["works","advDed","ret"]), recTot=sum(["advIn","works","advDed","ret","cover","hold","holdRel"]);
-  const payCost=sum(costKeys), net=sum(["advIn","works","advDed","ret","cover","hold","holdRel",...costKeys,"ov","vat","cont","mob"]);
+  const recFromWorks=sum(["works","advDed","ret","retRel"]), recTot=sum(["advIn","works","advDed","ret","retRel","cover","hold","holdRel"]);
+  const payCost=sum(costKeys), net=sum(["advIn","works","advDed","ret","retRel","cover","hold","holdRel",...costKeys,"ov","vat","cont","mob"]);
   const cum=[]; net.reduce((a,v,i)=>(cum[i]=a+v),0);
   const tot=a=>a.reduce((x,y)=>x+y,0);
   const cell=(v,cls)=>h("td",{class:"num"+(v<0?" neg":"")+(cls?" "+cls:"")},Math.abs(v)<0.5?"—":fmtNum(Math.round(v)));
@@ -2259,7 +2282,7 @@ function renderCF(p){
   const body=[
     sec("ფულადი ჩარიცხვა"),
     opt("advIn","მიღებული ავანსი"),
-    row("შესრულებული სამუშაოები",rows.works||z()),opt("advDed","ავანსის დაქვითვა"),opt("ret","საგარანტიოს დაკავება"),
+    row("შესრულებული სამუშაოები",rows.works||z()),opt("advDed","ავანსის დაქვითვა"),opt("ret","საგარანტიოს დაკავება"),opt("retRel","დაკავების დაბრუნება"),
     row("მიღებული ფული შესრულებიდან",recFromWorks,"pl-sum"),
     opt("cover","cash cover გამოთავისუფლება"),opt("hold","ფულის დაკავება"),opt("holdRel","დაკავებიდან გამოთავისუფლება"),
     row("სულ ჩარიცხვა",recTot,"pl-sum"),
@@ -2287,7 +2310,7 @@ function renderFinSide(p){
   const indM=f.ind.reduce((a,x)=>a+num(x.monthly),0);
   const pl=box("P&L დაშვებები",inp("cont","გაუთვალისწინებელი","%"),inp("mob","მობილიზაცია / დემობ.","%"),
     fact("არაპირდაპირი, თვეში",indM?gel(indM):"—"),fact("არაპირდაპირი სტრიქონი",String(f.ind.length)));
-  const cf=box("CF დაშვებები",inp("lag","ჩარიცხვა პერიოდის შემდეგ","დღე"),inp("adv","ავანსი / დაქვითვა","%"),inp("ret","საგარანტიო","%"),inp("vat","დღგ","%"),
+  const cf=box("CF დაშვებები",inp("lag","ჩარიცხვა პერიოდის შემდეგ","დღე"),fact("ავანსი",p.advancePct?fmtNum(p.advancePct)+"%":"—"),fact("გაქვითვა",p.advancePct&&(p.advFrom!=null||p.advTo!=null)?fmtNum(p.advFrom||0)+"–"+fmtNum(p.advTo??100)+"%":p.advancePct?tr("თანაბრად"):"—"),fact("დაკავება",p.retShort!=null||p.retLong!=null?fmtNum(num(p.retShort))+"% + "+fmtNum(num(p.retLong))+"%":"—"),inp("vat","დღგ","%"),
     inp("cover","cash cover","%"),inp("hold","ფულის დაკავება","%"),inp("holdRel","დაკავებიდან, თვეში","₾"),inp("ovDay","ზედნადების რიცხვი",""),inp("vatDay","დღგ-ს რიცხვი",""));
   const proj=box("პროექტი",fact("ღირებულება",p.contractValue!=null?gel(p.contractValue):"—"),fact("ხელშ. დადება",p.contractDate?fmtDate(p.contractDate):"—"),
     fact("სამუშაოს დაწყება",p.startDate?fmtDate(p.startDate):"—"),fact("სამუშაოს დასრულება",p.endDate?fmtDate(p.endDate):"—"));
@@ -2309,9 +2332,9 @@ function renderAssume(p){
   const nIn=(k,l,u)=>h("div",{class:"cd-cell"},h("div",{class:"cd-l"},l),h("div",{class:"as-pct"},
     h("input",{class:"inp cd-v num",inputmode:"decimal",value:String(fin[k]??""),disabled:!edit,"aria-label":tr(l),onchange:e=>{ fin[k]=num(e.target.value); save(); }}),u?h("span",null,u):null));
   const cfc=pcard("expenses","teal","ფულადი ნაკადის დაშვებები","ჩარიცხვის ვადა, დაქვითვები, დაკავება, ზედნადებისა და დღგ-ს გადახდის დღე",
-    h("div",{class:"cd-grid as-g4"},nIn("lag","ჩარიცხვა პერიოდის შემდეგ","დღე"),nIn("adv","ავანსი / დაქვითვა","%"),nIn("ret","საგარანტიო დაკავება","%"),nIn("vat","დღგ","%"),
+    h("div",{class:"cd-grid as-g4"},nIn("lag","ჩარიცხვა პერიოდის შემდეგ","დღე"),nIn("vat","დღგ","%"),
       nIn("cover","cash cover გამოთავისუფლება","%"),nIn("hold","ფულის დაკავება","%"),nIn("holdRel","დაკავებიდან გამოთავ. თვეში","₾"),nIn("ovDay","ზედნადების გადახდის რიცხვი",""),nIn("vatDay","დღგ-ს გადახდის რიცხვი","")),
-    h("div",{class:"muted small",style:"margin-top:8px"},tr("ავანსი მიიღება ხელშეკრულების დადების დღეს (ღირებულების %), და იქვითება ყოველი ჩარიცხვიდან. cash cover — ავანსის დაქვითვის %. ხარჯები იხდება რესურსის ანაზღაურების პირობებით (გეგმა-გრაფიკი), პირობის გარეშე — იმავე დღეს.")));
+    h("div",{class:"muted small",style:"margin-top:8px"},tr("ავანსი და მისი გაქვითვა მიეთითება პროექტის მონაცემებში (ვადები და ღირებულება); ავანსი მიიღება ხელშეკრულების დადების დღეს. cash cover — ავანსის დაქვითვის %. ხარჯები იხდება რესურსის ანაზღაურების პირობებით (გეგმა-გრაფიკი), პირობის გარეშე — იმავე დღეს.")));
   const box=h("div",{class:"as-ind"});
   const draw=()=>box.replaceChildren(
     h("div",{class:"as-row as-hd"},["დასახელება","თვეში, ₾","დან","მდე",""].map(t=>h("span",{class:"cd-l"},t))),

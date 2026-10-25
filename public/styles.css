@@ -1245,3 +1245,22 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .pr-table .pr-net th,.pr-table .pr-net td{padding-top:2px!important;padding-bottom:2px!important;line-height:1.35}
 .pr-table tbody tr.pr-gap+tr.pr-net th,.pr-table tbody tr.pr-gap+tr.pr-net td{padding-top:2px}
 .pr-table tr.pr-gap td{height:14px;border:0!important}
+/* timeline: five on the first line (four dates + days), value / advance / advance recovery below */
+.cd-grid.cd-g2{grid-template-columns:repeat(5,minmax(0,1fr))}
+.cd-g2 .cd-contractValue{grid-column:span 2}
+.cd-g2 .cd-advDed{grid-column:span 2}
+.cd-pct{display:flex;align-items:center;gap:4px}
+.cd-pct .cd-v{width:56px;padding:3px 6px}
+.cd-pct span{font-size:.74rem;color:var(--muted)}
+@media (max-width:560px){.cd-grid.cd-g2{grid-template-columns:1fr 1fr}.cd-g2 .cd-contractValue,.cd-g2 .cd-advDed{grid-column:span 2}}
+/* timeline v2: dates compact so five fit; row 2 value + advance + recovery, row 3 retention */
+.cd-g2 .cd-cell{padding:5px 6px 6px}
+.cd-g2 input[type=date].cd-v{font-size:.68rem;padding:2px 1px;letter-spacing:-.2px}
+.cd-g2 div.cd-v{font-size:.74rem;padding:3px 6px}
+.cd-g2 .cd-retShort,.cd-g2 .cd-retLong{grid-column:span 2}
+.cd-g2 .cd-contractValue{grid-column:span 2}
+/* room for five dates: a wider right column, the calendar opens on click instead of an icon */
+.cd-two{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}
+.cd-g2 input[type=date].cd-v{font-size:.72rem;padding:2px 4px;cursor:pointer}
+.cd-g2 input[type=date].cd-v::-webkit-calendar-picker-indicator{display:none}
+@media (max-width:1100px){.cd-two{grid-template-columns:minmax(0,1fr)}}
