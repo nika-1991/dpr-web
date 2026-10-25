@@ -515,6 +515,8 @@ function renderProject(){
   else if(S.tab==="team") body=renderTeam(p);
   else if(S.tab==="schedule") body=renderSchedule(p);
   else if(S.tab==="exec") body=renderExec(p);
+  else if(S.tab==="pl"&&canReview(p)) body=renderPL(p);
+  else if(S.tab==="assume"&&canReview(p)) body=renderAssume(p);
   else if(TAB_ICONS[S.tab]&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=h("div",{class:"empty"},tabIcon(S.tab),h("p",null,h("b",null,tr(FIN_TABS.find(([k])=>k===S.tab)[1]))),h("p",{class:"muted"},"გვერდი მზადდება."));
   else body=renderInfo(p);
   /* codes and name beside the tabs; the row stays put (and frozen under the top bar) on every tab */
@@ -1243,12 +1245,12 @@ async function loadSchedule(pid){
   if(S.schedLoading===pid) return; S.schedLoading=pid;
   try{ S.sched=await api("GET","/projects/"+encodeURIComponent(pid)+"/schedule"); S.schedPid=pid; S.gsel=null; S.gscroll=null; }
   catch(e){ toast("გეგმა-გრაფიკი ვერ ჩაიტვირთა: "+errMsg(e)); }
-  S.schedLoading=null; if(S.view==="project"&&(S.tab==="schedule"||S.tab==="exec")&&!typing()) render();
+  S.schedLoading=null; if(S.view==="project"&&["schedule","exec","pl","assume"].includes(S.tab)&&!typing()) render();
 }
 function saveSchedule(){
   clearTimeout(S.schedTimer); const pid=S.schedPid; schedStatus("ინახება…");
   S.schedTimer=setTimeout(async()=>{
-    try{ const sc=S.sched; for(const r of Object.values(sc.rows||{})) for(const x of r.res||[]) x.qty=resQty(x)||null; await api("PUT","/projects/"+encodeURIComponent(pid)+"/schedule",{start:sc.start,end:sc.end,rows:sc.rows,exec:sc.exec,terms:sc.terms}); schedStatus("შენახულია"); }
+    try{ const sc=S.sched; for(const r of Object.values(sc.rows||{})) for(const x of r.res||[]) x.qty=resQty(x)||null; await api("PUT","/projects/"+encodeURIComponent(pid)+"/schedule",{start:sc.start,end:sc.end,rows:sc.rows,exec:sc.exec,terms:sc.terms,fin:sc.fin}); schedStatus("შენახულია"); }
     catch(e){ schedStatus("ვერ შეინახა: "+errMsg(e),true); }
   },600);
 }
@@ -1924,6 +1926,185 @@ function renderInfo(p){
     renderProjectSheet(p)];
   const out=[renderProjectForm(S.pid)];
   return out;
+}
+
+/* ---------- FINANCE: P&L (plan · actual · comparison) and the assumptions behind the plan ----------
+   plan:   revenue = execution plan quantities × unit price; direct cost = schedule resources (qty × price);
+           indirect costs, contingency and mobilisation from the assumptions tab
+   actual: approved DPRs — priced works (revenue) and priced expenses (cost), by the chapter of their BoQ code
+   periods: the execution plan's dates (each period ends on one), otherwise calendar months */
+function finOf(sc){ const f=sc.fin||(sc.fin={}); if(f.cont==null) f.cont=3; if(f.mob==null) f.mob=2.5; f.ind=f.ind||[]; return f; }
+async function loadPlFact(pid){
+  if(S.plFactLoading===pid) return; S.plFactLoading=pid;
+  try{ const a=await api("GET","/analysis"); S.plFact={pid,reports:a.reports.filter(r=>r.projectId===pid)}; }
+  catch(e){ S.plFact={pid,reports:[],err:errMsg(e)}; }
+  S.plFactLoading=null; if(S.view==="project"&&S.tab==="pl"&&!typing()) render();
+}
+function plData(p){
+  const sc=S.sched, ex=(sc.exec||{dates:[],vals:{}}), fin=finOf(sc), boq=p.boq||[];
+  /* chapters and the chapter of every position */
+  const chaps=[], chOf=new Map(), qtyOf=new Map(); let cur=null;
+  for(const it of boq){
+    if(it.type==="თავი"){ cur={key:"c"+chaps.length,name:it.name||it.code||"",code:it.code||""}; chaps.push(cur); }
+    else if(it.type==="პოზიცია"){ const c=normCode(it.code); qtyOf.set(c,num(it.qty)); if(cur) chOf.set(c,cur.key); }
+  }
+  const OTHER={key:"x",name:"კოდის გარეშე",code:""};
+  const chKey=code=>chOf.get(normCode(code||""))||"x";
+  const price=code=>{ const m=num((sc.rows[code]||{}).xprice); return m>0?m:num(posUnitPrice(sc.rows[code],qtyOf.get(code))); };
+  /* every dated amount, so the periods can cover all of them */
+  const reps=((S.plFact&&S.plFact.pid===p.id)?S.plFact.reports:[]).filter(r=>r.status==="approved");
+  const dates=[];
+  for(const v of Object.values(ex.vals||{})) dates.push(...Object.keys(v));
+  for(const r of Object.values(sc.rows||{})) for(const x of r.res||[]) dates.push(...Object.keys(x.plan||{}));
+  for(const r of reps) dates.push(r.date);
+  dates.sort();
+  const lo=dates[0], hi=dates[dates.length-1];
+  let periods=[];
+  if((ex.dates||[]).length){
+    const ds=ex.dates; periods=ds.map((d,i)=>({from:i?addDays(ds[i-1],1):(lo&&lo<d?lo:d),to:d}));
+    if(hi&&hi>ds[ds.length-1]) periods.push({from:addDays(ds[ds.length-1],1),to:hi});
+  } else if(lo){
+    for(let m=lo.slice(0,7); m<=hi.slice(0,7); ){ const [y,mo]=m.split("-").map(Number), last=new Date(y,mo,0).getDate();
+      periods.push({from:m+"-01",to:m+"-"+String(last).padStart(2,"0")}); m=mo===12?(y+1)+"-01":y+"-"+String(mo+1).padStart(2,"0"); }
+  }
+  const lbl=d=>d.slice(8,10)+"."+d.slice(5,7);
+  periods.forEach(x=>{ x.label=lbl(x.from)+"–"+lbl(x.to); x.year=x.to.slice(0,4); });
+  const N=periods.length, z=()=>new Array(N).fill(0);
+  const pOf=d=>{ for(let i=0;i<N;i++) if(d>=periods[i].from&&d<=periods[i].to) return i; return -1; };
+  const blank=()=>({rev:{},cost:{},lines:{}});
+  const add=(o,k,i,v)=>{ if(i<0||!v) return; (o[k]||(o[k]=z()))[i]+=v; };
+  const addLine=(m,ch,name,i,v)=>{ if(i<0||!v) return; const L=m.lines[ch]||(m.lines[ch]=new Map()); if(!L.has(name)) L.set(name,z()); L.get(name)[i]+=v; };
+  /* plan */
+  const plan=blank();
+  for(const [code,v] of Object.entries(ex.vals||{})) for(const [d,q] of Object.entries(v)) add(plan.rev,chKey(code),pOf(d),num(q)*price(code));
+  for(const [code,r] of Object.entries(sc.rows||{})) for(const x of r.res||[]) for(const [d,q] of Object.entries(x.plan||{})){
+    const v=-num(q)*num(x.price), i=pOf(d); add(plan.cost,chKey(code),i,v); addLine(plan,chKey(code),x.name||tr(x.type),i,v); }
+  const revTot=m=>{ const t=z(); for(const a of Object.values(m.rev)) a.forEach((v,i)=>t[i]+=v); return t; };
+  const pr=revTot(plan);
+  plan.ind=fin.ind.filter(x=>x.name||num(x.monthly)).map(x=>{ const vals=z();
+    periods.forEach((per,i)=>{ for(let d=per.from; d<=per.to; d=addDays(d,1)){
+      const f0=x.from||p.startDate, t0=x.to||p.endDate; if((f0&&d<f0)||(t0&&d>t0)) continue;
+      const dt=new Date(d+"T00:00"); vals[i]-=num(x.monthly)/new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate(); } });
+    return {name:x.name||"—",vals}; });
+  plan.cont=pr.map(v=>-v*num(fin.cont)/100); plan.mob=pr.map(v=>-v*num(fin.mob)/100);
+  /* actual */
+  const fact=blank();
+  for(const r of reps){ const i=pOf(r.date);
+    for(const w of r.works||[]) if(w.code&&w.price!==""&&w.price!=null) add(fact.rev,chKey(w.code),i,amount(w));
+    for(const x of r.expenses||[]) if(x.price!==""&&x.price!=null){ const v=-amount(x); add(fact.cost,chKey(x.code),i,v); addLine(fact,chKey(x.code),x.type||"სხვა",i,v); } }
+  fact.ind=[]; fact.cont=z(); fact.mob=z();
+  const used=new Set([...Object.keys(plan.rev),...Object.keys(plan.cost),...Object.keys(fact.rev),...Object.keys(fact.cost)]);
+  const chapters=[...chaps,OTHER].filter(c=>used.has(c.key));
+  return {periods,chapters,plan,fact,N,z,unpriced:reps.reduce((a,r)=>a+(r.works||[]).filter(w=>w.code&&num(w.qty)&&(w.price===""||w.price==null)).length,0)};
+}
+/* totals of one model (plan or actual) */
+function plTotals(D,m){
+  const sum=arrs=>{ const t=D.z(); for(const a of arrs) a.forEach((v,i)=>t[i]+=v); return t; };
+  const rev=sum(Object.values(m.rev)), cost=sum(Object.values(m.cost)), gross=sum([rev,cost]), ind=sum(m.ind.map(x=>x.vals));
+  const net=sum([gross,ind,m.cont,m.mob]), allCost=sum([cost,ind,m.cont,m.mob]);
+  return {rev,cost,gross,ind,net,allCost};
+}
+function renderPL(p){
+  if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
+  if(!S.plFact||S.plFact.pid!==S.pid){ loadPlFact(S.pid); }
+  const D=plData(p), view=S.plView||"plan";
+  const sw=h("div",{class:"vswitch pl-sw",role:"group","aria-label":"P&L"},[["plan","გეგმა"],["fact","ფაქტი"],["cmp","შედარება"]].map(([k,l])=>
+    h("button",{type:"button","aria-pressed":String(view===k),class:"vbtn vtxt"+(view===k?" on":""),onclick:()=>{S.plView=k;render();}},l)));
+  const note={plan:"შემოსავალი — შესრულების გეგმა × ერთ. ფასი; პირდაპირი ხარჯი — გეგმა-გრაფიკის რესურსები; დანარჩენი — „დაშვებებიდან“.",
+    fact:"დადასტურებული DPR-ები: ფასიანი სამუშაოები (შემოსავალი) და ფასიანი ხარჯები, BoQ კოდის თავის მიხედვით.",
+    cmp:"ფაქტი გეგმასთან შედარებით; მწვანე — გეგმაზე უკეთესი, წითელი — უარესი."}[view];
+  const head=h("div",{class:"pl-head"},sw,h("div",{class:"pl-note muted small"},note),
+    h("button",{class:"btn sm ghost",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ დაშვებები"));
+  if(!D.periods.length) return [head,h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
+  const factLoading=!S.plFact||S.plFact.pid!==S.pid;
+  if(view==="cmp") return [head,renderPLCompare(D)];
+  const m=view==="plan"?D.plan:D.fact;
+  return [head,factLoading&&view==="fact"?h("p",{class:"muted"},"იტვირთება…"):renderPLTable(D,m,view),
+    view==="fact"&&D.unpriced?h("p",{class:"muted small"},D.unpriced+" "+tr("სამუშაოს ფასი ჯერ არ აქვს და შემოსავალში არ ითვლება.")):null];
+}
+function renderPLTable(D,m,view){
+  const T=plTotals(D,m), open=S.plOpen||(S.plOpen=new Set());
+  const cell=(v,cls)=>h("td",{class:"num"+(v<0?" neg":"")+(cls?" "+cls:"")},Math.abs(v)<0.005?"—":fmtNum(Math.round(v)));
+  const tot=a=>a.reduce((x,y)=>x+y,0);
+  const row=(label,vals,cls,extra)=>h("tr",{class:cls||""},h("th",{scope:"row"},extra||null,label),vals.map(v=>cell(v)),cell(tot(vals),"pl-tot"));
+  const sec=t=>h("tr",{class:"pl-sec"},h("th",{colspan:String(D.N+2)},t));
+  const pct=(a,b)=>{ if(!b) return "—"; const v=Math.round(a/b*1000)/10; return fmtNum(v||0)+"%"; };
+  const ratio=(label,f)=>h("tr",{class:"pl-ratio"},h("th",{scope:"row"},label),D.periods.map((_,i)=>h("td",{class:"num"},f(i))),h("td",{class:"num pl-tot"},f(-1)));
+  const at=(a,i)=>i<0?tot(a):a[i];
+  const body=[
+    sec("შემოსავლები"),
+    ...D.chapters.filter(c=>m.rev[c.key]).map(c=>row(c.name,m.rev[c.key])),
+    row("სულ ამონაგები",T.rev,"pl-sum"),
+    sec("პირდაპირი ხარჯები"),
+    ...D.chapters.filter(c=>m.cost[c.key]).flatMap(c=>{ const L=(m.lines[c.key]||new Map()), isOpen=open.has(view+c.key);
+      const tg=L.size?h("button",{class:"pl-tg",type:"button","aria-expanded":String(isOpen),"aria-label":(isOpen?"აკეცვა":"გაშლა")+": "+c.name,onclick:()=>{ isOpen?open.delete(view+c.key):open.add(view+c.key); render(); }},isOpen?"▾":"▸"):h("span",{class:"pl-tg"});
+      return [row(c.name,m.cost[c.key],"pl-ch",tg),...(isOpen?[...L.entries()].sort((a,b)=>tot(a[1])-tot(b[1])).map(([n,v])=>row(n,v,"pl-line")):[])]; }),
+    row("სულ პირდაპირი ხარჯი",T.cost,"pl-sum"),
+    sec("საერთო მოგება"),
+    ...D.chapters.map(c=>{ const v=D.z(); (m.rev[c.key]||[]).forEach((x,i)=>v[i]+=x); (m.cost[c.key]||[]).forEach((x,i)=>v[i]+=x); return tot(v.map(Math.abs))?row(c.name,v):null; }),
+    row("სულ საერთო მოგება",T.gross,"pl-sum"),
+    view==="plan"?[sec("არაპირდაპირი ხარჯები"),...m.ind.map(x=>row(x.name,x.vals)),row("სულ არაპირდაპირი ხარჯი",T.ind,"pl-sum"),
+      row("გაუთვალისწინებელი ხარჯი",m.cont,"pl-sum"),row("მობილიზაცია / დემობილიზაცია",m.mob,"pl-sum")]
+      :[h("tr",{class:"pl-sec"},h("th",{colspan:String(D.N+2)},h("span",null,"არაპირდაპირი ხარჯები"),h("span",{class:"muted small pl-sn"},"ფაქტი „სხვა ხარჯების“ გვერდიდან დაემატება.")))],
+    row("სულ პროექტის მოგება (ზარალი)",T.net,"pl-net"),
+    sec("კოეფიციენტები"),
+    ratio("მოგების მარჟა (მოგება / შემოსავალი)",i=>pct(at(T.net,i),at(T.rev,i))),
+    ratio("ხარჯის წილი (ხარჯი / შემოსავალი)",i=>pct(-at(T.allCost,i),at(T.rev,i))),
+    ratio("ხარჯის ამოგება (მოგება / ხარჯი)",i=>pct(at(T.net,i),-at(T.allCost,i)))];
+  const years=new Set(D.periods.map(x=>x.year));
+  return h("div",{class:"pl-wrap"},h("table",{class:"pl-table"},
+    h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),D.periods.map(x=>h("th",{class:"num",title:fmtDate(x.from)+" — "+fmtDate(x.to)},x.label,years.size>1?h("span",{class:"pl-y"},x.year):null)),h("th",{class:"num pl-tot"},"სულ"))),
+    h("tbody",null,body)));
+}
+function renderPLCompare(D){
+  /* -2 = up to today (periods that have started), -1 = all periods, otherwise one period */
+  const today=isoDay(new Date()), sel=S.plPer==null?-2:S.plPer;
+  const P=plTotals(D,D.plan), F=plTotals(D,D.fact);
+  const at=a=>sel===-1?a.reduce((x,y)=>x+y,0):sel===-2?a.reduce((x,y,i)=>x+(D.periods[i].from<=today?y:0),0):a[sel]||0;
+  const pick=h("select",{class:"inp pl-per","aria-label":"პერიოდი",onchange:e=>{S.plPer=+e.target.value;render();}},
+    [h("option",{value:"-2"},"დღემდე"),h("option",{value:"-1"},"ყველა პერიოდი"),...D.periods.map((x,i)=>h("option",{value:String(i)},fmtDate(x.from)+" — "+fmtDate(x.to)))]);
+  pick.value=String(sel);
+  const f=v=>Math.abs(v)<0.005?"—":fmtNum(Math.round(v));
+  const row=(label,pv,fv,cls)=>{ const d=fv-pv, good=d>0.5, bad=d<-0.5;
+    return h("tr",{class:cls||""},h("th",{scope:"row"},label),h("td",{class:"num"+(pv<0?" neg":"")},f(pv)),h("td",{class:"num"+(fv<0?" neg":"")},f(fv)),
+      h("td",{class:"num"+(good?" good":bad?" bad":"")},Math.abs(d)<0.5?"—":(d>0?"+":"−")+fmtNum(Math.round(Math.abs(d)))),
+      h("td",{class:"num"},pv?fmtNum(Math.round(fv/pv*1000)/10||0)+"%":"—")); };
+  const sec=t=>h("tr",{class:"pl-sec"},h("th",{colspan:"5"},t));
+  const ch=(k,c)=>{ const pa=D.plan[k][c.key], fa=D.fact[k][c.key]; return pa||fa?row(c.name,pa?at(pa):0,fa?at(fa):0):null; };
+  return h("div",null,h("div",{class:"pl-cmp-bar"},h("label",{class:"small muted"},"პერიოდი"),pick),
+    h("div",{class:"pl-wrap"},h("table",{class:"pl-table pl-cmp"},
+      h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),["გეგმა","ფაქტი","სხვაობა","შესრულება"].map(l=>h("th",{class:"num"},l)))),
+      h("tbody",null,
+        sec("შემოსავლები"),D.chapters.map(c=>ch("rev",c)),row("სულ ამონაგები",at(P.rev),at(F.rev),"pl-sum"),
+        sec("პირდაპირი ხარჯები"),D.chapters.map(c=>ch("cost",c)),row("სულ პირდაპირი ხარჯი",at(P.cost),at(F.cost),"pl-sum"),
+        row("სულ საერთო მოგება",at(P.gross),at(F.gross),"pl-sum"),
+        row("არაპირდაპირი ხარჯები",at(P.ind),at(F.ind)),
+        row("გაუთვალისწინებელი + მობილიზაცია",at(D.plan.cont)+at(D.plan.mob),0),
+        row("სულ პროექტის მოგება (ზარალი)",at(P.net),at(F.net),"pl-net")))));
+}
+/* assumptions behind the plan: contingency and mobilisation as % of revenue, indirect costs per month */
+function renderAssume(p){
+  if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
+  const sc=S.sched, fin=finOf(sc), edit=canReview(p)&&!p.archived;
+  const save=()=>saveSchedule();
+  const pctIn=(k,l)=>h("div",{class:"cd-cell"},h("div",{class:"cd-l"},l),h("div",{class:"as-pct"},
+    h("input",{class:"inp cd-v num",inputmode:"decimal",value:String(fin[k]??""),disabled:!edit,"aria-label":tr(l),onchange:e=>{ fin[k]=num(e.target.value); save(); }}),h("span",null,"%")));
+  const rates=pcard("chart","blue","პროცენტული დაშვებები","შემოსავლის პროცენტად, ყოველ პერიოდზე",
+    h("div",{class:"cd-grid cd-g2 as-g"},pctIn("cont","გაუთვალისწინებელი ხარჯი"),pctIn("mob","მობილიზაცია / დემობილიზაცია")));
+  const box=h("div",{class:"as-ind"});
+  const draw=()=>box.replaceChildren(
+    h("div",{class:"as-row as-hd"},["დასახელება","თვეში, ₾","დან","მდე",""].map(t=>h("span",{class:"cd-l"},t))),
+    ...fin.ind.map((x,i)=>h("div",{class:"as-row"},
+      h("input",{class:"inp cd-v cd-tx",value:x.name||"",disabled:!edit,"aria-label":tr("დასახელება")+" "+(i+1),placeholder:tr("მაგ. საიტის მენეჯერი"),onchange:e=>{x.name=e.target.value.trim();save();}}),
+      h("input",{class:"inp cd-v num",value:x.monthly??"",inputmode:"decimal",disabled:!edit,"aria-label":tr("თვეში, ₾")+" "+(i+1),onchange:e=>{x.monthly=num(e.target.value)||null;save();}}),
+      h("input",{class:"inp cd-v",type:"date",value:x.from||"",disabled:!edit,"aria-label":tr("დან")+" "+(i+1),onchange:e=>{x.from=e.target.value;save();}}),
+      h("input",{class:"inp cd-v",type:"date",value:x.to||"",disabled:!edit,"aria-label":tr("მდე")+" "+(i+1),onchange:e=>{x.to=e.target.value;save();}}),
+      edit?h("button",{class:"btn sm ghost",type:"button","aria-label":"წაშლა",onclick:()=>{fin.ind.splice(i,1);save();draw();}},"✕"):h("span"))),
+    edit?h("button",{class:"btn sm",type:"button",onclick:()=>{ fin.ind.push({id:Math.random().toString(36).slice(2,8),name:"",monthly:null,from:"",to:""}); draw(); box.querySelectorAll(".as-row:not(.as-hd)")[fin.ind.length-1].querySelector("input").focus(); }},"+ ხარჯი"):null,
+    h("div",{class:"muted small"},tr("თვიური თანხა პერიოდზე დღეების მიხედვით ნაწილდება. თარიღები ცარიელი — სამუშაოს დაწყებიდან დასრულებამდე (პროექტის მონაცემებიდან).")));
+  draw();
+  const ind=pcard("personnel","violet","არაპირდაპირი ხარჯები","საიტის პერსონალი, იჯარა, კვება, ტრანსპორტი და სხვა — თვიური თანხით",box);
+  return h("div",{class:"cd-page as-page"},h("div",{class:"row",style:"justify-content:flex-end"},h("span",{id:"sched-status",class:"muted small"})),rates,ind);
 }
 
 /* ---------- ANALYSIS (admin): revenue = priced works, cost = priced expenses ---------- */

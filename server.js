@@ -581,7 +581,13 @@ function cleanSchedule(b) {
     if (!RES_TYPES.includes(t) || !o || typeof o !== "object") continue;
     for (const [n, v] of Object.entries(o).slice(0, 300)) if (parts(v).length) (terms.items[t] ||= {})[str(n, 300)] = parts(v);
   }
-  return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows, exec: { dates, vals }, terms };
+  /* finance assumptions: contingency and mobilisation (% of revenue), indirect costs per month */
+  const fb = b && typeof b.fin === "object" && b.fin ? b.fin : {};
+  const pctv = (v, d) => { const n = cleanNum(v); return n == null ? d : Math.max(0, Math.min(100, n)); };
+  const fin = { cont: pctv(fb.cont, 3), mob: pctv(fb.mob, 2.5),
+    ind: (Array.isArray(fb.ind) ? fb.ind : []).slice(0, 100).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), monthly: cleanNum(x?.monthly),
+      from: ISO_RE.test(x?.from || "") ? x.from : "", to: ISO_RE.test(x?.to || "") ? x.to : "" })) };
+  return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows, exec: { dates, vals }, terms, fin };
 }
 api.get("/projects/:id/schedule", auth, (req, res) => {
   if (!canSee(getProject(req.params.id), req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
