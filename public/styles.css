@@ -959,3 +959,13 @@ button.gh-chk.on{background:color-mix(in srgb,var(--signal,#c98a00) 16%,var(--su
 .gh-clr:hover{text-decoration:underline}
 /* exec unit price: typed, the resource-derived price shows as a faint placeholder */
 .xtable input.x-pr::placeholder{color:var(--muted);font-style:italic;opacity:.8}
+/* project tabs in sections: a small section name above a row of icon-only tabs; names show on hover */
+.tabs.tgroups{gap:0;overflow:visible;flex-wrap:wrap}
+.tgrp{display:flex;flex-direction:column;padding:0 10px;border-left:1px solid var(--line)}
+.tgrp:first-child{border-left:0;padding-left:0}
+.tgrp-l{font-size:.62rem;font-weight:600;color:var(--muted);letter-spacing:.03em;padding:0 6px;white-space:nowrap}
+.tgrp-b{display:flex;gap:2px}
+.tabs.tgroups button{padding:6px 10px 7px}
+.tabs.tgroups button .ico{width:22px;height:22px}
+.tabs.tgroups button.tip::after{z-index:30;font-family:var(--f-body);letter-spacing:0}
+.tabs.tgroups .tgrp-l{font-family:var(--f-body);text-transform:none}
