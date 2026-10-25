@@ -957,3 +957,5 @@ button.gh-chk.on{background:color-mix(in srgb,var(--signal,#c98a00) 16%,var(--su
 .gh-checks>.gh-thead{display:flex;align-items:center;gap:10px}
 .gh-clr{border:0;background:none;color:var(--accent);font:inherit;font-size:.62rem;font-weight:700;cursor:pointer;padding:0;text-transform:none;letter-spacing:0}
 .gh-clr:hover{text-decoration:underline}
+/* exec unit price: typed, the resource-derived price shows as a faint placeholder */
+.xtable input.x-pr::placeholder{color:var(--muted);font-style:italic;opacity:.8}

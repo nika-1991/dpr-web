@@ -549,7 +549,7 @@ function cleanSchedule(b) {
   for (const [code, r] of Object.entries(b && typeof b.rows === "object" && b.rows ? b.rows : {}).slice(0, 5000)) {
     if (!r || typeof r !== "object") continue;
     rows[str(code, 40)] = {
-      price: cleanNum(r.price), plan: cleanPlan(r.plan),
+      price: cleanNum(r.price), xprice: cleanNum(r.xprice), plan: cleanPlan(r.plan),
       res: (Array.isArray(r.res) ? r.res : []).slice(0, 200).map((x) => ({
         id: str(x?.id, 20) || newId(6), type: RES_TYPES.includes(x?.type) ? x.type : "მასალა",
         name: str(x?.name, 300), unit: str(x?.unit, 30), qty: cleanNum(x?.qty), price: cleanNum(x?.price), plan: cleanPlan(x?.plan),

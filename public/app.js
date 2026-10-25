@@ -1727,7 +1727,9 @@ function renderExec(p){
   const months=[]; ex.dates.forEach(d=>{ const k=d.slice(0,7), l=months[months.length-1]; if(l&&l.k===k) l.n++; else months.push({k,n:1}); });
   /* a date column is as wide as its longest quantity, at least as wide as the date */
   const qtyOf=new Map(boq.filter(it=>it.type==="პოზიცია").map(it=>[normCode(it.code),num(it.qty)]));
-  const vm=S.xmode==="val", pr=code=>num(posUnitPrice(sc.rows[code],qtyOf.get(code)));
+  /* unit price: typed on this tab (xprice), otherwise derived from the schedule's resources */
+  const autoPr=code=>num(posUnitPrice(sc.rows[code],qtyOf.get(code)));
+  const vm=S.xmode==="val", pr=code=>{ const m=num((sc.rows[code]||{}).xprice); return m>0?m:autoPr(code); };
   /* checks; a picked one filters the rows to the items it concerns */
   const posAll=all.filter(r=>r.code);
   const totX=r=>ex.dates.reduce((a,d)=>a+num((ex.vals[r.code]||{})[d]),0);
@@ -1790,7 +1792,11 @@ function renderExec(p){
       h("td",{class:"g-fz f1"},h("div",{class:"g-name g-tipsrc","data-tip":it.name||""},it.name||"")),
       h("td",{class:"g-fz f2 num"},q?fmtNum(q):"—"),
       h("td",{class:"g-fz f3"},it.unit||""),
-      h("td",{class:"g-fz f4 num g-calc",title:tr("რესურსების ღირებულება ÷ რაოდენობა")},pr(r.code)?fmtNum(pr(r.code)):"—"),
+      h("td",{class:"g-fz f4"},h("input",{class:"g-in num x-in x-pr",value:sr.xprice??"",inputmode:"decimal",disabled:!edit,"data-col":"p",
+        placeholder:autoPr(r.code)?fmtNum(autoPr(r.code)):"",title:autoPr(r.code)?tr("რესურსებიდან")+": "+fmtNum(autoPr(r.code)):null,"aria-label":(it.code||"")+" "+tr("ერთ. ფასი"),
+        onkeydown:onKey,onchange:e=>{ const v=numOrNull(e.target.value); sr.xprice=v&&v>0?v:null; save();
+          if(valMode) setTimeout(()=>{ redraw(); const n=document.querySelector('.xtable input.x-pr[aria-label="'+e.target.getAttribute("aria-label")+'"]'); if(n&&document.activeElement===document.body) n.focus(); },0);
+          else { const oldTop=document.querySelector(".sched .g-head2"); if(oldTop) oldTop.replaceWith(buildTop()); } }})),
       valMode?h("td",{class:"g-fz f5 x-sum num"},vtot?fmtNum(vtot):""):h("td",{class:"g-fz f5 x-sum num"+(q&&tot>q+1e-9?" over":"")},tot?fmtNum(tot):""),
       valMode?ex.dates.map((d,ci)=>{ const x=cellVal(r.code,d); return h("td",{class:"x-c x-v num"+ms[ci]+(num(v[d])&&!priceOf(r.code)?" noprice":""),title:num(v[d])&&!priceOf(r.code)?tr("ერთეულის ფასი არ არის მითითებული"):null},x?fmtNum(x):(num(v[d])?"—":"")); }):
       ex.dates.map((d,ci)=>h("td",{class:"x-c"+ms[ci]},h("input",{class:"g-in num x-in",value:v[d]??"",inputmode:"decimal",disabled:!edit,"data-col":String(ci),"aria-label":(it.code||"")+" "+fmtDate(d),
