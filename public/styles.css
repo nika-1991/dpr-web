@@ -895,7 +895,7 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-stats b{color:var(--ink);font-family:var(--f-mono)}
 .gh-terms{border:0;border-left:1px solid var(--line);background:none;padding:0 0 0 22px;font:inherit;text-align:left;cursor:pointer;gap:3px;color:var(--muted);border-radius:0}
 .gh-terms:hover .gh-tv{color:var(--ink);text-decoration:underline}
-.gh-term{display:grid;grid-template-columns:10px 120px auto;align-items:center;gap:6px;font-size:.74rem}
+.gh-term{display:grid;grid-template-columns:10px 112px 96px auto;align-items:center;gap:6px;font-size:.74rem}
 .gh-term .g-sw{width:9px;height:9px}
 .gh-tn{color:var(--ink)}
 .gh-tv{white-space:nowrap}
@@ -906,3 +906,6 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-left>.gh-today{justify-content:center}
 .gh-left>.vswitch{display:flex}
 .gh-left>.vswitch .vbtn{flex:1;justify-content:center;padding:4px 2px;font-size:.74rem}
+.gh-cost{font-family:var(--f-mono);color:var(--ink);text-align:right;padding-right:12px;display:flex;justify-content:flex-end;align-items:center;gap:4px}
+.gh-warn{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;background:var(--signal,#c98a00);color:#fff;font-size:.62rem;font-weight:800;font-family:var(--f-body)}
+.gh-warn.tip::after{left:auto;right:-6px;transform:none;top:calc(100% + 6px)}

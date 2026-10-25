@@ -1283,8 +1283,14 @@ function renderSchedule(p){
       h("div",null,h("span",null,"დაგეგმილი:")," ",h("b",null,String(planned.length))),
       h("div",null,h("span",null,"დაუგეგმავი:")," ",h("b",null,String(positions.length-planned.length)))),
     h("button",{class:"gh-col gh-terms",type:"button",title:tr("ანაზღაურების პირობების შეცვლა"),onclick:()=>{ S.gview="terms"; render(); window.scrollTo(0,0); }},
-      RES_TYPES.map(([t,c])=>h("div",{class:"gh-term"},h("i",{class:"g-sw "+c}),h("span",{class:"gh-tn"},t),
-        h("span",{class:"gh-tv"},partsLabel(T.types[t])+(Object.keys(T.items[t]||{}).length?" (+"+Object.keys(T.items[t]).length+" "+tr("ცალკე")+")":""))))),
+      RES_TYPES.map(([t,c])=>{
+        /* cost of this resource type (qty × unit price) and how many of its resources still have no price */
+        const list=positions.flatMap(r=>r.sr.res.filter(x=>x.type===t));
+        const cost=list.reduce((a,x)=>a+num(x.qty)*num(x.price),0), miss=list.filter(x=>!num(x.price)).length;
+        return h("div",{class:"gh-term"},h("i",{class:"g-sw "+c}),h("span",{class:"gh-tn"},t),
+        h("span",{class:"gh-cost"},list.length?fmtNum(cost):"—",
+          miss?h("span",{class:"gh-warn tip","data-tip":miss+" "+tr("რესურსზე ფასი შევსებული არაა"),"aria-label":miss+" "+tr("რესურსზე ფასი შევსებული არაა")},"!"):null),
+        h("span",{class:"gh-tv"},partsLabel(T.types[t])+(Object.keys(T.items[t]||{}).length?" (+"+Object.keys(T.items[t]).length+" "+tr("ცალკე")+")":""))); })),
     h("span",{class:"spacer"}),
     h("div",{class:"g-ctrls"},
     h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
