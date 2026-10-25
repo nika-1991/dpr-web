@@ -1163,7 +1163,9 @@ function renderBoqImport(p){
 /* BoQ positions with their resources (material, machinery, labour) below them, and a day grid on the right:
    a number typed in a day cell is the quantity planned for that day; filled cells are coloured, which draws the timeline.
    The grid works like a spreadsheet: arrows/Tab/Enter move, typing edits, Delete clears, Shift/drag selects a range, Ctrl+C/Ctrl+V copy and paste. */
-const RES_TYPES=[["შრომა","lab"],["ტექნიკა","eq"],["მასალა","mat"]];
+const RES_TYPES=[["შრომა","lab"],["ტექნიკა","eq"],["მასალა","mat"],["ქვეკონტრაქტორი","subc"]];
+/* an item's unit price is not typed: it is the cost of all its resources (qty × unit price) divided by the item's quantity */
+const posUnitPrice=(sr,q)=>{ const t=((sr&&sr.res)||[]).reduce((a,x)=>a+num(x.qty)*num(x.price),0); return q>0&&t>0?t/q:null; };
 const MONTHS_KA=["იანვარი","თებერვალი","მარტი","აპრილი","მაისი","ივნისი","ივლისი","აგვისტო","სექტემბერი","ოქტომბერი","ნოემბერი","დეკემბერი"];
 const MONTHS_EN=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const WD_KA=["კვ","ორ","სა","ოთ","ხუ","პა","შა"], WD_EN=["Su","Mo","Tu","We","Th","Fr","Sa"];
@@ -1206,7 +1208,7 @@ function renderSchedule(p){
     if(it.type!=="პოზიცია") return;
     const code=normCode(it.code);
     const sr=sc.rows[code]||(sc.rows[code]={price:null,plan:{},res:[]}); sr.plan=sr.plan||{}; sr.res=sr.res||[];
-    const pr={kind:"pos",it,code,sr,plan:sr.plan,qty:num(it.qty),price:num(sr.price),chap,sub};
+    const pr={kind:"pos",it,code,sr,plan:sr.plan,qty:num(it.qty),price:num(posUnitPrice(sr,num(it.qty))),chap,sub};
     all.push(pr); if(chap) chap.kids.push(pr); if(sub) sub.kids.push(pr);
     for(const x of sr.res){ x.plan=x.plan||{}; all.push({kind:"res",it,code,sr,x,plan:x.plan,qty:num(x.qty),price:num(x.price),pos:pr}); }
   });
@@ -1339,7 +1341,7 @@ function renderSchedule(p){
           h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name))),
         h("td",{class:"g-fz f2 num"},r.qty?fmtNum(r.qty):"—"),
         h("td",{class:"g-fz f3 g-unit"},r.it.unit||""),
-        h("td",{class:"g-fz f4"},inp(r.sr.price??"",v=>{ r.sr.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":p"})),
+        h("td",{class:"g-fz f4 num g-calc",title:tr("რესურსების ღირებულება ÷ რაოდენობა")},r.price?fmtNum(r.price):"—"),
         h("td",{class:"g-fz f5 num"},dur(posDays(r))),
         gridCells(r,ri)); }
     const c=cls(r), isNew=!!S.gfocusNew&&S.gfocusNew===r.x.id;
@@ -1602,7 +1604,8 @@ function renderExec(p){
   const MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
   const months=[]; ex.dates.forEach(d=>{ const k=d.slice(0,7), l=months[months.length-1]; if(l&&l.k===k) l.n++; else months.push({k,n:1}); });
   /* a date column is as wide as its longest quantity, at least as wide as the date */
-  const vm=S.xmode==="val", pr=code=>num((sc.rows[code]||{}).price);
+  const qtyOf=new Map(boq.filter(it=>it.type==="პოზიცია").map(it=>[normCode(it.code),num(it.qty)]));
+  const vm=S.xmode==="val", pr=code=>num(posUnitPrice(sc.rows[code],qtyOf.get(code)));
   const dpx=ex.dates.map(d=>{ let len=0, all$=0;
     for(const [code,v] of Object.entries(ex.vals)) if(v[d]!=null){ const x=vm?num(v[d])*pr(code):num(v[d]); all$+=x; len=Math.max(len,fmtNum(x).length); }
     if(vm) len=Math.max(len,fmtNum(all$).length);
@@ -1623,7 +1626,7 @@ function renderExec(p){
       h("button",{class:"g-del",type:"button",title:tr("სვეტის წაშლა"),"aria-label":tr("სვეტის წაშლა"),onclick:()=>{ pend.n=Math.max(0,pend.n-1); redraw(); }},"✕"))))));
   /* quantities or values (quantity × unit price); in values the chapter and sub-chapter rows show sums */
   const valMode=S.xmode==="val";
-  const priceOf=code=>num((sc.rows[code]||{}).price);
+  const priceOf=pr;
   const cellVal=(code,d)=>{ const q=num((ex.vals[code]||{})[d]); return valMode?q*priceOf(code):q; };
   const kidsOf=r=>all.filter(x=>x.code&&(x.chap===r||x.sub===r));
   const mode=h("div",{class:"vswitch",role:"group","aria-label":"ჩვენება"},[["qty","რაოდენობა"],["val","ღირებულება"]].map(([k,l])=>
@@ -1647,7 +1650,7 @@ function renderExec(p){
       h("td",{class:"g-fz f1"},h("div",{class:"g-name g-tipsrc","data-tip":it.name||""},it.name||"")),
       h("td",{class:"g-fz f2 num"},q?fmtNum(q):"—"),
       h("td",{class:"g-fz f3"},it.unit||""),
-      h("td",{class:"g-fz f4"},h("input",{class:"g-in num",value:sr.price??"",placeholder:"—",inputmode:"decimal",disabled:!edit,"aria-label":"ერთ. ფასი",onchange:e=>{ sr.price=numOrNull(e.target.value); save(); }})),
+      h("td",{class:"g-fz f4 num g-calc",title:tr("რესურსების ღირებულება ÷ რაოდენობა")},pr(r.code)?fmtNum(pr(r.code)):"—"),
       valMode?h("td",{class:"g-fz f5 x-sum num"},vtot?fmtNum(vtot):""):h("td",{class:"g-fz f5 x-sum num"+(q&&tot>q+1e-9?" over":"")},tot?fmtNum(tot):""),
       valMode?ex.dates.map((d,ci)=>{ const x=cellVal(r.code,d); return h("td",{class:"x-c x-v num"+ms[ci]+(num(v[d])&&!priceOf(r.code)?" noprice":""),title:num(v[d])&&!priceOf(r.code)?tr("ერთეულის ფასი არ არის მითითებული"):null},x?fmtNum(x):(num(v[d])?"—":"")); }):
       ex.dates.map((d,ci)=>h("td",{class:"x-c"+ms[ci]},h("input",{class:"g-in num x-in",value:v[d]??"",inputmode:"decimal",disabled:!edit,"data-col":String(ci),"aria-label":(it.code||"")+" "+fmtDate(d),

@@ -538,7 +538,7 @@ api.get("/analysis", auth, (req, res) => {
   res.json({ reports, additional });
 });
 /* schedule (გეგმა-გრაფიკი): resources under each BoQ position and planned quantities per day */
-const RES_TYPES = ["მასალა", "ტექნიკა", "შრომა"];
+const RES_TYPES = ["მასალა", "ტექნიკა", "შრომა", "ქვეკონტრაქტორი"];
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 const cleanNum = (v) => { const n = parseFloat(String(v ?? "").replace(",", ".")); return isFinite(n) ? Math.round(n * 1e4) / 1e4 : null; };
 const cleanPlan = (pl) => Object.fromEntries(Object.entries(pl && typeof pl === "object" ? pl : {})
