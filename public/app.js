@@ -467,10 +467,10 @@ function renderProjectForm(pid){
 }
 
 /* ---------- PROJECT ---------- */
-const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]],["ფინანსები",["pl","cf","othercost"]]];
+const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]],["ფინანსები",["assume","pl","cf","othercost"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
-const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"]];
-const TAB_ICONS={pl:"table",cf:"pulse",othercost:"expenses",reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
+const FIN_TABS=[["assume","დაშვებები"],["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"]];
+const TAB_ICONS={assume:"gear",pl:"table",cf:"pulse",othercost:"expenses",reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
   const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?FIN_TABS:[])];
