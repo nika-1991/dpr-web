@@ -1210,3 +1210,9 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 /* lines inside a group sit close together */
 .pr-table .pr-item th,.pr-table .pr-item td,.pr-table .pr-line th,.pr-table .pr-line td,.pr-table .pr-ratio th,.pr-table .pr-ratio td{padding-top:2px;padding-bottom:2px;line-height:1.35}
 .pr-table .pr-rev th,.pr-table .pr-rev td,.pr-table .pr-cost th,.pr-table .pr-cost td,.pr-table .pr-gross th,.pr-table .pr-gross td,.pr-table .pr-ind th,.pr-table .pr-ind td{padding-top:5px;padding-bottom:5px}
+/* group lines: not indented, a lighter colour than the totals */
+.pr-table .pr-item th,.pr-table .pr-ratio th{padding-left:12px!important;color:color-mix(in srgb,var(--ink) 62%,var(--surface))}
+.pr-table .pr-item td,.pr-table .pr-ratio td{color:color-mix(in srgb,var(--ink) 62%,var(--surface))}
+.pr-table .pr-item td.neg{color:color-mix(in srgb,#be123c 70%,var(--surface))}
+.pr-table .pr-line th{padding-left:34px!important}
+.pr-table .pr-item .pl-tg{margin-left:0;width:14px}
