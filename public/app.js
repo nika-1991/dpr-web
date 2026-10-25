@@ -433,10 +433,10 @@ function renderProjectForm(pid){
   const parts=pcard("personnel","violet","პროექტში ჩართული პირები","კომპანიის სახელი: პასუხისმგებელი პირის გვარი, ტელეფონი, ელ. ფოსტა",
     h("div",{class:"cd-rows"},PARTICIPANTS.map(([k,ka])=>row(ka,inp(pf,k,(p.participants||{})[k],tr(ka))))));
   const dur=h("div",{class:"cd-v"},"—");
-  const upDur=()=>{ const d=durDays(f.startDate.value,f.endDate.value); dur.textContent=d?d+" "+tr("დღე"):"—"; };
+  const upDur=()=>{ const d=durDays(f.startDate.value,f.endDate.value); dur.textContent=d?String(d):"—"; };
   const dIn=(k,l)=>{ const el=inp(f,k,p[k],tr(l)); el.type="date"; el.classList.add("cd-v"); el.onchange=upDur; return [k,l,el]; };
   const valIn=inp(f,"contractValue",p.contractValue??"",tr("პროექტის ღირებულება")); valIn.classList.add("cd-v"); valIn.inputMode="decimal"; valIn.placeholder="0.00 ₾";
-  const when=termsCard([dIn("startDate","დაწყების თარიღი"),dIn("endDate","დასრულების თარიღი"),["duration","ხანგრძლივობა",dur],["contractValue","პროექტის ღირებულება (₾)",valIn]]);
+  const when=termsCard([dIn("startDate","დაწყება"),dIn("endDate","დასრულება"),["duration","დღეები",dur],["contractValue","ღირებულება, ₾",valIn]]);
   upDur();
   const codes=codesCard(["accountingCode","companyCode","projectCode","dprStart"].map(k=>{ const el=inp(f,k,k==="dprStart"?(p[k]||1):p[k],tr(CODE_LABELS[k]));
     el.classList.add("cd-v"); if(k==="dprStart"){ el.type="number"; el.min="1"; el.step="1"; } return [k,el]; }));
@@ -904,8 +904,8 @@ function renderProjectSheet(p){
   const parts_=pcard("personnel","violet","პროექტში ჩართული პირები","კომპანიის სახელი: პასუხისმგებელი პირის გვარი, ტელეფონი, ელ. ფოსტა",
     h("div",{class:"cd-rows"},PARTICIPANTS.map(([k,ka])=>row(ka,parts[k]))));
   const dd=durDays(p.startDate,p.endDate);
-  const when=termsCard([["startDate","დაწყების თარიღი",h("div",{class:"cd-v"},p.startDate?fmtDate(p.startDate):"—")],["endDate","დასრულების თარიღი",h("div",{class:"cd-v"},p.endDate?fmtDate(p.endDate):"—")],
-    ["duration","ხანგრძლივობა",h("div",{class:"cd-v"},dd?dd+" "+tr("დღე"):"—")],["contractValue","პროექტის ღირებულება",h("div",{class:"cd-v"},p.contractValue!=null?gel(p.contractValue):"—")]]);
+  const when=termsCard([["startDate","დაწყება",h("div",{class:"cd-v"},p.startDate?fmtDate(p.startDate):"—")],["endDate","დასრულება",h("div",{class:"cd-v"},p.endDate?fmtDate(p.endDate):"—")],
+    ["duration","დღეები",h("div",{class:"cd-v"},dd?String(dd):"—")],["contractValue","ღირებულება",h("div",{class:"cd-v"},p.contractValue!=null?gel(p.contractValue):"—")]]);
   const codes=codesCard([["accountingCode",h("div",{class:"cd-v"},p.accountingCode||"—")],["companyCode",h("div",{class:"cd-v"},p.companyCode||"—")],
     ["projectCode",h("div",{class:"cd-v"},p.projectCode||"—")],["dprStart",h("div",{class:"cd-v"},"DPR-"+String(p.dprStart||1).padStart(3,"0"))]]);
   const hse=pcard("hse","orange","უსაფრთხოების (HSE) პუნქტები","ყოველი ახალი ანგარიში ამ პუნქტებით იწყება.",
