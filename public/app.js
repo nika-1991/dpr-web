@@ -1504,7 +1504,7 @@ function renderChecks(positions,T){
   const issues=[];
   const add=(text,list)=>{ if(list.length) issues.push({text,n:list.length,tip:list.slice(0,8).join("\n")+(list.length>8?"\n…":"")}); };
   const plbl=r=>(r.it.code||"")+" · "+String(r.it.name||"").slice(0,50);
-  add("დასაგეგმი პოზიცია",positions.filter(r=>!posDays(r).length).map(plbl));
+  add("დაუგეგმავი პოზიცია",positions.filter(r=>!posDays(r).length).map(plbl));
   add("პოზიციას რაოდენობა არ აქვს",positions.filter(r=>!num(r.it.qty)).map(plbl));
   add("პოზიციას განზომილება არ აქვს",positions.filter(r=>!(r.it.unit||"").trim()).map(plbl));
   add("რესურსს ფასი არ აქვს",res.filter(x=>!num(x.x.price)).map(lbl));
@@ -1784,8 +1784,11 @@ function renderExec(p){
   const issues=[];
   const plbl=r=>(r.it.code||"")+" · "+String(r.it.name||"").slice(0,50);
   const add=(text,list)=>{ if(list.length) issues.push({text,n:list.length,tip:list.slice(0,8).join("\n")+(list.length>8?"\n…":"")}); };
-  if(ex.dates.length) add("დასაგეგმი პოზიცია",posAll.filter(r=>!plannedX.includes(r)).map(plbl));
-  add("ჯამი აჭარბებს რაოდენობას",posAll.filter(r=>{ const q=num(r.it.qty), t=ex.dates.reduce((a,d)=>a+num((ex.vals[r.code]||{})[d]),0); return q&&t>q+1e-9; }).map(plbl));
+  add("დაუგეგმავი პოზიცია",posAll.filter(r=>!plannedX.includes(r)).map(plbl));
+  /* planned items whose dates do not add up to the BoQ quantity */
+  const totX=r=>ex.dates.reduce((a,d)=>a+num((ex.vals[r.code]||{})[d]),0);
+  add("მეტია დაგეგმილი, ვიდრე რაოდენობა",plannedX.filter(r=>{ const q=num(r.it.qty); return q&&totX(r)>q+1e-9; }).map(r=>plbl(r)+" — "+fmtNum(totX(r))+" / "+fmtNum(num(r.it.qty))));
+  add("ნაკლებია დაგეგმილი, ვიდრე რაოდენობა",plannedX.filter(r=>{ const q=num(r.it.qty); return q&&totX(r)<q-1e-9; }).map(r=>plbl(r)+" — "+fmtNum(totX(r))+" / "+fmtNum(num(r.it.qty))));
   add("პოზიციას ფასი არ აქვს",plannedX.filter(r=>!pr(r.code)).map(plbl));
   add("პოზიციას რაოდენობა არ აქვს",posAll.filter(r=>!num(r.it.qty)).map(plbl));
   add("პოზიციას განზომილება არ აქვს",posAll.filter(r=>!(r.it.unit||"").trim()).map(plbl));
