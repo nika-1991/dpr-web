@@ -1079,3 +1079,9 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 /* the track spans the whole header row, as before */
 .ptabs>.tabs.tgroups{flex:1;align-self:stretch;margin:0;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:6px 8px;align-items:center}
 .tabs.tgroups .tgrp+.tgrp::before{top:4px;bottom:4px;width:2px;background:#fff;box-shadow:0 0 0 .5px color-mix(in srgb,var(--ink) 6%,transparent)}
+/* the open section fills the whole height of the panel; on wide pages (schedule, execution plan) it stays like the others */
+.ptabs>.tabs.tgroups{padding:0 8px;align-items:stretch;gap:2px}
+.tabs.tgroups .tgrp{display:flex;flex-direction:column;justify-content:center;padding:6px 10px;border-radius:0}
+.tabs.tgroups .tgrp.on{box-shadow:none;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.tabs.tgroups .tgrp+.tgrp::before{top:0;bottom:0;left:-2px;box-shadow:none}
+body.wide .tabs.tgroups .tgrp.on{background:none;border-color:transparent}
