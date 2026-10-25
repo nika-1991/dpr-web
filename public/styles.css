@@ -1064,3 +1064,11 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .cd-g2 .cd-l{white-space:normal;line-height:1.2}
 .cd-g2 input[type=date].cd-v{width:100%;max-width:none;font-size:.74rem;padding:2px 3px}
 .cd-g2 .cd-cell{display:flex;flex-direction:column}.cd-g2 .cd-cell>.cd-l{flex:1}
+/* tab sections as a segmented control: grey track, the open section lifted in white */
+.ptabs>.tabs.tgroups{flex:0 1 auto;align-self:center;align-items:stretch;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;margin:8px 0}
+.tabs.tgroups .tgrp{border-left:0;padding:4px 8px 5px;border-radius:9px;background:none;transition:background .15s,box-shadow .15s}
+.tabs.tgroups .tgrp:first-child{padding-left:8px}
+.tabs.tgroups .tgrp.on{background:var(--surface);box-shadow:0 1px 3px rgba(16,24,40,.14),0 0 0 1px var(--line)}
+.tabs.tgroups .tgrp:not(.on):hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.tabs.tgroups button{margin-bottom:0}
+.tabs.tgroups .tgrp:not(.on) button:hover{background:var(--surface)}
