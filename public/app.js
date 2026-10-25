@@ -467,10 +467,12 @@ function renderProjectForm(pid){
 }
 
 /* ---------- PROJECT ---------- */
+/* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
+const tabIcon=k=>{ const n=TAB_ICONS[k]||""; return n.startsWith("txt:")?h("span",{class:"ico tico","aria-hidden":"true"},n.slice(4)):icon(n); };
 const TAB_GROUPS=[["შესრულება",["reports","progress"]],["ზოგადი ინფო",["info","boq","team"]],["დაგეგმვა",["schedule","exec"]],["ფინანსები",["assume","pl","cf","othercost"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
 const FIN_TABS=[["assume","დაშვებები"],["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"]];
-const TAB_ICONS={assume:"gear",pl:"table",cf:"pulse",othercost:"expenses",reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
+const TAB_ICONS={assume:"gear",pl:"txt:P&L",cf:"txt:CF",othercost:"expenses",reports:"report",progress:"chart",boq:"list",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
   const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?FIN_TABS:[])];
@@ -493,7 +495,7 @@ function renderProject(){
       icon(p.archived?"plus":"works"),p.archived?"აქტიურად დაბრუნება":"დასრულებულად მონიშვნა"):null);
   /* tabs grouped into sections; inside a section only icons, the name shows on hover */
   const tabName=new Map(tabs);
-  const tabBtn=k=>h("button",{type:"button",role:"tab",class:"tip","data-tip":tr(tabName.get(k)),"aria-label":tr(tabName.get(k)),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},icon(TAB_ICONS[k]));
+  const tabBtn=k=>h("button",{type:"button",role:"tab",class:"tip","data-tip":tr(tabName.get(k)),"aria-label":tr(tabName.get(k)),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},tabIcon(k));
   const tabBar=h("div",{class:"tabs tgroups",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
     return b.length?h("div",{class:"tgrp"+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }));
   let body;
@@ -503,7 +505,7 @@ function renderProject(){
   else if(S.tab==="team") body=renderTeam(p);
   else if(S.tab==="schedule") body=renderSchedule(p);
   else if(S.tab==="exec") body=renderExec(p);
-  else if(TAB_ICONS[S.tab]&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=h("div",{class:"empty"},icon(TAB_ICONS[S.tab]),h("p",null,h("b",null,tr(FIN_TABS.find(([k])=>k===S.tab)[1]))),h("p",{class:"muted"},"გვერდი მზადდება."));
+  else if(TAB_ICONS[S.tab]&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=h("div",{class:"empty"},tabIcon(S.tab),h("p",null,h("b",null,tr(FIN_TABS.find(([k])=>k===S.tab)[1]))),h("p",{class:"muted"},"გვერდი მზადდება."));
   else body=renderInfo(p);
   /* codes and name beside the tabs; the row stays put (and frozen under the top bar) on every tab */
   const pid=h("div",{class:"pid"},
