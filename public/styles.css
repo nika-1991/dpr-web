@@ -1058,3 +1058,9 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .cd-subs{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
 .cd-sub{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) auto;gap:6px;width:100%;align-items:center}
 .cd-subv .cd-l{color:var(--ink);font-weight:600}
+/* timeline: four dates on the first line, work days and value on the second */
+.cd-grid.cd-g2{grid-template-columns:repeat(4,minmax(0,1fr))}
+.cd-g2 .cd-contractValue{grid-column:span 3}
+.cd-g2 .cd-l{white-space:normal;line-height:1.2}
+.cd-g2 input[type=date].cd-v{width:100%;max-width:none;font-size:.74rem;padding:2px 3px}
+.cd-g2 .cd-cell{display:flex;flex-direction:column}.cd-g2 .cd-cell>.cd-l{flex:1}
