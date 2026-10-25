@@ -1232,3 +1232,11 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .pr-rv{display:flex;gap:14px;align-items:baseline}
 .pr-rv span{display:flex;flex-direction:column;font-size:.9rem;font-weight:800;color:var(--c);font-variant-numeric:tabular-nums}
 .pr-rv em{font-style:normal;font-size:.6rem;font-weight:500;color:var(--muted)}
+/* small title; ratios as three coloured lines under the result */
+.pr-title{font-size:.9rem}
+.pr-title span{font-size:.78rem}
+.pr-top{padding-bottom:8px}
+.pr-table .pr-ratio th,.pr-table .pr-ratio td{color:var(--c)!important;font-weight:600;font-style:normal}
+.pr-table .pr-ratio th{font-weight:500}
+.pr-ratio.pr-r0{--c:#059669}.pr-ratio.pr-r1{--c:#d97706}.pr-ratio.pr-r2{--c:#7c3aed}
+.pr-gap td{height:12px}
