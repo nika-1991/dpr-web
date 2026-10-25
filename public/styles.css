@@ -1273,3 +1273,29 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .cd-pl+.cd-v{margin-left:2px}
 .cd-pct span+.cd-pl{margin-left:10px}
 .cd-ret .cd-pct .cd-v{width:46px}.cd-ret div.cd-v{font-family:var(--f-body)}
+/* timeline v3 on a 20-column grid: five dates/days on top, value · advance · recovery · retention on one line below */
+.cd-grid.cd-g2{grid-template-columns:repeat(20,minmax(0,1fr))}
+.cd-g2>.cd-cell{grid-column:span 4}
+.cd-g2>.cd-contractValue{grid-column:span 5}
+.cd-g2>.cd-advancePct{grid-column:span 5}
+.cd-g2>.cd-advDed{grid-column:span 4}
+.cd-g2>.cd-ret{grid-column:span 6}
+.cd-advancePct .cd-pct{flex-wrap:wrap;row-gap:2px}
+.cd-advancePct .cd-amt{margin-left:0;flex-basis:100%;font-size:.72rem}
+.cd-rets{display:flex;flex-direction:column;gap:3px}
+.cd-rets .cd-pl{min-width:76px}
+.cd-g2 .cd-advDed .cd-pct .cd-v,.cd-g2 .cd-advancePct .cd-pct .cd-v{width:44px}
+div.cd-v.cd-2l{display:flex;flex-direction:column;gap:1px;white-space:normal;font-family:var(--f-body)}
+@media (max-width:560px){.cd-grid.cd-g2{grid-template-columns:1fr 1fr}.cd-g2>.cd-cell{grid-column:auto!important}}
+.cd-g2>.cd-contractValue{grid-column:span 4}
+.cd-g2>.cd-advancePct{grid-column:span 4}
+.cd-g2>.cd-advDed{grid-column:span 5}
+.cd-g2>.cd-ret{grid-column:span 7}
+.cd-contractValue .cd-v,.cd-advancePct div.cd-v{font-family:var(--f-body)}
+.cd-g2 .cd-advDed .cd-pct{flex-wrap:nowrap}
+.cd-g2 .cd-advDed .cd-pct .cd-v{width:38px}
+.cd-g2>.cd-cell>.cd-l{white-space:normal}
+.cd-g2>.cd-contractValue{grid-column:span 5}
+.cd-g2>.cd-ret{grid-column:span 6}
+.cd-rets .cd-pl{min-width:72px}
+.cd-rets .cd-pl{min-width:0;flex:1;font-size:.66rem}.cd-rets .cd-pct{gap:3px}.cd-ret .cd-rets .cd-v{width:40px}
