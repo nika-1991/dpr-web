@@ -1279,7 +1279,10 @@ function renderSchedule(p){
   /* header: today, view and outline levels (one width) | item counts | resources with their payment terms | plan, help */
   const T=normTerms(sc.terms);
   const top=h("div",{class:"g-head2"},
-    h("div",{class:"gh-col gh-left"},h("button",{class:"btn sm gh-today",type:"button",onclick:()=>scrollToday(true)},"დღეს"),seg,outline),
+    h("div",{class:"gh-col gh-left"},
+      h("div",{class:"vswitch",role:"group","aria-label":"ჩვენება"},[["qty","რაოდ."],["val","ღირ."]].map(([k,l])=>
+        h("button",{type:"button",class:"vbtn vtxt tip"+((S.gmode||"qty")===k?" on":""),"data-tip":tr(k==="qty"?"რაოდენობა":"ღირებულება (რაოდენობა × ერთ. ფასი)"),"aria-pressed":String((S.gmode||"qty")===k),onclick:()=>{ S.gmode=k; S.gscroll={x:wrap.scrollLeft,y:wrap.scrollTop}; render(); }},l))),
+      seg,outline),
     h("div",{class:"gh-col gh-stats"},
       h("div",null,h("span",null,"სულ პოზიცია:")," ",h("b",null,String(positions.length))),
       h("div",null,h("span",null,"დაგეგმილი:")," ",h("b",null,String(planned.length))),
@@ -1316,7 +1319,9 @@ function renderSchedule(p){
   const fz=["BoQ","დასახელება","დღგ","საშ.","რაოდენობა","განზ.","ერთ. ფასი","ვადა"];
   /* each date column is as wide as its longest number (and never narrower than the header) */
   const base=dayMode?36:zoom==="week"?60:84;
-  const colPx=cols.map(c=>{ let len=0; for(const r of all) if(r.kind==="res"){ const v=c.days.reduce((a,d)=>a+num(r.plan[d]),0); if(v) len=Math.max(len,fmtNum(v).length); }
+  /* quantities or values (quantity × the resource's unit price) in the day cells */
+  const valMode=S.gmode==="val", mult=x=>valMode?num(x.price):1;
+  const colPx=cols.map(c=>{ let len=0; for(const r of all) if(r.kind==="res"){ const v=c.days.reduce((a,d)=>a+num(r.plan[d]),0)*mult(r.x); if(v) len=Math.max(len,fmtNum(v).length); }
     return Math.max(base,Math.ceil(len*6.6+14)); });
   const thead=h("thead",null,
     h("tr",null,fz.map((l,i)=>h("th",{class:"g-fz f"+i+(i===7?" g-fz-last":""),rowspan:"2"},l)),
@@ -1339,7 +1344,7 @@ function renderSchedule(p){
     }
     const c=cls(r);
     /* resources: editable quantities; positions: a thin bar over the days their resources are used */
-    if(r.kind==="res"){ const v=colVals(r.plan);
+    if(r.kind==="res"){ const v=colVals(r.plan).map(x=>x*mult(r.x));
       return cols.map((cl,ci)=>h("td",{class:"gc"+(isWe(cl)?" we":"")+(isTd(cl)?" td":"")+(v[ci]?" f":""),"data-ri":String(ri),"data-ci":String(ci)},
         v[ci]?h("div",{class:"gb "+c},fmtNum(v[ci])):null)); }
     const resV=r.sr.res.map(x=>colVals(x.plan));
@@ -1419,7 +1424,7 @@ function renderSchedule(p){
     if(t===""||t==="0"){ delete r.plan[d]; return true; }
     const n=parseFloat(t.replace(/\s/g,"").replace(",",".")); if(!isFinite(n)) return false; r.plan[d]=n; return true; };
   const commitAll=()=>{ saveSchedule(); rebuild(); requestAnimationFrame(()=>{ const w=document.querySelector(".gwrap"); if(w) w.focus({preventScroll:true}); }); };
-  const dayOnly=()=>{ if(dayMode) return true; toast("შესავსებად აირჩიეთ „დღე“ ხედი"); return false; };
+  const dayOnly=()=>{ if(valMode){ toast("რაოდენობის შესაცვლელად აირჩიეთ „რაოდ.“"); return false; } if(dayMode) return true; toast("შესავსებად აირჩიეთ „დღე“ ხედი"); return false; };
   const startEdit=(initial)=>{ if(!edit||!S.gsel||!dayOnly()) return; const {ri,ci}=S.gsel; const c=cell(ri,ci); if(!c) return;
     const old=rows[ri].plan[cols[ci].from]; const typed=initial!=null;
     const box=h("input",{class:"g-edit",inputmode:"decimal",value:typed?initial:(old!=null?String(old):"")});
