@@ -2085,7 +2085,7 @@ function plRows(D,m,view){
   R("gap","");
   const ratio=(l,a,b,sign)=>R("ratio",l,null,{f:i=>{ const x=i<0?tot(a):a[i], y=i<0?tot(b):b[i]; return y?sign*x/y:null; }});
   ratio("საერთო მოგების მარჟა",T.gross,T.rev,1);
-  ratio("წმინდა მოგების მარჟა",T.net,T.rev,1);
+  ratio("პროექტის მოგების მარჟა",T.net,T.rev,1);
   ratio("არაპირდაპირი ხარჯი / შემოსავალი",T.ind,T.rev,-1);
   return out;
 }
