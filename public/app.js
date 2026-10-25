@@ -1274,24 +1274,19 @@ function renderSchedule(p){
   /* top: title and counts, period, zoom, today, plan */
   const seg=h("div",{class:"vswitch g-zoom"},[["day","დღე"],["week","კვირა"],["month","თვე"]].map(([k,l])=>
     h("button",{type:"button",class:"vbtn vtxt"+(zoom===k?" on":""),"aria-pressed":String(zoom===k),onclick:()=>{ S.gzoom=k; S.gscroll=null; S.gsel=null; render(); }},l)));
-  const top=h("div",{class:"g-top"},
-    h("div",{class:"g-title"},
-      (()=>{ const T=normTerms(sc.terms);
-        return h("button",{class:"g-terms",type:"button",title:tr("ანაზღაურების პირობების შეცვლა"),onclick:()=>{ S.gview="terms"; render(); window.scrollTo(0,0); }},
-          h("span",{class:"g-terms-l"},"ანაზღ. პირობები:"),
-          RES_TYPES.map(([t,c],i)=>h("span",{class:"g-term"},i?" · ":"",h("i",{class:"g-sw "+c}),h("span",null,t),": "+partsLabel(T.types[t])+(Object.keys(T.items[t]||{}).length?" (+"+Object.keys(T.items[t]).length+" "+tr("ცალკე")+")":"")))); })(),
-      h("div",{class:"small muted"},h("span",null,"პოზიციები:")," "+positions.length+" · ",h("span",null,"დაგეგმილი:")," "+planned.length+" · ",h("span",null,"დაუგეგმავი:")," "+(positions.length-planned.length))),
-    h("div",{class:"g-ctrls"},
-      seg,
-      h("button",{class:"btn",type:"button",onclick:()=>scrollToday(true)},"დღეს"),
-      edit?h("button",{class:"btn primary",type:"button",onclick:()=>{ S.gplan={code:(positions.find(r=>!posDays(r).length)||positions[0]||{}).code}; render(); }},"+ დაგეგმვა"):null));
-  const legend=h("div",{class:"g-legrow"},
-    outline,
-    h("span",null,h("i",{class:"g-sw pos wide"}),"სამუშაო"),
-    RES_TYPES.map(([l,c])=>h("span",null,h("i",{class:"g-sw "+c}),l)),
-    h("span",null,h("i",{class:"g-sw we"}),"შაბათ-კვირა"),
-    h("span",null,h("i",{class:"g-sw tdl"}),"დღეს"),
+  /* header: view and outline levels | item counts | resources with their payment terms | today, plan, help */
+  const T=normTerms(sc.terms);
+  const top=h("div",{class:"g-head2"},
+    h("div",{class:"gh-col"},seg,outline),
+    h("div",{class:"gh-col gh-stats"},
+      h("div",null,h("span",null,"სულ პოზიცია:")," ",h("b",null,String(positions.length))),
+      h("div",null,h("span",null,"დაგეგმილი:")," ",h("b",null,String(planned.length))),
+      h("div",null,h("span",null,"დაუგეგმავი:")," ",h("b",null,String(positions.length-planned.length)))),
+    h("button",{class:"gh-col gh-terms",type:"button",title:tr("ანაზღაურების პირობების შეცვლა"),onclick:()=>{ S.gview="terms"; render(); window.scrollTo(0,0); }},
+      RES_TYPES.map(([t,c])=>h("div",{class:"gh-term"},h("i",{class:"g-sw "+c}),h("span",{class:"gh-tn"},t),
+        h("span",{class:"gh-tv"},partsLabel(T.types[t])+(Object.keys(T.items[t]||{}).length?" (+"+Object.keys(T.items[t]).length+" "+tr("ცალკე")+")":""))))),
     h("span",{class:"spacer"}),
+    h("div",{class:"g-ctrls"},
     h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
     h("details",{class:"g-helpd"},h("summary",{"aria-label":"დახმარება",title:"დახმარება"},"?"),
       h("div",{class:"g-pop"},
@@ -1305,7 +1300,9 @@ function renderSchedule(p){
           h("li",null,"Delete — წაშლა"),
           h("li",null,"Shift ან მაუსით გადათრევა — რამდენიმე უჯრის მონიშვნა"),
           h("li",null,"Ctrl+C / Ctrl+V — კოპირება Excel-იდან და Excel-ში; ერთი მნიშვნელობა ავსებს მთელ მონიშნულს")),
-        edit?null:h("p",{class:"muted"},"გეგმა-გრაფიკს ცვლის ადმინი ან პროექტის რივიუერი."))));
+        edit?null:h("p",{class:"muted"},"გეგმა-გრაფიკს ცვლის ადმინი ან პროექტის რივიუერი."))),
+      h("button",{class:"btn",type:"button",onclick:()=>scrollToday(true)},"დღეს"),
+      edit?h("button",{class:"btn primary",type:"button",onclick:()=>{ S.gplan={code:(positions.find(r=>!posDays(r).length)||positions[0]||{}).code}; render(); }},"+ დაგეგმვა"):null));
 
   /* header: months (years in month view) above, days / weeks / months below */
   const grp=[]; for(const c of cols){ const k=zoom==="month"?c.from.slice(0,4):c.from.slice(0,7); const l=grp[grp.length-1]; if(l&&l.k===k) l.n++; else grp.push({k,n:1}); }
@@ -1467,7 +1464,7 @@ function renderSchedule(p){
     paint();
     if(S.gfocusNew){ S.gfocusNew=false; const n=wrap.querySelector('input[data-new="1"]'); if(n) n.focus(); } });
   const units=h("datalist",{id:"g-units"},((S.lists&&S.lists.units)||[]).map(u=>h("option",{value:u})));
-  return h("div",{class:"sched"},top,legend,
+  return h("div",{class:"sched"},top,
     rows.length?wrap:h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე.")),units,
     S.gplan?renderPlanDialog(sc,positions,from,to):null);
 }
