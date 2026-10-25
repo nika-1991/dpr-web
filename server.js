@@ -553,6 +553,7 @@ function cleanSchedule(b) {
       res: (Array.isArray(r.res) ? r.res : []).slice(0, 200).map((x) => ({
         id: str(x?.id, 20) || newId(6), type: RES_TYPES.includes(x?.type) ? x.type : "მასალა",
         name: str(x?.name, 300), unit: str(x?.unit, 30), qty: cleanNum(x?.qty), price: cleanNum(x?.price), plan: cleanPlan(x?.plan),
+        ...(typeof x?.vat === "boolean" ? { vat: x.vat } : {}), ...(typeof x?.pit === "boolean" ? { pit: x.pit } : {}),
       })),
     };
   }
@@ -564,7 +565,11 @@ function cleanSchedule(b) {
     const pl = Object.fromEntries(Object.entries(cleanPlan(v)).filter(([d]) => dates.includes(d)));
     if (Object.keys(pl).length) vals[str(code, 40)] = pl;
   }
-  return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows, exec: { dates, vals } };
+  /* payment terms per resource type: adv, 0, 7, 14, 30, 60, eom or custom:<days> */
+  const terms = {};
+  for (const [t, v] of Object.entries(b && typeof b.terms === "object" && b.terms ? b.terms : {}))
+    if (RES_TYPES.includes(t) && /^(adv|0|7|14|30|60|eom|custom:\d{1,3})$/.test(String(v))) terms[t] = String(v);
+  return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows, exec: { dates, vals }, terms };
 }
 api.get("/projects/:id/schedule", auth, (req, res) => {
   if (!canSee(getProject(req.params.id), req.user)) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });

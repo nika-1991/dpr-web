@@ -1164,6 +1164,12 @@ function renderBoqImport(p){
    a number typed in a day cell is the quantity planned for that day; filled cells are coloured, which draws the timeline.
    The grid works like a spreadsheet: arrows/Tab/Enter move, typing edits, Delete clears, Shift/drag selects a range, Ctrl+C/Ctrl+V copy and paste. */
 const RES_TYPES=[["შრომა","lab"],["ტექნიკა","eq"],["მასალა","mat"],["ქვეკონტრაქტორი","subc"]];
+/* taxes on a resource: VAT (დღგ) or income tax (საშ.); labour carries income tax by default, everything else VAT */
+const taxDef=t=>({vat:t!=="შრომა",pit:t==="შრომა"});
+const taxOf=(x,k)=>typeof x[k]==="boolean"?x[k]:taxDef(x.type)[k];
+/* payment terms per resource type: when a resource used on a day has to be paid */
+const PAY_TERMS=[["adv","წინასწარ"],["0","იმავე დღეს"],["7","1 კვირაში"],["14","2 კვირაში"],["30","1 თვეში"],["60","2 თვეში"],["eom","თვის ბოლოს"],["custom","სხვა (დღეები)"]];
+const termLabel=t=>{ if(!t) return "—"; if(/^custom:\d+$/.test(t)) return t.slice(7)+" "+tr("დღეში"); const f=PAY_TERMS.find(x=>x[0]===t); return f?tr(f[1]):"—"; };
 /* an item's unit price is not typed: it is the cost of all its resources (qty × unit price) divided by the item's quantity */
 const posUnitPrice=(sr,q)=>{ const t=((sr&&sr.res)||[]).reduce((a,x)=>a+num(x.qty)*num(x.price),0); return q>0&&t>0?t/q:null; };
 const MONTHS_KA=["იანვარი","თებერვალი","მარტი","აპრილი","მაისი","ივნისი","ივლისი","აგვისტო","სექტემბერი","ოქტომბერი","ნოემბერი","დეკემბერი"];
@@ -1179,7 +1185,7 @@ async function loadSchedule(pid){
 function saveSchedule(){
   clearTimeout(S.schedTimer); const pid=S.schedPid; schedStatus("ინახება…");
   S.schedTimer=setTimeout(async()=>{
-    try{ const sc=S.sched; await api("PUT","/projects/"+encodeURIComponent(pid)+"/schedule",{start:sc.start,end:sc.end,rows:sc.rows,exec:sc.exec}); schedStatus("შენახულია"); }
+    try{ const sc=S.sched; await api("PUT","/projects/"+encodeURIComponent(pid)+"/schedule",{start:sc.start,end:sc.end,rows:sc.rows,exec:sc.exec,terms:sc.terms}); schedStatus("შენახულია"); }
     catch(e){ schedStatus("ვერ შეინახა: "+errMsg(e),true); }
   },600);
 }
@@ -1252,6 +1258,9 @@ function renderSchedule(p){
     h("button",{type:"button",class:"vbtn vtxt"+(zoom===k?" on":""),"aria-pressed":String(zoom===k),onclick:()=>{ S.gzoom=k; S.gscroll=null; S.gsel=null; render(); }},l)));
   const top=h("div",{class:"g-top"},
     h("div",{class:"g-title"},
+      h("button",{class:"g-terms",type:"button",title:tr("ანაზღაურების პირობების შეცვლა"),onclick:()=>{ S.gterms=true; render(); }},
+        h("span",{class:"g-terms-l"},"ანაზღ. პირობები:"),
+        RES_TYPES.map(([t,c],i)=>h("span",{class:"g-term"},i?" · ":"",h("i",{class:"g-sw "+c}),h("span",null,t),": "+termLabel((sc.terms||{})[t])))),
       h("div",{class:"small muted"},h("span",null,"პოზიციები:")," "+positions.length+" · ",h("span",null,"დაგეგმილი:")," "+planned.length+" · ",h("span",null,"დაუგეგმავი:")," "+(positions.length-planned.length))),
     h("div",{class:"g-ctrls"},
       seg,
@@ -1281,13 +1290,13 @@ function renderSchedule(p){
 
   /* header: months (years in month view) above, days / weeks / months below */
   const grp=[]; for(const c of cols){ const k=zoom==="month"?c.from.slice(0,4):c.from.slice(0,7); const l=grp[grp.length-1]; if(l&&l.k===k) l.n++; else grp.push({k,n:1}); }
-  const fz=["BoQ","დასახელება","რაოდენობა","განზ.","ერთ. ფასი","ვადა"];
+  const fz=["BoQ","დასახელება","დღგ","საშ.","რაოდენობა","განზ.","ერთ. ფასი","ვადა"];
   /* each date column is as wide as its longest number (and never narrower than the header) */
   const base=dayMode?36:zoom==="week"?60:84;
   const colPx=cols.map(c=>{ let len=0; for(const r of all) if(r.kind==="res"){ const v=c.days.reduce((a,d)=>a+num(r.plan[d]),0); if(v) len=Math.max(len,fmtNum(v).length); }
     return Math.max(base,Math.ceil(len*6.6+14)); });
   const thead=h("thead",null,
-    h("tr",null,fz.map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":""),rowspan:"2"},l)),
+    h("tr",null,fz.map((l,i)=>h("th",{class:"g-fz f"+i+(i===7?" g-fz-last":""),rowspan:"2"},l)),
       grp.map(x=>h("th",{class:"gm",colspan:String(x.n)},h("span",{class:"gm-l"},zoom==="month"?x.k:MN[+x.k.slice(5)-1]+" "+x.k.slice(0,4))))),
     h("tr",null,cols.map((c,ci)=>h("th",{class:"gd"+(isWe(c)?" we":"")+(isTd(c)?" td":""),"data-ci":String(ci),style:"width:"+colPx[ci]+"px;min-width:"+colPx[ci]+"px;max-width:"+colPx[ci]+"px",title:dayMode?fmtDate(c.from):fmtDate(c.from)+" – "+fmtDate(c.to)},
       dayMode?[h("b",null,String(+c.from.slice(8))),h("span",null,WD[wd(c.from)])]
@@ -1331,7 +1340,7 @@ function renderSchedule(p){
       return h("tr",{class:"g-head"+(r.it.type==="ქვეთავი"?" sub":"")},
         codeCell(r,tri(!fold.has(r.key),()=>{ fold.has(r.key)?fold.delete(r.key):fold.add(r.key); rebuild(); },r.it.name)),
         h("td",{class:"g-fz f1"},h("div",{class:"g-hname g-tipsrc","data-tip":r.it.name||""},r.it.name||"")),
-        h("td",{class:"g-fz g-hsum",colspan:"4"},r.kids.length?[String(n)," / ",String(r.kids.length)," ",h("span",null,"დაგეგმილი")]:""),
+        h("td",{class:"g-fz g-hsum",colspan:"6"},r.kids.length?[String(n)," / ",String(r.kids.length)," ",h("span",null,"დაგეგმილი")]:""),
         gridCells(r,ri)); }
     if(r.kind==="pos"){ const n=r.sr.res.length, open=!shut.has(r.code);
       return h("tr",{class:"g-pos"},
@@ -1339,10 +1348,11 @@ function renderSchedule(p){
         h("td",{class:"g-fz f1"},h("div",{class:"g-pname"},
           edit?h("button",{class:"g-plus",type:"button",title:tr("რესურსის დამატება"),"aria-label":tr("რესურსის დამატება")+": "+(r.it.name||""),onclick:()=>{ const id=Math.random().toString(36).slice(2,8); r.sr.res.push({id,type:"შრომა",name:"",unit:"",qty:null,price:null,plan:{}}); shut.delete(r.code); S.gfocusNew=id; changed(); }},"+"):null,
           h("div",{class:"g-name g-tipsrc","data-tip":r.it.name||""},r.it.name))),
-        h("td",{class:"g-fz f2 num"},r.qty?fmtNum(r.qty):"—"),
-        h("td",{class:"g-fz f3 g-unit"},r.it.unit||""),
-        h("td",{class:"g-fz f4 num g-calc",title:tr("რესურსების ღირებულება ÷ რაოდენობა")},r.price?fmtNum(r.price):"—"),
-        h("td",{class:"g-fz f5 num"},dur(posDays(r))),
+        h("td",{class:"g-fz f2"}),h("td",{class:"g-fz f3"}),
+        h("td",{class:"g-fz f4 num"},r.qty?fmtNum(r.qty):"—"),
+        h("td",{class:"g-fz f5 g-unit"},r.it.unit||""),
+        h("td",{class:"g-fz f6 num g-calc",title:tr("რესურსების ღირებულება ÷ რაოდენობა")},r.price?fmtNum(r.price):"—"),
+        h("td",{class:"g-fz f7 num"},dur(posDays(r))),
         gridCells(r,ri)); }
     const c=cls(r), isNew=!!S.gfocusNew&&S.gfocusNew===r.x.id;
     return h("tr",{class:"g-res"},
@@ -1352,14 +1362,16 @@ function renderSchedule(p){
           RES_TYPES.map(([t])=>{ const o=h("option",{value:t},t); if(t===r.x.type) o.selected=true; return o; })),
         inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა","aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
         edit?h("button",{class:"g-del",type:"button",tabindex:"-1","aria-label":"რესურსის წაშლა",title:"წაშლა",onclick:()=>{ r.sr.res.splice(r.sr.res.indexOf(r.x),1); changed(); }},"✕"):null)),
-      h("td",{class:"g-fz f2"},inp(r.x.qty??"",v=>{ r.x.qty=numOrNull(v); changed(); },{class:"g-in num","aria-label":"რაოდენობა",placeholder:"0",inputmode:"decimal","data-f":ri+":q"})),
-      h("td",{class:"g-fz f3 g-unit"},inp(r.x.unit,v=>{ r.x.unit=v; changed(); },{class:"g-in g-un","aria-label":"განზ.",placeholder:"—",list:"g-units","data-f":ri+":u"})),
-      h("td",{class:"g-fz f4"},inp(r.x.price??"",v=>{ r.x.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":rp"})),
-      h("td",{class:"g-fz f5 num"},dur(planDays(r.plan))),
+      ...["vat","pit"].map((k,j)=>h("td",{class:"g-fz f"+(2+j)+" g-tax"},h("input",{type:"checkbox",checked:taxOf(r.x,k),disabled:!edit,"aria-label":(k==="vat"?"დღგ":"საშ.")+": "+(r.x.name||""),
+        onchange:e=>{ r.x[k]=e.target.checked; saveSchedule(); }}))),
+      h("td",{class:"g-fz f4"},inp(r.x.qty??"",v=>{ r.x.qty=numOrNull(v); changed(); },{class:"g-in num","aria-label":"რაოდენობა",placeholder:"0",inputmode:"decimal","data-f":ri+":q"})),
+      h("td",{class:"g-fz f5 g-unit"},inp(r.x.unit,v=>{ r.x.unit=v; changed(); },{class:"g-in g-un","aria-label":"განზ.",placeholder:"—",list:"g-units","data-f":ri+":u"})),
+      h("td",{class:"g-fz f6"},inp(r.x.price??"",v=>{ r.x.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":rp"})),
+      h("td",{class:"g-fz f7 num"},dur(planDays(r.plan))),
       gridCells(r,ri));
   });
   const table=h("table",{class:"gtable z-"+zoom},thead,h("tbody",null,body));
-  colResize(table,"sched2");
+  colResize(table,"sched3");
 
   /* selection and editing (day view) */
   const wrap=h("div",{class:"gwrap",tabindex:"0","aria-label":"გეგმა-გრაფიკის ბადე",onscroll:()=>{ S.gscroll={x:wrap.scrollLeft,y:wrap.scrollTop}; gTip().hidden=true; }},table);
@@ -1438,7 +1450,8 @@ function renderSchedule(p){
   const units=h("datalist",{id:"g-units"},((S.lists&&S.lists.units)||[]).map(u=>h("option",{value:u})));
   return h("div",{class:"sched"},top,legend,
     rows.length?wrap:h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე.")),units,
-    S.gplan?renderPlanDialog(sc,positions,from,to):null);
+    S.gplan?renderPlanDialog(sc,positions,from,to):null,
+    S.gterms?renderTermsDialog(sc,edit):null);
 }
 /* "+ დაგეგმვა": spread a quantity evenly over a date range (optionally skipping weekends) */
 /* Excel-like column resizing for the schedule and execution plan tables: drag the right edge of a header
@@ -1467,6 +1480,27 @@ function colResize(table,kind){
   };
   table.querySelectorAll("thead th.g-fz").forEach(th=>{ const m=/\bf(\d)\b/.exec(th.className); if(!m) return;
     handle(th,"--w"+m[1],()=>[...table.querySelectorAll(".f"+m[1])]); });
+}
+/* payment terms: for each resource type, how long after the work the payment is due */
+function renderTermsDialog(sc,edit){
+  const terms=Object.assign({},sc.terms||{});
+  const close=()=>{ S.gterms=false; render(); };
+  const rows=RES_TYPES.map(([t,c])=>{ const cur=terms[t]||""; const custom=/^custom:/.test(cur);
+    const days=h("input",{class:"inp num",type:"number",min:"1",max:"365",value:custom?cur.slice(7):"",disabled:!edit,"aria-label":tr(t)+": "+tr("დღეები"),style:"width:80px",hidden:!custom});
+    const sel=h("select",{class:"inp",disabled:!edit,"aria-label":tr(t),onchange:()=>{ days.hidden=sel.value!=="custom"; if(!days.hidden) days.focus(); }},
+      h("option",{value:""},"—"),PAY_TERMS.map(([v,l])=>h("option",{value:v},l)));
+    sel.value=custom?"custom":cur;
+    return {t,sel,days,el:h("div",{class:"g-trow"},h("span",{class:"g-trow-l"},h("i",{class:"g-sw "+c}),t),sel,days)}; });
+  const ok=()=>{ const out={};
+    for(const r of rows){ if(r.sel.value==="custom"){ const n=parseInt(r.days.value,10); if(!(n>0)){ toast("მიუთითეთ დღეების რაოდენობა"); r.days.focus(); return; } out[r.t]="custom:"+n; } else if(r.sel.value) out[r.t]=r.sel.value; }
+    sc.terms=out; S.gterms=false; saveSchedule(); render(); };
+  return h("div",{class:"g-modal",onkeydown:e=>{ if(e.key==="Escape") close(); },onclick:e=>{ if(e.target===e.currentTarget) close(); }},
+    h("div",{class:"g-dlg",role:"dialog","aria-modal":"true","aria-label":tr("ანაზღაურების პირობები")},
+      h("h3",null,"ანაზღაურების პირობები"),
+      h("p",{class:"small muted",style:"margin:0"},"რესურსის ტიპის მიხედვით: შესრულებიდან რამდენ ხანში ხდება გადახდა."),
+      rows.map(r=>r.el),
+      h("div",{class:"row",style:"justify-content:flex-end"},h("button",{class:"btn ghost",type:"button",onclick:close},edit?"გაუქმება":"დახურვა"),
+        edit?h("button",{class:"btn primary",type:"button",onclick:ok},"შენახვა"):null)));
 }
 /* "+ დაგეგმვა": spread a resource quantity evenly over a period (optionally skipping weekends);
    the resource can be one the position already has or a new one */

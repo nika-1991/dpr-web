@@ -652,7 +652,7 @@ a.btn{text-decoration:none}
 .gtable th.gd.td b,.gtable th.gd.td span{color:#fff}
 /* frozen left columns */
 .g-fz{position:sticky;z-index:2;background:var(--surface)}
-.gtable .f5{border-right:1px solid var(--line)}
+.gtable:not(.xtable) .f7,.xtable .f5{border-right:1px solid var(--line)}
 .gtable td.g-fz{padding:0 12px;overflow:hidden;text-overflow:ellipsis}
 .gtable td.f3{padding:0 4px}
 .gtable td.num{text-align:right}
@@ -799,8 +799,8 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .tabs button .ico{width:22px;height:22px;flex:none}
 .tabs button>span{white-space:normal;max-width:92px;font-size:.7rem;line-height:1.2;text-align:left}
 /* frozen column widths are variables so columns can be resized (drag the header edge, double-click to fit) */
-.gtable{--w0:116px;--w1:300px;--w2:94px;--w3:62px;--w4:90px;--w5:80px;--fz:calc(var(--w0) + var(--w1) + var(--w2) + var(--w3) + var(--w4) + var(--w5))}
-.gtable.xtable{--w2:84px;--w3:90px;--w4:80px;--w5:96px}
+.gtable{--w0:116px;--w1:300px;--w2:40px;--w3:40px;--w4:94px;--w5:72px;--w6:90px;--w7:80px;--fz:calc(var(--w0) + var(--w1) + var(--w2) + var(--w3) + var(--w4) + var(--w5) + var(--w6) + var(--w7))}
+.gtable.xtable{--w2:84px;--w3:90px;--w4:80px;--w5:96px;--fz:calc(var(--w0) + var(--w1) + var(--w2) + var(--w3) + var(--w4) + var(--w5))}
 .gtable .f0{left:0;width:var(--w0);min-width:var(--w0);max-width:var(--w0)}
 .gtable .f1{left:var(--w0);width:var(--w1);min-width:var(--w1);max-width:var(--w1)}
 .gtable .f2{left:calc(var(--w0) + var(--w1));width:var(--w2);min-width:var(--w2);max-width:var(--w2)}
@@ -854,3 +854,19 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gb.subc{background:var(--g-subc)}
 .g-chip.subc{background:color-mix(in srgb,var(--g-subc) 14%,var(--surface));color:var(--g-subc)}
 .gtable td.g-calc{color:var(--muted);font-style:italic}
+.gtable .f6{left:calc(var(--w0) + var(--w1) + var(--w2) + var(--w3) + var(--w4) + var(--w5));width:var(--w6);min-width:var(--w6);max-width:var(--w6)}
+.gtable .f7{left:calc(var(--w0) + var(--w1) + var(--w2) + var(--w3) + var(--w4) + var(--w5) + var(--w6));width:var(--w7);min-width:var(--w7);max-width:var(--w7)}
+@media (max-width:980px){.f6,.f7{position:static}}
+/* tax checkboxes on resources */
+.gtable td.g-tax{text-align:center;padding:0}
+.gtable:not(.xtable) thead th.f2,.gtable:not(.xtable) thead th.f3{text-align:center;padding:0 4px}
+.g-tax input{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
+/* payment terms line and dialog */
+.g-terms{display:flex;flex-wrap:wrap;align-items:center;gap:2px 0;border:0;background:none;padding:0;font:inherit;font-size:.7rem;color:var(--muted);cursor:pointer;text-align:left;margin-bottom:3px}
+.g-terms:hover{color:var(--ink)}
+.g-terms:hover .g-terms-l{text-decoration:underline}
+.g-terms-l{font-weight:700;margin-right:6px}
+.g-term{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.g-term .g-sw{width:8px;height:8px}
+.g-trow{display:grid;grid-template-columns:150px 1fr auto;gap:8px;align-items:center}
+.g-trow-l{display:flex;align-items:center;gap:7px;font-size:.86rem}
