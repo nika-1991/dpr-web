@@ -1936,7 +1936,7 @@ function renderInfo(p){
    plan:   revenue = execution plan quantities × unit price; direct cost = schedule resources (qty × price);
            indirect costs, contingency and mobilisation from the assumptions tab
    actual: approved DPRs — priced works (revenue) and priced expenses (cost), by the chapter of their BoQ code
-   periods: the execution plan's dates (each period ends on one), otherwise calendar months */
+   periods: calendar months */
 function finOf(sc){ const f=sc.fin||(sc.fin={}); if(f.cont==null) f.cont=3; if(f.mob==null) f.mob=2.5; f.ind=f.ind||[]; return f; }
 async function loadPlFact(pid){
   if(S.plFactLoading===pid) return; S.plFactLoading=pid;
@@ -1961,18 +1961,18 @@ function plData(p){
   for(const v of Object.values(ex.vals||{})) dates.push(...Object.keys(v));
   for(const r of Object.values(sc.rows||{})) for(const x of r.res||[]) dates.push(...Object.keys(x.plan||{}));
   for(const r of reps) dates.push(r.date);
+  /* the months of the works period too, so overheads show over the whole project */
+  if(p.startDate) dates.push(p.startDate); if(p.endDate) dates.push(p.endDate);
   dates.sort();
   const lo=dates[0], hi=dates[dates.length-1];
+  /* calendar months */
   let periods=[];
-  if((ex.dates||[]).length){
-    const ds=ex.dates; periods=ds.map((d,i)=>({from:i?addDays(ds[i-1],1):(lo&&lo<d?lo:d),to:d}));
-    if(hi&&hi>ds[ds.length-1]) periods.push({from:addDays(ds[ds.length-1],1),to:hi});
-  } else if(lo){
+  if(lo){
     for(let m=lo.slice(0,7); m<=hi.slice(0,7); ){ const [y,mo]=m.split("-").map(Number), last=new Date(y,mo,0).getDate();
       periods.push({from:m+"-01",to:m+"-"+String(last).padStart(2,"0")}); m=mo===12?(y+1)+"-01":y+"-"+String(mo+1).padStart(2,"0"); }
   }
-  const lbl=d=>d.slice(8,10)+"."+d.slice(5,7);
-  periods.forEach(x=>{ x.label=lbl(x.from)+"–"+lbl(x.to); x.year=x.to.slice(0,4); });
+  const MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
+  periods.forEach(x=>{ x.label=MN[+x.from.slice(5,7)-1].slice(0,3)+". "+x.from.slice(0,4); x.year=x.to.slice(0,4); });
   const N=periods.length, z=()=>new Array(N).fill(0);
   const pOf=d=>{ for(let i=0;i<N;i++) if(d>=periods[i].from&&d<=periods[i].to) return i; return -1; };
   const blank=()=>({rev:{},cost:{},lines:{}});
@@ -1980,7 +1980,8 @@ function plData(p){
   const addLine=(m,ch,name,i,v)=>{ if(i<0||!v) return; const L=m.lines[ch]||(m.lines[ch]=new Map()); if(!L.has(name)) L.set(name,z()); L.get(name)[i]+=v; };
   /* plan */
   const plan=blank();
-  for(const [code,v] of Object.entries(ex.vals||{})) for(const [d,q] of Object.entries(v)) add(plan.rev,chKey(code),pOf(d),num(q)*price(code));
+  const revByDate={};
+  for(const [code,v] of Object.entries(ex.vals||{})) for(const [d,q] of Object.entries(v)){ const a=num(q)*price(code); add(plan.rev,chKey(code),pOf(d),a); revByDate[d]=(revByDate[d]||0)+a; }
   for(const [code,r] of Object.entries(sc.rows||{})) for(const x of r.res||[]) for(const [d,q] of Object.entries(x.plan||{})){
     const v=-num(q)*num(x.price), i=pOf(d); add(plan.cost,chKey(code),i,v); addLine(plan,chKey(code),x.name||tr(x.type),i,v); }
   const revTot=m=>{ const t=z(); for(const a of Object.values(m.rev)) a.forEach((v,i)=>t[i]+=v); return t; };
@@ -1999,7 +2000,7 @@ function plData(p){
   fact.ind=[]; fact.cont=z(); fact.mob=z();
   const used=new Set([...Object.keys(plan.rev),...Object.keys(plan.cost),...Object.keys(fact.rev),...Object.keys(fact.cost)]);
   const chapters=[...chaps,OTHER].filter(c=>used.has(c.key));
-  return {periods,chapters,plan,fact,N,z,unpriced:reps.reduce((a,r)=>a+(r.works||[]).filter(w=>w.code&&num(w.qty)&&(w.price===""||w.price==null)).length,0)};
+  return {periods,chapters,plan,fact,N,z,revByDate,unpriced:reps.reduce((a,r)=>a+(r.works||[]).filter(w=>w.code&&num(w.qty)&&(w.price===""||w.price==null)).length,0)};
 }
 /* totals of one model (plan or actual) */
 function plTotals(D,m){
@@ -2083,9 +2084,8 @@ function renderPLTable(D,m,view){
     ratio("მოგების მარჟა (მოგება / შემოსავალი)",i=>pct(at(T.net,i),at(T.rev,i))),
     ratio("ხარჯის წილი (ხარჯი / შემოსავალი)",i=>pct(-at(T.allCost,i),at(T.rev,i))),
     ratio("ხარჯის ამოგება (მოგება / ხარჯი)",i=>pct(at(T.net,i),-at(T.allCost,i)))];
-  const years=new Set(D.periods.map(x=>x.year));
   return h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table"},
-    h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),D.periods.map(x=>h("th",{class:"num",title:fmtDate(x.from)+" — "+fmtDate(x.to)},x.label,years.size>1?h("span",{class:"pl-y"},x.year):null)),h("th",{class:"num pl-tot"},"სულ"))),
+    h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),D.periods.map(x=>h("th",{class:"num",title:fmtDate(x.from)+" — "+fmtDate(x.to)},x.label)),h("th",{class:"num pl-tot"},"სულ"))),
     h("tbody",null,body)),"pl"));
 }
 function renderPLCompare(D){
@@ -2094,7 +2094,7 @@ function renderPLCompare(D){
   const P=plTotals(D,D.plan), F=plTotals(D,D.fact);
   const at=a=>sel===-1?a.reduce((x,y)=>x+y,0):sel===-2?a.reduce((x,y,i)=>x+(D.periods[i].from<=today?y:0),0):a[sel]||0;
   const pick=h("select",{class:"inp pl-per","aria-label":"პერიოდი",onchange:e=>{S.plPer=+e.target.value;render();}},
-    [h("option",{value:"-2"},"დღემდე"),h("option",{value:"-1"},"ყველა პერიოდი"),...D.periods.map((x,i)=>h("option",{value:String(i)},fmtDate(x.from)+" — "+fmtDate(x.to)))]);
+    [h("option",{value:"-2"},"დღემდე"),h("option",{value:"-1"},"ყველა პერიოდი"),...D.periods.map((x,i)=>h("option",{value:String(i)},x.label))]);
   pick.value=String(sel);
   const f=v=>Math.abs(v)<0.005?"—":fmtNum(Math.round(v));
   const row=(label,pv,fv,cls)=>{ const d=fv-pv, good=d>0.5, bad=d<-0.5;
@@ -2132,12 +2132,12 @@ function cfData(p){
   const flows=[]; /* {row, sub, date, v} */
   const put=(row,date,v,sub)=>{ if(v&&date) flows.push({row,sub,date,v}); };
   const vatIn={}, vatOut={}; const mk=d=>d.slice(0,7);
-  /* receipts from executed works, per period */
-  const rev=PL.periods.map((_,i)=>Object.values(PL.plan.rev).reduce((a,x)=>a+x[i],0));
+  /* receipts from executed works: each execution-plan period is invoiced on its date */
+  const invs=Object.entries(PL.revByDate).sort((a,b)=>a[0].localeCompare(b[0]));
   if(num(f.adv)&&num(p.contractValue)&&p.contractDate) put("advIn",p.contractDate,num(p.contractValue)*num(f.adv)/100);
   let held=0; const holds=[];
-  PL.periods.forEach((per,i)=>{ const v=rev[i]; if(!v) return; const pay=addDays(per.to,num(f.lag));
-    vatOut[mk(per.to)]=(vatOut[mk(per.to)]||0)+v*r/(1+r);
+  invs.forEach(([d,v])=>{ if(!v) return; const pay=addDays(d,num(f.lag));
+    vatOut[mk(d)]=(vatOut[mk(d)]||0)+v*r/(1+r);
     const adv=-v*num(f.adv)/100, ret=-v*num(f.ret)/100, cover=Math.abs(adv)*num(f.cover)/100;
     put("works",pay,v); put("advDed",pay,adv); put("ret",pay,ret); put("cover",pay,cover);
     const hold=-(v+adv+ret+cover)*num(f.hold)/100; put("hold",pay,hold); holds.push({date:pay,v:-hold});
