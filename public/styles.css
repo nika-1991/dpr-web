@@ -900,3 +900,9 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-tn{color:var(--ink)}
 .gh-tv{white-space:nowrap}
 .g-head2 .g-ctrls{align-items:center}
+/* left header column: "today" and the view switch take the width of the outline levels row */
+.gh-left{display:grid;grid-template-columns:max-content;gap:6px}
+.gh-left>.gh-today,.gh-left>.vswitch{width:0;min-width:100%;box-sizing:border-box}
+.gh-left>.gh-today{justify-content:center}
+.gh-left>.vswitch{display:flex}
+.gh-left>.vswitch .vbtn{flex:1;justify-content:center;padding:4px 2px;font-size:.74rem}

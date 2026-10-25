@@ -1274,10 +1274,10 @@ function renderSchedule(p){
   /* top: title and counts, period, zoom, today, plan */
   const seg=h("div",{class:"vswitch g-zoom"},[["day","დღე"],["week","კვირა"],["month","თვე"]].map(([k,l])=>
     h("button",{type:"button",class:"vbtn vtxt"+(zoom===k?" on":""),"aria-pressed":String(zoom===k),onclick:()=>{ S.gzoom=k; S.gscroll=null; S.gsel=null; render(); }},l)));
-  /* header: view and outline levels | item counts | resources with their payment terms | today, plan, help */
+  /* header: today, view and outline levels (one width) | item counts | resources with their payment terms | plan, help */
   const T=normTerms(sc.terms);
   const top=h("div",{class:"g-head2"},
-    h("div",{class:"gh-col"},seg,outline),
+    h("div",{class:"gh-col gh-left"},h("button",{class:"btn sm gh-today",type:"button",onclick:()=>scrollToday(true)},"დღეს"),seg,outline),
     h("div",{class:"gh-col gh-stats"},
       h("div",null,h("span",null,"სულ პოზიცია:")," ",h("b",null,String(positions.length))),
       h("div",null,h("span",null,"დაგეგმილი:")," ",h("b",null,String(planned.length))),
@@ -1301,7 +1301,6 @@ function renderSchedule(p){
           h("li",null,"Shift ან მაუსით გადათრევა — რამდენიმე უჯრის მონიშვნა"),
           h("li",null,"Ctrl+C / Ctrl+V — კოპირება Excel-იდან და Excel-ში; ერთი მნიშვნელობა ავსებს მთელ მონიშნულს")),
         edit?null:h("p",{class:"muted"},"გეგმა-გრაფიკს ცვლის ადმინი ან პროექტის რივიუერი."))),
-      h("button",{class:"btn",type:"button",onclick:()=>scrollToday(true)},"დღეს"),
       edit?h("button",{class:"btn primary",type:"button",onclick:()=>{ S.gplan={code:(positions.find(r=>!posDays(r).length)||positions[0]||{}).code}; render(); }},"+ დაგეგმვა"):null));
 
   /* header: months (years in month view) above, days / weeks / months below */
