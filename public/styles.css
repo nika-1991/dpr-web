@@ -983,3 +983,7 @@ button.gh-chk.on{background:color-mix(in srgb,var(--signal,#c98a00) 16%,var(--su
 /* assumptions: "≈" in a dashed frame = an estimate */
 .tico.est{border-style:dashed;font-size:1.2rem;font-weight:700;line-height:0;padding-bottom:2px}
 .empty .tico.est{font-size:1.6rem}
+/* project data: general box and codes stacked on the left, participants on the right */
+.sh-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.sh-gen .sh-row{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+.sh-gen .sh-val{font-weight:600}

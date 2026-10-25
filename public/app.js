@@ -223,7 +223,7 @@ function renderBar(){
   if(S.view==="analysis") add("ანალიტიკა");
   if(PLACEHOLDERS[S.view]) add(PLACEHOLDERS[S.view][1]);
   if(S.view==="account") add("ჩემი ანგარიში");
-  if((S.view==="project"||S.view==="report") && p) add(p.name,()=>go("project",{pid:S.pid,tab:"reports"}));
+  if((S.view==="project"||S.view==="report") && p) add(pShort(p),()=>go("project",{pid:S.pid,tab:"reports"}));
   if(S.view==="report" && S.rep) add("DPR-"+String(S.rep.num||0).padStart(3,"0")+" · "+fmtDate(S.rep.date));
   const me=document.getElementById("me"); me.replaceChildren();
   document.querySelector(".brand-name").textContent=tr("პროექტები");
@@ -427,10 +427,11 @@ function renderProjectForm(pid){
   const p=pid?S.projects.get(pid):{};
   const f={}, pf={};
   const inp=(store,k,val,label)=>{ const el=h("input",{class:"inp","aria-label":label,value:val||""}); store[k]=el; return el; };
-  const band=h("div",{class:"sh-band"},
-    [["name","პროექტის დასახელება / Project Title"],["client","დამკვეთის დასახელება / Client Name"],["location","ადგილმდებარეობა / Location"]]
-      .map(([k,l])=>h("div",{class:"sh-cell"},h("div",{class:"sh-th"},l),h("div",{class:"sh-td sh-td-in"},inp(f,k,p[k],l)))));
   const row=(label,el)=>h("div",{class:"sh-row"},h("div",{class:"sh-lbl"},label),el);
+  const band=h("section",{class:"sh-box sh-gen"},
+    h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"📋 ზოგადი ინფორმაცია",h("span",{class:"en"},"General")),
+      h("div",{class:"sh-sub"},"შემოკლებული დასახელება ჩანს სათაურში, ნავიგაციასა და ანალიტიკაში.")),
+    [["name","პროექტის დასახელება / Project Title"],["shortName","შემოკლებული დასახელება / Short Name"],["client","დამკვეთის დასახელება / Client Name"],["location","ადგილმდებარეობა / Location"]].map(([k,l])=>row(l,inp(f,k,p[k],l))));
   const parts=h("section",{class:"sh-box"},
     h("div",{class:"sh-hd"},
       h("div",{class:"sh-title"},"👥 პროექტში ჩართული პირი / პოზიცია",h("span",{class:"en"},"Project Participant / Position")),
@@ -463,7 +464,7 @@ function renderProjectForm(pid){
   const bar=h("div",{class:"form-bar"},h("h2",null,pid?"პროექტის მონაცემები":"ახალი პროექტი"),
     h("button",{class:"btn ghost",type:"button",onclick:()=>{ if(pid) S.editInfo=false; else S.creating=null; render();}},"გაუქმება"),
     h("button",{class:"btn primary",type:"button",onclick:save},pid?"შენახვა":"შექმნა"));
-  return h("div",{class:"sheet-head sheet-form"},bar,band,h("div",{class:"sh-grid"},parts,codes),hseSec);
+  return h("div",{class:"sheet-head sheet-form"},bar,h("div",{class:"sh-grid"},h("div",{class:"sh-col"},band,codes),parts),hseSec);
 }
 
 /* ---------- PROJECT ---------- */
@@ -510,7 +511,7 @@ function renderProject(){
   /* codes and name beside the tabs; the row stays put (and frozen under the top bar) on every tab */
   const pid=h("div",{class:"pid"},
     h("div",{class:"pid-codes"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c))),
-    h("h1",{class:"pid-name",title:p.name},p.name));
+    h("h1",{class:"pid-name",title:p.name},pShort(p)));
   const tabRow=h("div",{class:"ptabs"},pid,tabBar);
   if(S.tab==="schedule"||S.tab==="exec") return h("div",{class:"proj-main"},tabRow,body);
   /* on a phone the sidebar stacks above the tabs, so the codes and name go first */
@@ -877,12 +878,15 @@ function deleteControl(){
   wrap.append(btn); return wrap;
 }
 /* fixed project data laid out like the DPR sheet header: title band, codes, participants */
+/* short project name where space is tight; the full name everywhere official (report sheets, exports) */
+const pShort=p=>(p&&(p.shortName||p.name))||"";
 function renderProjectSheet(p){
   const parts=p.participants||{};
-  const band=h("div",{class:"sh-band"},
-    [["პროექტის დასახელება / Project Title",p.name],["დამკვეთის დასახელება / Client Name",p.client],["ადგილმდებარეობა / Location",p.location]]
-      .map(([l,v])=>h("div",{class:"sh-cell"},h("div",{class:"sh-th"},l),h("div",{class:"sh-td"},v||"—"))));
   const row=(l,v,mono)=>h("div",{class:"sh-row"},h("div",{class:"sh-lbl"},l),h("div",{class:"sh-val"+(mono?" mono":"")},v||""));
+  /* general data one under another: label on the left, value beside it */
+  const band=h("section",{class:"sh-box sh-gen"},
+    h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"📋 ზოგადი ინფორმაცია",h("span",{class:"en"},"General"))),
+    [["name","პროექტის დასახელება / Project Title"],["shortName","შემოკლებული დასახელება / Short Name"],["client","დამკვეთის დასახელება / Client Name"],["location","ადგილმდებარეობა / Location"]].map(([k,l])=>row(l,p[k]||"—")));
   const parts_=h("section",{class:"sh-box"},
     h("div",{class:"sh-hd"},
       h("div",{class:"sh-title"},"👥 პროექტში ჩართული პირი / პოზიცია",h("span",{class:"en"},"Project Participant / Position")),
@@ -897,7 +901,7 @@ function renderProjectSheet(p){
   const hse=h("section",{class:"sh-box"},
     h("div",{class:"sh-hd"},h("div",{class:"sh-title"},"🦺 უსაფრთხოების (HSE) პუნქტები",h("span",{class:"en"},"HSE")),h("div",{class:"sh-sub"},"ყოველი ახალი ანგარიში ამ პუნქტებით იწყება.")),
     (p.hse||[]).length?h("ol",{class:"hse-list"},(p.hse||[]).map(x=>h("li",null,(LANG==="en"?x.descEn:x.desc)||x.desc||x.descEn))):h("div",{class:"muted small"},"პუნქტები არ არის."));
-  return h("div",{class:"sheet-head"},band,h("div",{class:"sh-grid"},parts_,codes),hse);
+  return h("div",{class:"sheet-head"},h("div",{class:"sh-grid"},h("div",{class:"sh-col"},band,codes),parts_),hse);
 }
 
 function renderSection(key){
@@ -1944,7 +1948,7 @@ function renderAnalysis(){
       h("tbody",null,data.map(d=>{
         const open=S.anOpen.has(d.p.id);
         return [h("tr",{class:"an-row",tabindex:"0",onclick:()=>{ open?S.anOpen.delete(d.p.id):S.anOpen.add(d.p.id); render(); },onkeydown:e=>{ if(e.key==="Enter") e.currentTarget.click(); }},
-            h("td",null,h("span",{class:"an-caret"},open?"▾":"▸")," ",d.p.name,d.unpriced?h("span",{class:"chip st-draft",style:"margin-left:8px"},d.unpriced+" ფასის გარეშე"):null),
+            h("td",null,h("span",{class:"an-caret"},open?"▾":"▸")," ",pShort(d.p),d.unpriced?h("span",{class:"chip st-draft",style:"margin-left:8px"},d.unpriced+" ფასის გარეშე"):null),
             h("td",{class:"num"},d.reports),h("td",{class:"num"},money(d.rev)),h("td",{class:"num"},money(d.cost)),
             h("td",{class:"num"+(d.rev-d.cost<0?" neg":"")},money(d.rev-d.cost)),h("td",{class:"num"},pct(d.rev-d.cost,d.rev))),
           open?h("tr",{class:"an-detail"},h("td",{colspan:"6"},renderAnalysisDetail(d,money))):null];
@@ -2008,7 +2012,7 @@ function renderUsers(){
     const roleSel=h("select",{class:"inp",style:"width:auto","aria-label":"როლი",disabled:self,onchange:async e=>{ try{ await api("PATCH","/users/"+u.id,{role:e.target.value}); toast("როლი შეიცვალა"); refresh(); }catch(ex){ toast(errMsg(ex)); } }},
       h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"admin"},"ადმინისტრატორი")); roleSel.value=u.role==="admin"?"admin":"employee";
     const projs=u.role==="admin"?[]:[...S.projects.values()].filter(p=>(p.memberIds||[]).includes(u.id))
-      .map(p=>p.name+" — "+tr(ACCESS_NAMES[((p.members||{})[u.id]||{}).access]||ACCESS_NAMES.executor));
+      .map(p=>pShort(p)+" — "+tr(ACCESS_NAMES[((p.members||{})[u.id]||{}).access]||ACCESS_NAMES.executor));
     return h("tr",null,
       h("td",{"data-l":"სახელი"},h("strong",null,u.name),h("div",{class:"small muted mono"},u.username)),
       h("td",{"data-l":"კონტაქტი",class:"small contact"},

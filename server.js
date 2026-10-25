@@ -362,13 +362,13 @@ api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
   res.json(rows.filter((p) => canSee(p, req.user)).map((p) => ({ ...p, stats: projectStats(p, p.id) })));
 });
-const PROJECT_FIELDS = ["name", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
+const PROJECT_FIELDS = ["name", "shortName", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
 /* HSE items every new report starts with; each project can edit its own copy */
 const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
 function cleanProject(body, base) {
   const p = { ...base };
   for (const k of PROJECT_FIELDS) if (body[k] !== undefined) p[k] = body[k];
-  for (const k of ["name", "client", "location", "companyCode", "projectCode", "accountingCode"]) p[k] = String(p[k] ?? "").trim().slice(0, 300);
+  for (const k of ["name", "shortName", "client", "location", "companyCode", "projectCode", "accountingCode"]) p[k] = String(p[k] ?? "").trim().slice(0, 300);
   p.participants = typeof p.participants === "object" && p.participants ? p.participants : {};
   p.boq = Array.isArray(p.boq) ? p.boq.slice(0, 5000) : [];
   const validIds = new Set(db.prepare("SELECT id FROM users").all().map((r) => r.id));
