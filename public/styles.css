@@ -923,3 +923,10 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-thead{font-size:.62rem;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;margin-bottom:1px}
 .gh-thead .gh-th1{grid-column:1 / span 2}
 .gh-thead .gh-cost{font-family:inherit;color:var(--muted)}
+/* schedule header: tighter spacing; the resources list is one grid so its columns fit their content */
+.g-head2{gap:10px 14px}
+.gh-stats{padding-left:14px}
+.gh-terms{display:grid;grid-template-columns:auto auto auto auto;column-gap:8px;row-gap:3px;align-content:center;padding:0 14px}
+.gh-term{display:contents}
+.gh-term .g-sw{align-self:center}
+.gh-cost{padding-right:4px}
