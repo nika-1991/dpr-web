@@ -1299,23 +1299,9 @@ function renderSchedule(p){
         h("span",{class:"gh-cost"},list.length?gel(cost):"—",
           miss?h("span",{class:"gh-warn tip","data-tip":miss+" "+tr("რესურსზე ფასი შევსებული არაა"),"aria-label":miss+" "+tr("რესურსზე ფასი შევსებული არაა")},"!"):null),
         h("span",{class:"gh-tv"},partsLabel(T.types[t])+(Object.keys(T.items[t]||{}).length?" (+"+Object.keys(T.items[t]).length+" "+tr("ცალკე")+")":""))); })),
+    renderChecks(positions,T),
     h("span",{class:"spacer"}),
-    h("div",{class:"g-ctrls"},
-    h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
-    h("details",{class:"g-helpd"},h("summary",{"aria-label":"დახმარება",title:"დახმარება"},"?"),
-      h("div",{class:"g-pop"},
-        h("b",null,"როგორ შევავსო"),
-        h("p",null,"რესურსის დღის უჯრაში ჩაწერეთ იმ დღის რაოდენობა — უჯრა გაფერადდება, პოზიციის ზოლი კი თავისით გამოჩნდება. „+ დაგეგმვა“ რესურსის რაოდენობას თანაბრად გაანაწილებს არჩეულ პერიოდზე."),
-        h("p",null,"პოზიციის დასახელების წინ „+“ ამატებს მასალას, ტექნიკას ან შრომით რესურსს. რესურსის დღეებში პოზიციის ზოლი თავისით ფერადდება."),
-        h("b",null,"კლავიატურა (დღის ხედში)"),
-        h("ul",null,
-          h("li",null,"ისრები, Tab, Enter — გადაადგილება"),
-          h("li",null,"რიცხვის აკრეფა — ჩაწერა; ორჯერ დაჭერა ან F2 — შესწორება"),
-          h("li",null,"Delete — წაშლა"),
-          h("li",null,"Shift ან მაუსით გადათრევა — რამდენიმე უჯრის მონიშვნა"),
-          h("li",null,"Ctrl+C / Ctrl+V — კოპირება Excel-იდან და Excel-ში; ერთი მნიშვნელობა ავსებს მთელ მონიშნულს")),
-        edit?null:h("p",{class:"muted"},"გეგმა-გრაფიკს ცვლის ადმინი ან პროექტის რივიუერი."))),
-      edit?h("button",{class:"btn primary",type:"button",onclick:()=>{ S.gplan={code:(positions.find(r=>!posDays(r).length)||positions[0]||{}).code}; render(); }},"+ დაგეგმვა"):null));
+    h("span",{id:"sched-status",class:"small muted gh-status"},edit?"":"მხოლოდ ნახვა"));
 
   /* header: months (years in month view) above, days / weeks / months below */
   const grp=[]; for(const c of cols){ const k=zoom==="month"?c.from.slice(0,4):c.from.slice(0,7); const l=grp[grp.length-1]; if(l&&l.k===k) l.n++; else grp.push({k,n:1}); }
@@ -1510,6 +1496,24 @@ function colResize(table,kind){
   };
   table.querySelectorAll("thead th.g-fz").forEach(th=>{ const m=/\bf(\d)\b/.exec(th.className); if(!m) return;
     handle(th,"--w"+m[1],()=>[...table.querySelectorAll(".f"+m[1])]); });
+}
+/* schedule checks: what is missing or inconsistent, listed in the header (✓ when all is filled in) */
+function renderChecks(positions,T){
+  const res=positions.flatMap(r=>r.sr.res.map(x=>({x,r})));
+  const lbl=x=>(x.r.it.code||"")+" · "+(x.x.name||tr("დასახელება არაა"));
+  const issues=[];
+  const add=(text,list)=>{ if(list.length) issues.push({text,n:list.length,tip:list.slice(0,8).join("\n")+(list.length>8?"\n…":"")}); };
+  add("ფასი არ აქვს",res.filter(x=>!num(x.x.price)).map(lbl));
+  add("დასახელება არ აქვს",res.filter(x=>!(x.x.name||"").trim()).map(x=>(x.r.it.code||"")+" · "+tr(x.x.type)));
+  add("განზომილება არ აქვს",res.filter(x=>!(x.x.unit||"").trim()).map(lbl));
+  add("ბადეში არ არის დაგეგმილი",res.filter(x=>!resQty(x.x)).map(lbl));
+  const usedTypes=[...new Set(res.map(x=>x.x.type))];
+  add("ანაზღაურების პირობა არ აქვს",usedTypes.filter(t=>!(T.types[t]||[]).length).map(t=>tr(t)));
+  add("გეგმა სცდება BoQ-ის ვადას",positions.filter(r=>{ const ds=posDays(r); return r.it.end&&ds.length&&ds[ds.length-1]>r.it.end; }).map(r=>(r.it.code||"")+" · "+tr("ვადა")+" "+fmtDate(r.it.end)));
+  return h("div",{class:"gh-col gh-checks"},
+    h("div",{class:"gh-thead"},"კონტროლი"),
+    issues.length?issues.map(i=>h("div",{class:"gh-chk bad",title:i.tip},h("span",{class:"gh-ci"},"!"),h("span",null,tr(i.text)+": "),h("b",null,String(i.n))))
+      :h("div",{class:"gh-chk ok"},h("span",{class:"gh-ci"},"✓"),h("span",null,"ყველაფერი შევსებულია")));
 }
 /* payment terms page (opened from the schedule): a card per resource type with parts (%, due point);
    individual resources (by name) can get their own terms, the rest share the type's */

@@ -930,3 +930,12 @@ body.wide main{max-width:none;padding-left:max(16px,env(safe-area-inset-left,0px
 .gh-term{display:contents}
 .gh-term .g-sw{align-self:center}
 .gh-cost{padding-right:4px}
+/* schedule checks */
+.gh-checks{gap:3px;font-size:.74rem;justify-content:center}
+.gh-chk{display:flex;align-items:center;gap:6px;color:var(--ink);cursor:default;white-space:nowrap}
+.gh-chk b{font-family:var(--f-mono)}
+.gh-ci{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;font-size:.6rem;font-weight:800;color:#fff;flex:none}
+.gh-chk.bad .gh-ci{background:var(--signal,#c98a00)}
+.gh-chk.ok .gh-ci{background:var(--ok)}
+.gh-chk.ok{color:var(--ok)}
+.gh-status{align-self:flex-start}
