@@ -565,10 +565,19 @@ function cleanSchedule(b) {
     const pl = Object.fromEntries(Object.entries(cleanPlan(v)).filter(([d]) => dates.includes(d)));
     if (Object.keys(pl).length) vals[str(code, 40)] = pl;
   }
-  /* payment terms per resource type: adv, 0, 7, 14, 30, 60, eom or custom:<days> */
-  const terms = {};
-  for (const [t, v] of Object.entries(b && typeof b.terms === "object" && b.terms ? b.terms : {}))
-    if (RES_TYPES.includes(t) && /^(adv|0|7|14|30|60|eom|custom:\d{1,3})$/.test(String(v))) terms[t] = String(v);
+  /* payment terms: per resource type and per named resource, parts of {pct, t} where t is
+     adv · 0 · d:<days> · eom · nmd:<day of next month> · nme */
+  const DUE = /^(adv|0|eom|nme|d:\d{1,3}|nmd:\d{1,2})$/;
+  const parts = (v) => (Array.isArray(v) ? v : []).slice(0, 12)
+    .map((x) => ({ pct: Math.max(0, Math.min(100, cleanNum(x?.pct) ?? 0)), t: String(x?.t ?? "") })).filter((x) => DUE.test(x.t));
+  const tb = b && typeof b.terms === "object" && b.terms ? b.terms : {};
+  const terms = { types: {}, items: {} };
+  for (const [t, v] of Object.entries(tb.types || {})) if (RES_TYPES.includes(t) && parts(v).length) terms.types[t] = parts(v);
+  /* individual resources (by name) with their own terms, per type */
+  for (const [t, o] of Object.entries(tb.items || {})) {
+    if (!RES_TYPES.includes(t) || !o || typeof o !== "object") continue;
+    for (const [n, v] of Object.entries(o).slice(0, 300)) if (parts(v).length) (terms.items[t] ||= {})[str(n, 300)] = parts(v);
+  }
   return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows, exec: { dates, vals }, terms };
 }
 api.get("/projects/:id/schedule", auth, (req, res) => {
