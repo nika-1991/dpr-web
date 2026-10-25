@@ -1132,3 +1132,14 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .as-g4{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px}
 .as-g4 .cd-cell{display:flex;flex-direction:column}.as-g4 .cd-cell>.cd-l{flex:1}
 @media (max-width:800px){.cf-kpis,.as-g4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+/* finance sidebar: assumptions */
+.fs-box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px 4px;margin-bottom:12px}
+.fs-t{font-size:.74rem;font-weight:800;color:var(--ink);padding-bottom:4px}
+.fs-box .pside-facts{border-top:0;padding-top:0}
+.fs-box .pside-fact{font-size:.78rem;padding:4px 0}
+.fs-in{cursor:text}
+.fs-v{display:flex;align-items:center;gap:4px;flex:none}
+.fs-v input{width:64px;padding:2px 6px;font-size:.78rem;text-align:right;min-height:0;height:24px}
+.fs-v em{font-style:normal;color:var(--muted);font-size:.72rem;min-width:14px}
+.fs-all{width:100%}
+.fs-v input{width:54px}.fs-box .pside-fact>span:first-child{min-width:0}

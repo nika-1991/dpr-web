@@ -506,6 +506,9 @@ function renderProject(){
   /* tabs grouped into sections; inside a section only icons, the name shows on hover */
   const tabName=new Map(tabs);
   const tabBtn=k=>h("button",{type:"button",role:"tab",class:"tip","data-tip":tr(tabName.get(k)),"aria-label":tr(tabName.get(k)),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},tabIcon(k));
+  /* on the finance tabs the sidebar shows the assumptions that page uses, editable in place */
+  const finTab=FIN_TABS.some(([k])=>k===S.tab)&&canReview(p);
+  const finSide=finTab?h("aside",{class:"pside"},renderFinSide(p)):null;
   const tabBar=h("div",{class:"tabs tgroups",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
     return b.length?h("div",{class:"tgrp"+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }));
   let body;
@@ -527,8 +530,8 @@ function renderProject(){
   const tabRow=h("div",{class:"ptabs"},pid,tabBar);
   if(S.tab==="schedule"||S.tab==="exec") return h("div",{class:"proj-main"},tabRow,body);
   /* on a phone the sidebar stacks above the tabs, so the codes and name go first */
-  if(window.matchMedia("(max-width:980px)").matches) return h("div",{class:"proj-layout"},pid,side,h("div",{class:"proj-main"},h("div",{class:"ptabs"},tabBar),body));
-  return h("div",{class:"proj-layout"},side,h("div",{class:"proj-main"},tabRow,body));
+  if(window.matchMedia("(max-width:980px)").matches) return h("div",{class:"proj-layout"},pid,finSide||side,h("div",{class:"proj-main"},h("div",{class:"ptabs"},tabBar),body));
+  return h("div",{class:"proj-layout"},finSide||side,h("div",{class:"proj-main"},tabRow,body));
 }
 
 function canCreateOn(date){ return S.admin || date<=todayISO(); }
@@ -2191,6 +2194,27 @@ function renderCF(p){
     h("tbody",null,body)))];
 }
 
+/* sidebar on the finance tabs: the assumptions behind the open page, editable in place */
+function renderFinSide(p){
+  if(S.schedPid!==S.pid) return h("p",{class:"muted small"},"იტვირთება…");
+  const sc=S.sched, f=cfFin(sc), edit=canReview(p)&&!p.archived;
+  const inp=(k,l,u)=>h("label",{class:"pside-fact fs-in"},h("span",null,l),h("span",{class:"fs-v"},
+    h("input",{class:"inp num",inputmode:"decimal",value:String(f[k]??""),disabled:!edit,"aria-label":tr(l),
+      onchange:e=>{ f[k]=num(e.target.value); saveSchedule(); setTimeout(render,0); }}),u?h("em",null,u):null));
+  const fact=(l,v)=>h("div",{class:"pside-fact"},h("span",null,l),h("b",null,v));
+  const box=(t,...kids)=>h("div",{class:"fs-box"},h("div",{class:"fs-t"},t),h("div",{class:"pside-facts"},kids));
+  const indM=f.ind.reduce((a,x)=>a+num(x.monthly),0);
+  const pl=box("P&L დაშვებები",inp("cont","გაუთვალისწინებელი","%"),inp("mob","მობილიზაცია / დემობ.","%"),
+    fact("არაპირდაპირი, თვეში",indM?gel(indM):"—"),fact("არაპირდაპირი სტრიქონი",String(f.ind.length)));
+  const cf=box("CF დაშვებები",inp("lag","ჩარიცხვა პერიოდის შემდეგ","დღე"),inp("adv","ავანსი / დაქვითვა","%"),inp("ret","საგარანტიო","%"),inp("vat","დღგ","%"),
+    inp("cover","cash cover","%"),inp("hold","ფულის დაკავება","%"),inp("holdRel","დაკავებიდან, თვეში","₾"),inp("ovDay","ზედნადების რიცხვი",""),inp("vatDay","დღგ-ს რიცხვი",""));
+  const proj=box("პროექტი",fact("ღირებულება",p.contractValue!=null?gel(p.contractValue):"—"),fact("ხელშ. დადება",p.contractDate?fmtDate(p.contractDate):"—"),
+    fact("სამუშაოს დაწყება",p.startDate?fmtDate(p.startDate):"—"),fact("სამუშაოს დასრულება",p.endDate?fmtDate(p.endDate):"—"));
+  const all=h("button",{class:"btn sm ghost fs-all",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ ყველა დაშვება");
+  if(S.tab==="cf") return [cf,proj,all];
+  if(S.tab==="assume") return [proj];
+  return [pl,proj,all];
+}
 /* assumptions behind the plan: contingency and mobilisation as % of revenue, indirect costs per month */
 function renderAssume(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
