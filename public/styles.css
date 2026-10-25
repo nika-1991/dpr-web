@@ -1264,3 +1264,12 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .cd-g2 input[type=date].cd-v{font-size:.72rem;padding:2px 4px;cursor:pointer}
 .cd-g2 input[type=date].cd-v::-webkit-calendar-picker-indicator{display:none}
 @media (max-width:1100px){.cd-two{grid-template-columns:minmax(0,1fr)}}
+/* row 2: value + advance (with its amount); row 3: advance recovery + quality retention (both terms in one box) */
+.cd-g2 .cd-advancePct{grid-column:span 3}
+.cd-g2 .cd-advDed{grid-column:span 2}
+.cd-g2 .cd-ret{grid-column:span 3}
+.cd-amt{font-size:.76rem;color:#0d9488;margin-left:6px;white-space:nowrap}
+.cd-pl{font-size:.7rem;color:var(--muted)}
+.cd-pl+.cd-v{margin-left:2px}
+.cd-pct span+.cd-pl{margin-left:10px}
+.cd-ret .cd-pct .cd-v{width:46px}.cd-ret div.cd-v{font-family:var(--f-body)}
