@@ -1024,3 +1024,25 @@ input.cd-v:focus{outline:2px solid color-mix(in srgb,var(--tone) 45%,transparent
 .cd-g2 .cd-cell{padding:12px 16px 14px}
 .cd-contractValue .cd-v{color:#0d9488}
 .cd-duration .cd-v{color:var(--muted)}
+/* project data: compact — tighter cards, single-line rows, small value boxes */
+.cd-page{gap:12px}
+.cd-two,.cd-col{gap:12px}
+.cd-card{padding:12px 16px 14px;border-radius:12px}
+.cd-hd{gap:10px;padding-bottom:9px;margin-bottom:10px}
+.cd-ic{width:32px;height:32px;border-radius:8px}
+.cd-ic .ico{width:17px;height:17px}
+.cd-t{font-size:.92rem}
+.cd-s{font-size:.72rem;margin-top:0}
+.cd-rows{gap:0}
+.cd-row{background:none;border:0;border-radius:0;border-bottom:1px solid var(--line);padding:5px 2px;gap:10px;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr)}
+.cd-row:last-child{border-bottom:0}
+.cd-l{font-size:.74rem;margin-bottom:4px}
+.cd-row .cd-l{margin:0}
+.cd-v{padding:4px 10px;font-size:.82rem;border-radius:6px;box-shadow:none}
+.cd-v.cd-tx{font-size:.82rem;line-height:1.3;padding:4px 10px;min-height:28px}
+div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-height:0}
+.cd-grid{gap:10px}
+.cd-grid.cd-g2{gap:8px}
+.cd-cell,.cd-g2 .cd-cell{padding:7px 10px 8px;border-radius:8px}
+.cd-hse{gap:4px;font-size:.82rem;line-height:1.45}
+.cd-page .hse-ed textarea{font-size:.8rem;line-height:1.4;padding:6px 9px}
