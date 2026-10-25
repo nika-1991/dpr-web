@@ -1053,3 +1053,8 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .cd-g2 .cd-v{padding:3px 7px;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cd-g2 input[type=date].cd-v{width:auto;max-width:132px;padding:2px 4px}
 @media (max-width:560px){.cd-grid.cd-g2{grid-template-columns:1fr 1fr}}
+/* participants: subcontractors as their own part under a line */
+.cd-subh{margin:10px 0 4px;padding-top:9px;border-top:2px solid var(--line);font-size:.78rem;font-weight:700;color:var(--ink)}
+.cd-subs{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.cd-sub{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) auto;gap:6px;width:100%;align-items:center}
+.cd-subv .cd-l{color:var(--ink);font-weight:600}
