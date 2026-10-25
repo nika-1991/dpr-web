@@ -1018,3 +1018,9 @@ input.cd-v:focus{outline:2px solid color-mix(in srgb,var(--tone) 45%,transparent
 .cd-page .hse-ed .inp{background:var(--surface)}
 @media (max-width:1100px){.cd-two{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.cd-row{grid-template-columns:minmax(0,1fr);gap:6px}.cd-card{padding:14px}}
+.cd-teal{--tone:#0d9488}
+.cd-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.cd-grid.cd-g2{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cd-g2 .cd-cell{padding:12px 16px 14px}
+.cd-contractValue .cd-v{color:#0d9488}
+.cd-duration .cd-v{color:var(--muted)}
