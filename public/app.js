@@ -2081,7 +2081,7 @@ function plRows(D,m,view){
     R("item","გაუთვალისწინებელი ხარჯი",m.cont); R("item","მობილიზაცია / დემობილიზაცია",m.mob);
     R("ind","სულ სხვა ხარჯი",m.cont.map((v,i)=>v+m.mob[i]));
   } else R("note","არაპირდაპირი ხარჯის ფაქტი „სხვა ხარჯების“ გვერდიდან დაემატება.");
-  R("net","სულ პროექტის მოგება (ზარალი)",T.net);
+  R("gap",""); R("net","სულ პროექტის მოგება (ზარალი)",T.net);
   R("gap","");
   const ratio=(l,a,b,sign)=>R("ratio",l,null,{f:i=>{ const x=i<0?tot(a):a[i], y=i<0?tot(b):b[i]; return y?sign*x/y:null; }});
   ratio("საერთო მოგების მარჟა",T.gross,T.rev,1);

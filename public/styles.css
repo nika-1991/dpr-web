@@ -1240,3 +1240,8 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .pr-table .pr-ratio th{font-weight:500}
 .pr-ratio.pr-r0{--c:#059669}.pr-ratio.pr-r1{--c:#d97706}.pr-ratio.pr-r2{--c:#7c3aed}
 .pr-gap td{height:12px}
+/* totals: thin rows; the project result a little lower */
+.pr-table .pr-rev th,.pr-table .pr-rev td,.pr-table .pr-cost th,.pr-table .pr-cost td,.pr-table .pr-gross th,.pr-table .pr-gross td,.pr-table .pr-ind th,.pr-table .pr-ind td{padding-top:2px;padding-bottom:2px;line-height:1.35}
+.pr-table .pr-net th,.pr-table .pr-net td{padding-top:2px!important;padding-bottom:2px!important;line-height:1.35}
+.pr-table tbody tr.pr-gap+tr.pr-net th,.pr-table tbody tr.pr-gap+tr.pr-net td{padding-top:2px}
+.pr-table tr.pr-gap td{height:14px;border:0!important}
