@@ -2084,9 +2084,9 @@ function plRows(D,m,view){
   R("net","სულ პროექტის მოგება (ზარალი)",T.net);
   R("gap","");
   const ratio=(l,a,b,sign)=>R("ratio",l,null,{f:i=>{ const x=i<0?tot(a):a[i], y=i<0?tot(b):b[i]; return y?sign*x/y:null; }});
-  ratio("მოგების მარჟა (მოგება / შემოსავალი)",T.net,T.rev,1);
-  ratio("ხარჯის წილი (ხარჯი / შემოსავალი)",T.allCost,T.rev,-1);
-  ratio("ხარჯის ამოგება (მოგება / ხარჯი)",T.net,T.allCost.map(x=>-x),1);
+  ratio("საერთო მოგების მარჟა",T.gross,T.rev,1);
+  ratio("წმინდა მოგების მარჟა",T.net,T.rev,1);
+  ratio("არაპირდაპირი ხარჯი / შემოსავალი",T.ind,T.rev,-1);
   return out;
 }
 const plMoney=v=>Math.abs(v)<0.5?"—":v<0?"("+fmtNum(Math.round(-v))+")":fmtNum(Math.round(v));
