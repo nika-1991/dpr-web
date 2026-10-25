@@ -2026,6 +2026,34 @@ function renderPL(p){
   return [head,factLoading&&view==="fact"?h("p",{class:"muted"},"იტვირთება…"):renderPLTable(D,m,view),
     view==="fact"&&D.unpriced?h("p",{class:"muted small"},D.unpriced+" "+tr("სამუშაოს ფასი ჯერ არ აქვს და შემოსავალში არ ითვლება.")):null];
 }
+/* finance tables: every column can be dragged wider or narrower at its right edge, a double click fits it to its content;
+   widths are kept per table kind and column (by its heading) in this browser */
+function finResize(table,kind){
+  const key="dpr.finw."+kind; let saved={}; try{ saved=JSON.parse(localStorage.getItem(key)||"{}")||{}; }catch(e){}
+  const store=()=>{ try{ localStorage.setItem(key,JSON.stringify(saved)); }catch(e){} };
+  requestAnimationFrame(()=>{ if(!table.isConnected) return;
+    const ths=[...table.querySelectorAll("thead tr:first-child th")];
+    const ks=ths.map((th,i)=>i===0?"#0":th.textContent.trim()||"#"+i);
+    const w=ths.map((th,i)=>saved[ks[i]]||Math.ceil(th.getBoundingClientRect().width));
+    const cg=h("colgroup",null,w.map(x=>h("col",{style:"width:"+x+"px"}))); table.prepend(cg);
+    const total=()=>{ table.style.width=w.reduce((a,b)=>a+b,0)+"px"; };
+    table.classList.add("fin-fixed"); total();
+    const set=(i,x)=>{ w[i]=Math.max(36,Math.min(900,Math.round(x))); cg.children[i].style.width=w[i]+"px"; total(); };
+    ths.forEach((th,i)=>{ th.classList.add("fin-th");
+      const rs=h("span",{class:"col-rs","aria-hidden":"true",title:tr("გაწევა; ორჯერ დაჭერა — მორგება")});
+      rs.addEventListener("mousedown",e=>{ e.preventDefault(); e.stopPropagation(); const x0=e.clientX, w0=w[i]; rs.classList.add("on");
+        const move=ev=>set(i,w0+ev.clientX-x0);
+        const up=()=>{ document.removeEventListener("mousemove",move); document.removeEventListener("mouseup",up); rs.classList.remove("on"); saved[ks[i]]=w[i]; store(); };
+        document.addEventListener("mousemove",move); document.addEventListener("mouseup",up); });
+      rs.addEventListener("click",e=>e.stopPropagation());
+      rs.addEventListener("dblclick",e=>{ e.preventDefault(); e.stopPropagation();
+        const cells=[...table.rows].map(r=>r.cells[i]).filter(c=>c&&c.colSpan===1);
+        /* a cell's scrollWidth is at least its own width, so shrink the column first, then measure the content */
+        set(i,36); set(i,Math.max(...cells.map(c=>c.scrollWidth))+2); saved[ks[i]]=w[i]; store(); });
+      th.append(rs); });
+  });
+  return table;
+}
 function renderPLTable(D,m,view){
   const T=plTotals(D,m), open=S.plOpen||(S.plOpen=new Set());
   const cell=(v,cls)=>h("td",{class:"num"+(v<0?" neg":"")+(cls?" "+cls:"")},Math.abs(v)<0.005?"—":fmtNum(Math.round(v)));
@@ -2056,9 +2084,9 @@ function renderPLTable(D,m,view){
     ratio("ხარჯის წილი (ხარჯი / შემოსავალი)",i=>pct(-at(T.allCost,i),at(T.rev,i))),
     ratio("ხარჯის ამოგება (მოგება / ხარჯი)",i=>pct(at(T.net,i),-at(T.allCost,i)))];
   const years=new Set(D.periods.map(x=>x.year));
-  return h("div",{class:"pl-wrap"},h("table",{class:"pl-table"},
+  return h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table"},
     h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),D.periods.map(x=>h("th",{class:"num",title:fmtDate(x.from)+" — "+fmtDate(x.to)},x.label,years.size>1?h("span",{class:"pl-y"},x.year):null)),h("th",{class:"num pl-tot"},"სულ"))),
-    h("tbody",null,body)));
+    h("tbody",null,body)),"pl"));
 }
 function renderPLCompare(D){
   /* -2 = up to today (periods that have started), -1 = all periods, otherwise one period */
@@ -2076,7 +2104,7 @@ function renderPLCompare(D){
   const sec=t=>h("tr",{class:"pl-sec"},h("th",{colspan:"5"},t));
   const ch=(k,c)=>{ const pa=D.plan[k][c.key], fa=D.fact[k][c.key]; return pa||fa?row(c.name,pa?at(pa):0,fa?at(fa):0):null; };
   return h("div",null,h("div",{class:"pl-cmp-bar"},h("label",{class:"small muted"},"პერიოდი"),pick),
-    h("div",{class:"pl-wrap"},h("table",{class:"pl-table pl-cmp"},
+    h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table pl-cmp"},
       h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),["გეგმა","ფაქტი","სხვაობა","შესრულება"].map(l=>h("th",{class:"num"},l)))),
       h("tbody",null,
         sec("შემოსავლები"),D.chapters.map(c=>ch("rev",c)),row("სულ ამონაგები",at(P.rev),at(F.rev),"pl-sum"),
@@ -2084,7 +2112,7 @@ function renderPLCompare(D){
         row("სულ საერთო მოგება",at(P.gross),at(F.gross),"pl-sum"),
         row("არაპირდაპირი ხარჯები",at(P.ind),at(F.ind)),
         row("გაუთვალისწინებელი + მობილიზაცია",at(D.plan.cont)+at(D.plan.mob),0),
-        row("სულ პროექტის მოგება (ზარალი)",at(P.net),at(F.net),"pl-net")))));
+        row("სულ პროექტის მოგება (ზარალი)",at(P.net),at(F.net),"pl-net"))),"plcmp")));
 }
 /* ---------- FINANCE: cash flow (plan) ----------
    receipts:  each execution period's revenue is paid `lag` days after the period ends, less advance deduction and retention;
@@ -2189,9 +2217,9 @@ function renderCF(p){
     opt("vat","დღგ-ს გადახდა / დაბრუნება"),opt("cont","გაუთვალისწინებელი ხარჯი"),opt("mob","მობილიზაცია / დემობილიზაცია"),
     row("წმინდა ნაკადი",net,"pl-net"),
     row("კუმულატიური ნაშთი",cum,"pl-sum cf-cum",null,true)];
-  return [head,kpis,h("div",{class:"pl-wrap"},h("table",{class:"pl-table"},
+  return [head,kpis,h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table"},
     h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),cols.map(k=>h("th",{class:"num"},label(k))),h("th",{class:"num pl-tot"},"სულ"))),
-    h("tbody",null,body)))];
+    h("tbody",null,body)),"cf."+zoom))];
 }
 
 /* sidebar on the finance tabs: the assumptions behind the open page, editable in place */

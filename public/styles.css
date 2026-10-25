@@ -1143,3 +1143,10 @@ div.cd-v.cd-tx{border-color:transparent;background:none;padding-left:0;min-heigh
 .fs-v em{font-style:normal;color:var(--muted);font-size:.72rem;min-width:14px}
 .fs-all{width:100%}
 .fs-v input{width:54px}.fs-box .pside-fact>span:first-child{min-width:0}
+/* finance tables with set column widths */
+.pl-table.fin-fixed{table-layout:fixed}
+.pl-table.fin-fixed th,.pl-table.fin-fixed td{overflow:hidden;text-overflow:ellipsis}
+.pl-table.fin-fixed tbody th{min-width:0;max-width:none}
+.pl-table thead th.fin-th{position:sticky}
+.pl-table thead th .col-rs{z-index:4}
+.fs-box .pside-fact>span:first-child{overflow-wrap:anywhere}
