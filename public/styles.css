@@ -1299,3 +1299,4 @@ div.cd-v.cd-2l{display:flex;flex-direction:column;gap:1px;white-space:normal;fon
 .cd-g2>.cd-ret{grid-column:span 6}
 .cd-rets .cd-pl{min-width:72px}
 .cd-rets .cd-pl{min-width:0;flex:1;font-size:.66rem}.cd-rets .cd-pct{gap:3px}.cd-ret .cd-rets .cd-v{width:40px}
+.cd-rets .cd-pl{flex:0 0 auto;min-width:40px}

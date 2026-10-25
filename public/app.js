@@ -451,10 +451,10 @@ function renderProjectForm(pid){
   const when=termsCard([dIn("contractDate","ხელშ. დადება"),dIn("contractEnd","ხელშ. დასრულება"),dIn("startDate","სამუშაოს დაწყება"),dIn("endDate","სამუშაოს დასრულება"),["duration","სამუშაო დღეები",dur],
     ["contractValue","ღირებულება, ₾",valIn],["advancePct","ავანსი",h("div",{class:"cd-pct"},advIn,h("span",null,"%"),advAmt)],
     ["advDed","ავანსის გაქვითვა",h("div",{class:"cd-pct"},pctIn("advFrom","გაქვითვა იწყება, %"),h("span",null,"% –"),pctIn("advTo","გაქვითვა მთავრდება, %"),h("span",null,"%"))],
-    ["ret","ხარისხის დაკავება",h("div",{class:"cd-rets"},h("div",{class:"cd-pct"},h("span",{class:"cd-pl"},"მოკლევადიანი"),pctIn("retShort","მოკლევადიანი დაკავება, %"),h("span",null,"%")),
-      h("div",{class:"cd-pct"},h("span",{class:"cd-pl"},"გრძელვადიანი"),pctIn("retLong","გრძელვადიანი დაკავება, %"),h("span",null,"%")))]]);
+    ["ret","ხარისხის დაკავება",h("div",{class:"cd-rets"},h("div",{class:"cd-pct"},h("span",{class:"cd-pl",title:tr("მოკლევადიანი")},"მოკლ."),pctIn("retShort","მოკლევადიანი დაკავება, %"),h("span",null,"%")),
+      h("div",{class:"cd-pct"},h("span",{class:"cd-pl",title:tr("გრძელვადიანი")},"გრძელ."),pctIn("retLong","გრძელვადიანი დაკავება, %"),h("span",null,"%")))]]);
   /* the advance in lari, next to its % */
-  const upAdv=()=>{ const v=num(valIn.value)*num(advIn.value)/100; advAmt.textContent=v?"= "+gel(v):""; };
+  const upAdv=()=>{ const v=num(valIn.value)*num(advIn.value)/100; advAmt.textContent=v?"= "+gel0(v):""; };
   advIn.addEventListener("input",upAdv); valIn.addEventListener("input",upAdv); upAdv();
   upDur();
   const codes=codesCard(["accountingCode","companyCode","projectCode","dprStart"].map(k=>{ const el=inp(f,k,k==="dprStart"?(p[k]||1):p[k],tr(CODE_LABELS[k]));
@@ -939,10 +939,10 @@ function renderProjectSheet(p){
   const dd=durDays(p.startDate,p.endDate);
   const dv=k=>h("div",{class:"cd-v"},p[k]?fmtDate(p[k]):"—");
   const when=termsCard([["contractDate","ხელშ. დადება",dv("contractDate")],["contractEnd","ხელშ. დასრულება",dv("contractEnd")],["startDate","სამუშაოს დაწყება",dv("startDate")],["endDate","სამუშაოს დასრულება",dv("endDate")],
-    ["duration","სამუშაო დღეები",h("div",{class:"cd-v"},dd?String(dd):"—")],["contractValue","ღირებულება",h("div",{class:"cd-v"},p.contractValue!=null?gel(p.contractValue):"—")],
-    ["advancePct","ავანსი",h("div",{class:"cd-v cd-2l"},p.advancePct?[h("span",null,fmtNum(p.advancePct)+"%"),p.contractValue?h("span",{class:"cd-amt"},gel(p.contractValue*p.advancePct/100)):null]:"—")],
+    ["duration","სამუშაო დღეები",h("div",{class:"cd-v"},dd?String(dd):"—")],["contractValue","ღირებულება",h("div",{class:"cd-v"},p.contractValue!=null?gel0(p.contractValue):"—")],
+    ["advancePct","ავანსი",h("div",{class:"cd-v cd-2l"},p.advancePct?[h("span",null,fmtNum(p.advancePct)+"%"),p.contractValue?h("span",{class:"cd-amt"},gel0(p.contractValue*p.advancePct/100)):null]:"—")],
     ["advDed","ავანსის გაქვითვა",h("div",{class:"cd-v"},p.advancePct?(p.advFrom!=null||p.advTo!=null?fmtNum(p.advFrom||0)+"% – "+fmtNum(p.advTo??100)+"%":tr("ყოველი ჩარიცხვიდან თანაბრად")):"—")],
-    ["ret","ხარისხის დაკავება",h("div",{class:"cd-v cd-2l"},p.retShort!=null||p.retLong!=null?[h("span",null,tr("მოკლევადიანი")+" "+fmtNum(num(p.retShort))+"%"),h("span",null,tr("გრძელვადიანი")+" "+fmtNum(num(p.retLong))+"%")]:"—")]]);
+    ["ret","ხარისხის დაკავება",h("div",{class:"cd-v cd-2l"},p.retShort!=null||p.retLong!=null?[h("span",null,tr("მოკლ.")+" "+fmtNum(num(p.retShort))+"%"),h("span",null,tr("გრძელ.")+" "+fmtNum(num(p.retLong))+"%")]:"—")]]);
   const codes=codesCard([["accountingCode",h("div",{class:"cd-v"},p.accountingCode||"—")],["companyCode",h("div",{class:"cd-v"},p.companyCode||"—")],
     ["projectCode",h("div",{class:"cd-v"},p.projectCode||"—")],["dprStart",h("div",{class:"cd-v"},"DPR-"+String(p.dprStart||1).padStart(3,"0"))]]);
   const hse=pcard("hse","orange","უსაფრთხოების (HSE) პუნქტები","ყოველი ახალი ანგარიში ამ პუნქტებით იწყება.",
@@ -1249,6 +1249,8 @@ const normTerms=raw=>{ raw=raw||{}; const types={}, items={};
 const partsLabel=parts=>parts&&parts.length?parts.map(x=>(parts.length>1||x.pct!==100?fmtNum(x.pct)+"% ":"")+dueLabel(x.t)).join(" + "):"—";
 /* an item's unit price is not typed: it is the cost of all its resources (qty × unit price) divided by the item's quantity */
 /* money in Georgian lari: 2 880,00 ₾ */
+/* whole lari: 2 450 000 ₾ */
+const gel0=n=>{ const neg=n<0; return (neg?"−":"")+String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g,"\u00a0")+"\u00a0₾"; };
 const gel=n=>{ const neg=n<0, [i,d]=Math.abs(Math.round(n*100)/100).toFixed(2).split("."); return (neg?"−":"")+i.replace(/\B(?=(\d{3})+(?!\d))/g,"\u00a0")+","+d+"\u00a0₾"; };
 /* a resource's quantity is not typed: it is the sum of what is planned for it in the day grid */
 const resQty=x=>Object.values((x&&x.plan)||{}).reduce((a,v)=>a+num(v),0);
