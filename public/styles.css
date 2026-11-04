@@ -1460,3 +1460,6 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .rep-empty{display:flex;align-items:center;gap:12px}
 .rep-empty .rep-add{background:var(--accent);border-color:var(--accent)}
 .rep-add-td{width:44px}
+/* report form tables: the same graphite heading as the reports list, a shade lighter */
+.rt th{background:linear-gradient(180deg,#7b8494,#646d7d);color:#fff;border-bottom-color:#565e6c;font-weight:700;letter-spacing:.02em}
+.sec .rt th{background:linear-gradient(180deg,#7b8494,#646d7d);color:#fff;border-bottom-color:#565e6c}
