@@ -1376,3 +1376,17 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .g-head2>.gh-terms{grid-template-columns:auto auto auto!important}
 .gh-terms .gh-thead .gh-th1{grid-column:auto!important}
 .gh-view .vswitch .vbtn{white-space:nowrap}
+/* execution plan: the totals column as "count | %", clickable to show only that item's dates */
+.x-cnt-h,.x-cnt{display:grid;grid-template-columns:1fr 1fr;align-items:center;width:100%}
+.x-cnt-h span{text-align:center}
+.x-cnt-h span+span{border-left:1px solid var(--line-strong)}
+.x-cnt{border:0;background:none;font:inherit;font-size:.74rem;cursor:pointer;padding:3px 0;border-radius:6px;color:var(--ink);font-variant-numeric:tabular-nums}
+.x-cnt:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.x-cnt.on{background:var(--accent);color:#fff}
+.x-cnt span{text-align:center}
+.x-cnt .x-n{font-weight:700}
+.x-cnt .x-p{border-left:1px solid color-mix(in srgb,var(--ink) 15%,transparent)}
+.x-sum.over .x-p{color:#b42318;font-weight:700}
+.x-cnt.on .x-p{color:#fff;border-left-color:rgba(255,255,255,.35)}
+.x-cnt-clr{border:0;background:var(--accent);color:#fff;border-radius:6px;padding:3px 8px;font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
+.x-cnt-h,.x-cnt{grid-template-columns:.75fr 1.25fr}
