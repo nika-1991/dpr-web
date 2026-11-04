@@ -1813,7 +1813,7 @@ function renderExec(p){
     const vs=r=>posLbl(r)+" — "+fmtNum(totX(r))+" / "+fmtNum(num(r.it.qty));
     addP("მეტია დაგეგმილი, ვიდრე რაოდენობა",planned.filter(r=>{ const q=num(r.it.qty); return q&&totX(r)>q+1e-9; }),vs);
     addP("ნაკლებია დაგეგმილი, ვიდრე რაოდენობა",planned.filter(r=>{ const q=num(r.it.qty); return q&&totX(r)<q-1e-9; }),vs);
-    addP("პოზიციას ფასი არ აქვს",planned.filter(r=>!pr(r.code)));
+    addP("პოზიციას ერთ. ფასი არ აქვს",planned.filter(r=>!pr(r.code)));
     addP("პოზიციას რაოდენობა არ აქვს",posAll.filter(r=>!num(r.it.qty)));
     addP("პოზიციას განზომილება არ აქვს",posAll.filter(r=>!(r.it.unit||"").trim()));
     return {out,planned}; };
