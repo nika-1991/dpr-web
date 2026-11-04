@@ -1460,3 +1460,7 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .rep-empty{display:flex;align-items:center;gap:12px}
 .rep-empty .rep-add{background:var(--accent);border-color:var(--accent)}
 .rep-add-td{width:44px}
+/* report section bars: a light graphite instead of teal */
+.sec .sec-h{background:linear-gradient(180deg,#7b8494,#646d7d)}
+.sec .sec-h h2,.sec .sec-h h2 .en{color:#fff}
+.sec .sec-h .btn{border-color:rgba(255,255,255,.5);color:#fff}
