@@ -1850,7 +1850,7 @@ function renderExec(p){
     const on=S.xonly===code;
     return h("td",{class:"g-fz f5 x-sum"+(pc!=null&&pc>100.0001?" over":"")},h("button",{type:"button",class:"x-cnt"+(on?" on":""),"aria-pressed":String(on),
       title:tr(on?"ყველა თარიღის ჩვენება":"მხოლოდ ამ პოზიციის თარიღები")+" · "+fmtNum(t),"aria-label":(label||"")+": "+ds.length+" "+tr("თარიღი")+(pc!=null?", "+fmtNum(Math.round(pc))+"%":""),
-      onclick:()=>{ S.xonly=on?null:code; redraw(); }},h("span",{class:"x-n"},String(ds.length)),h("span",{class:"x-p"},pc!=null?fmtNum(Math.round(pc*10)/10)+"%":"—"))); };
+      onclick:()=>{ S.xonly=on?null:code; redraw(); }},h("span",{class:"x-n"},String(ds.length)),h("span",{class:"x-p"+(pc==null?"":Math.abs(pc-100)<0.05?" ok":pc>100?" hi":" lo")},pc!=null?fmtNum(Math.round(pc*10)/10)+"%":"—"))); };
   const body=rows.map(r=>{
     const it=r.it, head=it.type!=="პოზიცია";
     const toggle=head?h("button",{class:"g-fold",type:"button","aria-expanded":String(!fold.has(r.key)),"aria-label":(fold.has(r.key)?tr("გაშლა"):tr("აკეცვა"))+": "+(it.name||""),
