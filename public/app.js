@@ -396,11 +396,13 @@ function renderHome(){
       h("td",{"data-l":"პროგრესი"},prog(p)),
       h("td",{"data-l":"ბოლო ანგარიში"},last(p))))))));
   else listEl=h("div",{class:"tiles-grid"},shown.map(p=>h("button",{class:"ptile"+(p.archived?" archived":""),type:"button",onclick:()=>open(p.id)},
-      h("div",{class:"ptile-top"},h("span",{class:"ptile-codes"},codes(p).slice(0,3)),status(p)),
-      h("div",{class:"ptile-name",title:p.name||""},p.name||"უსახელო"),
-      h("div",{class:"ptile-meta"},h("span",null,icon("personnel"),(p.memberIds||[]).length),h("span",null,icon("works"),pos(p)," BoQ")),
-      prog(p),
-      last(p))));
+      /* like a browser tab-group card: the name on a coloured strip, the details on a white panel inside the frame */
+      h("div",{class:"ptile-hd"},h("span",{class:"ptile-sq","aria-hidden":"true"}),h("div",{class:"ptile-name",title:p.name||""},pShort(p)||"უსახელო")),
+      h("div",{class:"ptile-bd"},
+        h("div",{class:"ptile-top"},h("span",{class:"ptile-codes"},codes(p).slice(0,3)),status(p)),
+        h("div",{class:"ptile-meta"},h("span",null,icon("personnel"),(p.memberIds||[]).length),h("span",null,icon("works"),pos(p)," BoQ")),
+        prog(p),
+        last(p)))));
   out.push(h("div",{class:"dash-left"},
     h("div",{class:"home-bar"},
       h("label",{class:"home-search"},icon("search"),search),

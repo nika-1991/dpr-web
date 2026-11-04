@@ -2,7 +2,7 @@
 :root{
   color-scheme:light;
   --bg:#f6f8fa; --surface:#ffffff; --sunk:#f1f5f9; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --line-strong:#cbd5e1;
-  --accent:#036053; --accent-ink:#ffffff; --accent-soft:#e6f4f0;
+  --accent:#00696d; --accent-ink:#ffffff; --accent-soft:#e3f1f1;
   --signal:#c98a00; --signal-soft:#fbf0d2;
   --info:#1d5fa8; --info-soft:#e2edf9;
   --ok:#2f7d4f; --ok-soft:#e1f1e7; --bad:#b23a32; --bad-soft:#f8e3e1;
@@ -13,25 +13,25 @@
   --r:9px;
   --radius:14px;
   --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px -4px rgba(15,23,42,.06);
-  --shadow-hover:0 2px 4px rgba(15,23,42,.05),0 12px 28px -8px rgba(3,96,83,.18);
-  --sh-head:#036053; --sh-head-ink:#ffffff; --sh-tint:#e8f2ef; --sh-line:#bcd6cf; --sh-ink:#073d35;
+  --shadow-hover:0 2px 4px rgba(15,23,42,.05),0 12px 28px -8px rgba(0,105,109,.18);
+  --sh-head:#00696d; --sh-head-ink:#ffffff; --sh-tint:#e6f1f1; --sh-line:#b8d4d5; --sh-ink:#053b3d;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0b1220; --surface:#111a2b; --sunk:#0e1626; --ink:#e5eaf2; --muted:#94a3b8; --line:#1e293b; --line-strong:#334155;
   --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-hover:0 8px 24px -8px rgba(0,0,0,.5);
-  --accent:#4ab8a0; --accent-ink:#0b1f1b; --accent-soft:#13302a;
+  --accent:#4fb2b5; --accent-ink:#0b1f1b; --accent-soft:#13302a;
   --signal:#e8b744; --signal-soft:#33290f;
   --info:#78aef0; --info-soft:#17283d;
   --ok:#62c18a; --ok-soft:#173023; --bad:#e8786f; --bad-soft:#3a1d1b; color-scheme:dark;
-  --sh-head:#0d5248; --sh-head-ink:#e6f4f1; --sh-tint:#14231f; --sh-line:#2a453e; --sh-ink:#9fd6c9}}
+  --sh-head:#0b4f52; --sh-head-ink:#e6f4f1; --sh-tint:#14231f; --sh-line:#2a453e; --sh-ink:#9fd6c9}}
 :root[data-theme="dark"]{
   --bg:#0b1220; --surface:#111a2b; --sunk:#0e1626; --ink:#e5eaf2; --muted:#94a3b8; --line:#1e293b; --line-strong:#334155;
   --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-hover:0 8px 24px -8px rgba(0,0,0,.5);
-  --accent:#4ab8a0; --accent-ink:#0b1f1b; --accent-soft:#13302a;
+  --accent:#4fb2b5; --accent-ink:#0b1f1b; --accent-soft:#13302a;
   --signal:#e8b744; --signal-soft:#33290f;
   --info:#78aef0; --info-soft:#17283d;
   --ok:#62c18a; --ok-soft:#173023; --bad:#e8786f; --bad-soft:#3a1d1b; color-scheme:dark;
-  --sh-head:#0d5248; --sh-head-ink:#e6f4f1; --sh-tint:#14231f; --sh-line:#2a453e; --sh-ink:#9fd6c9}
+  --sh-head:#0b4f52; --sh-head-ink:#e6f4f1; --sh-tint:#14231f; --sh-line:#2a453e; --sh-ink:#9fd6c9}
 /* BPG Nino Mtavruli (free font by BPG-InfoTech): Georgian capitals style for tabs and headings, like the company site */
 @font-face{font-family:"BPG Nino Mtavruli";src:url("/fonts/bpg-nino-mtavruli-webfont.woff2") format("woff2"),url("/fonts/bpg-nino-mtavruli-webfont.woff") format("woff");font-weight:400;font-display:swap}
 *{box-sizing:border-box}
@@ -388,14 +388,14 @@ td.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
   .print-doc{display:block;color:#111;font-family:var(--f-body);font-size:9.5pt;line-height:1.35}
   .print-doc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
-.pd-head{display:flex;align-items:center;justify-content:space-between;border-bottom:2.5pt solid #036053;padding-bottom:5pt;margin-bottom:7pt}
+.pd-head{display:flex;align-items:center;justify-content:space-between;border-bottom:2.5pt solid #00696d;padding-bottom:5pt;margin-bottom:7pt}
 .pd-head img{height:24pt}
 .pd-title{text-align:right}
-.pd-title b{display:block;font-size:12pt;color:#036053}
+.pd-title b{display:block;font-size:12pt;color:#00696d}
 .pd-code{font-family:var(--f-mono);font-size:9.5pt}
 .pd-sec{margin-top:8pt;break-inside:avoid}
 .pd-sec.long{break-inside:auto}
-.pd-sec h3{margin:0;background:#036053;color:#fff;font-size:9.5pt;font-weight:700;padding:3pt 6pt;border-radius:2pt 2pt 0 0}
+.pd-sec h3{margin:0;background:#00696d;color:#fff;font-size:9.5pt;font-weight:700;padding:3pt 6pt;border-radius:2pt 2pt 0 0}
 .pd-t{width:100%;border-collapse:collapse;font-size:8.5pt}
 .pd-t th,.pd-t td{border:0.6pt solid #9aa5a1;padding:2.5pt 4pt;vertical-align:top;text-align:left}
 .pd-t th{background:#e6f1ee;color:#073d35;font-weight:600;font-size:8pt}
@@ -1300,3 +1300,11 @@ div.cd-v.cd-2l{display:flex;flex-direction:column;gap:1px;white-space:normal;fon
 .cd-rets .cd-pl{min-width:72px}
 .cd-rets .cd-pl{min-width:0;flex:1;font-size:.66rem}.cd-rets .cd-pct{gap:3px}.cd-ret .cd-rets .cd-v{width:40px}
 .cd-rets .cd-pl{flex:0 0 auto;min-width:40px}
+/* project tiles as tab-group cards: a teal frame and strip with the name, a white rounded panel inside */
+.tiles-grid .ptile{background:var(--accent);border:0;border-radius:22px;padding:0 5px 5px;gap:0;box-shadow:var(--shadow)}
+.tiles-grid .ptile:hover{border-color:transparent;background:color-mix(in srgb,var(--accent) 88%,#000)}
+.tiles-grid .ptile.archived{background:#8a9aa1;opacity:1}
+.ptile-hd{display:flex;align-items:center;gap:9px;padding:9px 12px 8px;min-width:0}
+.ptile-sq{width:15px;height:15px;border-radius:4px;border:2px solid color-mix(in srgb,#fff 55%,transparent);background:color-mix(in srgb,#fff 18%,transparent);flex:none}
+.tiles-grid .ptile-name{color:#fff;font-size:.86rem;font-weight:700;flex:1;min-width:0}
+.ptile-bd{background:var(--surface);border-radius:17px;padding:10px 12px 11px;display:flex;flex-direction:column;gap:7px;flex:1}
