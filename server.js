@@ -586,8 +586,9 @@ function cleanSchedule(b) {
   const fb = b && typeof b.fin === "object" && b.fin ? b.fin : {};
   const pctv = (v, d) => { const n = cleanNum(v); return n == null ? d : Math.max(0, Math.min(100, n)); };
   const nn = (v, d, max) => { const n = cleanNum(v); return n == null ? d : Math.max(0, Math.min(max, n)); };
-  const fin = { cont: pctv(fb.cont, 3), mob: pctv(fb.mob, 2.5), lag: nn(fb.lag, 10, 365), adv: pctv(fb.adv, 0), ret: pctv(fb.ret, 5), cover: pctv(fb.cover, 0),
+  const fin = { cont: pctv(fb.cont, 3), mob: pctv(fb.mob, 2.5), lag: nn(fb.lag, 20, 365), adv: pctv(fb.adv, 0), ret: pctv(fb.ret, 5), cover: pctv(fb.cover, 0),
     hold: pctv(fb.hold, 0), holdRel: nn(fb.holdRel, 0, 1e12), vat: pctv(fb.vat, 18), ovDay: nn(fb.ovDay, 5, 31), vatDay: nn(fb.vatDay, 15, 31),
+    f2: nn(fb.f2, 0, 180), shift: Math.max(-730, Math.min(730, Math.round(cleanNum(fb.shift) ?? 0))), open: cleanNum(fb.open) ?? 0,
     ind: (Array.isArray(fb.ind) ? fb.ind : []).slice(0, 100).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), monthly: cleanNum(x?.monthly),
       from: ISO_RE.test(x?.from || "") ? x.from : "", to: ISO_RE.test(x?.to || "") ? x.to : "" })) };
   return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows, exec: { dates, vals }, terms, fin };
