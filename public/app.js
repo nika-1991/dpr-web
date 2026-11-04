@@ -571,11 +571,18 @@ function sortedReports(){ return [...S.reports.entries()].sort((a,b)=>b[1].date.
 function renderReportsTab(p){
   const list=sortedReports();
   const cnt=(arr,f)=>(arr||[]).filter(f).length;
+  const canAdd=canWorkOn(p)&&!p.archived;
+  /* "+" at the right of the table heading: pick the date, then the report opens (or is created) */
+  const addBtn=()=>{ const din=h("input",{type:"date",class:"rep-add-d",tabindex:"-1","aria-hidden":"true",max:S.admin?null:todayISO(),value:todayISO(),
+      onchange:e=>{ const d=e.target.value; if(!d) return; if(S.reports.has(S.pid+"__"+d)){ openReport(S.pid+"__"+d); return; }
+        if(!canCreateOn(d)){ toast("მომავალი თარიღით ანგარიშის შექმნა შეუძლებელია."); return; } createReport(d); }});
+    return h("span",{class:"rep-add-w"},h("button",{class:"rep-add tip",type:"button","data-tip":tr("ანგარიშის დამატება"),"aria-label":tr("ანგარიშის დამატება"),
+      onclick:()=>{ try{ din.showPicker(); }catch(e){ din.focus(); din.click(); } }},"+"),din); };
   const bar=h("div",{class:"rep-toolbar"},
-    canWorkOn(p)&&!p.archived?renderCreateControls(p):h("span"),
+    h("span"),
     list.length?h("button",{class:"btn",type:"button",onclick:()=>exportProject(p)},icon("list"),"რეესტრის ექსპორტი (.xlsx)"):null);
   const table=list.length?h("section",{class:"panel"},h("div",{class:"tw"},h("table",{class:"rt rlist-t stack"},
-      h("thead",null,h("tr",null,["DPR #","თარიღი","REV","სამუშაო","ფოტო","შექმნა / Created by","დაადასტურა / Approved by","სტატუსი"].map(l=>h("th",null,l)))),
+      h("thead",null,h("tr",null,["DPR #","თარიღი","REV","სამუშაო","ფოტო","შექმნა / Created by","დაადასტურა / Approved by","სტატუსი"].map(l=>h("th",null,l)),h("th",{class:"rep-add-th"},canAdd?addBtn():null))),
       h("tbody",null,list.map(([id,r])=>h("tr",{tabindex:"0",role:"link",onclick:()=>openReport(id),onkeydown:e=>{ if(e.key==="Enter") openReport(id); }},
         h("td",{class:"rn","data-l":"DPR #"},"DPR-"+String(r.num||0).padStart(3,"0")),
         h("td",{"data-l":"თარიღი"},fmtDate(r.date)),
@@ -584,8 +591,8 @@ function renderReportsTab(p){
         h("td",{class:"num","data-l":"ფოტო"},(r.photos||[]).length),
         h("td",{"data-l":"შექმნა / Created by"},who(r.createdBy)),
         h("td",{"data-l":"დაადასტურა / Approved by"},r.status==="approved"?who(r.approvedBy):h("span",{class:"muted"},"—")),
-        h("td",{"data-l":"სტატუსი"},chip(r.status))))))))
-    :h("div",{class:"empty-line muted"},"ანგარიში ჯერ არ შექმნილა.");
+        h("td",{"data-l":"სტატუსი"},chip(r.status)),h("td",{class:"rep-add-td"})))))))
+    :h("div",{class:"empty-line muted rep-empty"},h("span",null,"ანგარიში ჯერ არ შექმნილა."),canAdd?addBtn():null);
   return h("div",{class:"rep-tab"},bar,table);
 }
 function renderCreateControls(p){
