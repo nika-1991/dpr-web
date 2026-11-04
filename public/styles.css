@@ -1315,3 +1315,7 @@ div.cd-v.cd-2l{display:flex;flex-direction:column;gap:1px;white-space:normal;fon
 .anav-i:hover{color:var(--ink)}
 .anav-i.on{font-weight:700}
 .anav-g{gap:4px}
+/* home: square add button at the right end of the filter bar */
+.home-bar .hb-add{width:52px;height:52px;min-width:52px;padding:0;border-radius:12px;font-size:1.7rem;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;align-self:center;margin-left:4px}
+.home-bar .hb-add.tip::after{top:auto;bottom:calc(100% + 8px);left:auto;right:0;transform:none}
+.home-bar .hb-add.tip::after{font-family:var(--f-body);letter-spacing:0;text-transform:none}
