@@ -292,7 +292,7 @@ function renderLogin(){
     try{ const r=await api("POST","/login",{username:user.value.trim(),password:pass.value}); await onLoggedIn(r.user); }
     catch(ex){ err.textContent=errMsg(ex); pass.value=""; pass.focus(); }
     btn.disabled=false; }},
-    h("div",{class:"login-logo"},h("img",{class:"logo logo-l",src:"/logo.png",alt:"Tesen Group"}),h("img",{class:"logo logo-d",src:"/logo-dark.png",alt:"Tesen Group"})),
+    h("div",{class:"login-logo"},h("img",{class:"logo logo-l",src:"/logo-mark.png",alt:"ლოგო"}),h("img",{class:"logo logo-d",src:"/logo-mark-dark.png",alt:"ლოგო"})),
     h("div",null,h("h1",null,"შესვლა"),h("p",{class:"muted small",style:"margin:4px 0 0"},"ყოველდღიური რეპორტის საიტი")),
     h("div",{class:"field"},h("label",{for:uId},"მომხმარებლის სახელი"),user),
     h("div",{class:"field"},h("label",{for:pId},"პაროლი"),pass),
@@ -891,7 +891,7 @@ function buildPrintDoc(p,r){
     (r.visitors||[]).map(x=>h("tr",null,td(x.name),td(x.company),td(x.position),td(x.time,"c"),td(x.purpose),td(x.comment))));
   const photos=(r.photos||[]).length?sec("photos","ფოტო მასალა / Photos",h("div",{class:"pd-ph"},r.photos.map((x,i)=>h("figure",null,h("img",{src:x.url,alt:""}),h("figcaption",null,"Foto #"+(i+1)+(x.desc?" — "+x.desc:""))))),true):(empty.push(tr("ფოტო მასალა / Photos")),null);
   return h("div",{class:"print-doc"},
-    h("div",{class:"pd-head"},h("img",{src:"/logo.png",alt:"Tesen Group"}),
+    h("div",{class:"pd-head"},h("img",{src:"/logo-mark.png",alt:"ლოგო"}),
       h("div",{class:"pd-title"},h("b",null,"ყოველდღიური ანგარიში / Daily Progress Report"),h("span",{class:"pd-code"},docCode(p,r)))),
     info,top,hse,issues,works,expenses,personnel,materials,fuel,visitors,photos,
     empty.length?h("div",{class:"pd-empty"},"ჩანაწერის გარეშე: ",empty.join(", ")):null,
