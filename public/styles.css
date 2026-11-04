@@ -1319,3 +1319,20 @@ div.cd-v.cd-2l{display:flex;flex-direction:column;gap:1px;white-space:normal;fon
 .home-bar .hb-add{width:52px;height:52px;min-width:52px;padding:0;border-radius:12px;font-size:1.7rem;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center;align-self:center;margin-left:4px}
 .home-bar .hb-add.tip::after{top:auto;bottom:calc(100% + 8px);left:auto;right:0;transform:none}
 .home-bar .hb-add.tip::after{font-family:var(--f-body);letter-spacing:0;text-transform:none}
+/* tab bar v4: section names above, each section's icons in a white pill, grey lines between sections */
+.ptabs>.tabs.tgroups{background:var(--bg)!important;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0;padding:4px 10px 8px!important;gap:0!important;align-items:flex-end!important}
+.tabs.tgroups .tgrp,.tabs.tgroups .tgrp.on{background:none!important;box-shadow:none!important;border:0!important;padding:0 22px!important;border-radius:0;justify-content:flex-end}
+.tabs.tgroups .tgrp:first-child{padding-left:0!important}
+.tabs.tgroups .tgrp+.tgrp::before{background:var(--line-strong)!important;width:1px!important;left:0!important;top:30px!important;bottom:6px!important;box-shadow:none!important}
+.tabs.tgroups .tgrp-l{font-size:.72rem;font-weight:500;color:var(--muted);padding:0 0 4px 4px;text-align:left}
+.tabs.tgroups .tgrp.on .tgrp-l{color:var(--accent);font-weight:800}
+.tabs.tgroups .tgrp-b{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 6px;gap:4px}
+.tabs.tgroups .tgrp.on .tgrp-b{border-color:color-mix(in srgb,var(--accent) 30%,var(--line))}
+.tabs.tgroups button{color:var(--ink);background:none;border-radius:10px;padding:7px 9px}
+.tabs.tgroups .tgrp:not(.on) button:hover,.tabs.tgroups button:hover{background:var(--sunk)}
+.tabs.tgroups button[aria-selected="true"]{background:var(--accent)!important;color:#fff}
+.tabs.tgroups button .ico{width:20px;height:20px}
+.tabs.tgroups button .ico svg{stroke-width:1.6}
+.tabs.tgroups .tico{border:0;font-weight:800;font-size:.78rem;min-width:24px}
+.tabs.tgroups .tico.est{border:0}
+body.wide .tabs.tgroups .tgrp.on{background:none!important}
