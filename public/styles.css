@@ -1415,3 +1415,10 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .xtable td.x-sum.x-sel{background:#e8eefc!important;box-shadow:inset 0 0 0 2px #6366f1}
 .x-cnt.on .x-p.lo{color:#d97706}
 .gtable.xtable{--w5:112px}
+/* totals column: the row's own colour with a faint grey veil on top, so it reads as a lighter shade of the same rows */
+.xtable .g-pos td.x-sum{background:linear-gradient(rgba(100,116,139,.07),rgba(100,116,139,.07)),var(--surface)!important}
+.xtable .g-head td.x-sum{background:linear-gradient(rgba(100,116,139,.07),rgba(100,116,139,.07)),color-mix(in srgb,var(--ink) 10%,var(--surface))!important}
+.xtable .g-head.sub td.x-sum{background:linear-gradient(rgba(100,116,139,.07),rgba(100,116,139,.07)),color-mix(in srgb,var(--ink) 5%,var(--surface))!important}
+.xtable thead th.f5{background:linear-gradient(rgba(100,116,139,.07),rgba(100,116,139,.07)),var(--sunk)!important}
+.xtable .g-pos td.x-sum:hover{background:linear-gradient(rgba(100,116,139,.14),rgba(100,116,139,.14)),var(--surface)!important}
+.xtable td.x-sum.x-sel{background:linear-gradient(rgba(99,102,241,.10),rgba(99,102,241,.10)),var(--surface)!important}
