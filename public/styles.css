@@ -1337,3 +1337,42 @@ div.cd-v.cd-2l{display:flex;flex-direction:column;gap:1px;white-space:normal;fon
 .tabs.tgroups .tico.est{border:0}
 body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .pside-card{font-size:.74rem;gap:6px;padding:8px 10px}.pside-li .ico{width:14px;height:14px}.pside-li+.pside-li{padding-top:6px}
+/* schedule / execution header as cards: each part in its own white box, the whole strip set off from the table below */
+.g-head2{gap:8px!important;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--line);align-items:stretch!important}
+.g-head2>.gh-col,.g-head2>.gh-left,.g-head2>.gh-terms{background:var(--surface);border:1px solid var(--line)!important;border-radius:12px!important;box-shadow:0 1px 2px rgba(15,23,42,.05);padding:7px 12px!important;align-self:stretch}
+.g-head2>.gh-terms{border-right:1px solid var(--line)!important}
+.g-head2>.gh-checks-x{border-left:1px solid var(--line)!important}
+.g-head2 .gh-thead{font-size:.66rem;color:var(--ink);font-weight:800;letter-spacing:.02em;text-transform:none}
+/* the checks card looks like a problem: soft red box, red rule, warning mark */
+.g-head2>.gh-checks.gh-alert{background:#fdf0f0;border-color:#efb3b3!important;box-shadow:0 1px 3px rgba(185,28,28,.08)}
+.gh-alert .gh-thead{color:#b42318}
+.gh-at{display:inline-grid;place-items:center;font-size:.85rem;line-height:1;margin-right:2px}
+.gh-alert .gh-at{color:#d92d20}
+.gh-alert .gh-chk.bad .gh-ci{background:#d92d20}
+.gh-alert .gh-chk{color:#3b0d0c}
+.gh-alert button.gh-chk:hover{background:#fbe0e0}
+.gh-alert button.gh-chk.on{background:#f9d4d4;box-shadow:inset 0 0 0 1px #e58b8b}
+.g-head2>.gh-checks.gh-okc{background:#effaf3;border-color:#b7e2c6!important}
+.gh-okc .gh-thead,.gh-okc .gh-at{color:#067647}
+.g-head2>.g-ctrls{align-self:center}
+/* resource types as filled colour pills; the levels marked with a layers icon */
+.gh-term>.g-sw{display:none}
+.gh-pill{display:inline-block;justify-self:start;padding:1px 9px;border-radius:999px;color:#fff!important;font-size:.68rem;font-weight:700;line-height:1.5;white-space:nowrap}
+.gh-pill.lab{background:var(--g-lab)}.gh-pill.eq{background:var(--g-eq)}.gh-pill.mat{background:var(--g-mat)}.gh-pill.subc{background:var(--g-subc)}
+.g-lvl-ic{display:inline-flex;align-items:center;color:var(--ink)}
+.g-lvl-ic .ico{width:16px;height:16px}
+/* view controls: an icon per row, the chosen option filled in teal so it reads at a glance */
+.gh-left.gh-view{grid-template-columns:auto max-content!important;column-gap:8px;align-items:center}
+.gh-left.gh-view>.vswitch{width:auto;min-width:0}
+.gh-ll{display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+.gh-ll .ico{width:16px;height:16px}
+.gh-ll.tip::after{left:0;transform:none;font-family:var(--f-body);letter-spacing:0;z-index:40}
+.gh-view .vswitch{background:var(--sunk);border-color:var(--line);padding:2px!important;border-radius:9px}
+.gh-view .vswitch .vbtn{padding:3px 10px!important;font-size:.72rem!important;border-radius:7px;color:var(--muted);font-weight:600}
+.gh-view .vswitch .vbtn.on{background:var(--accent);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.gh-view .g-lvls .g-lvl{border-radius:6px}
+.gh-view .g-lvls .g-lvl.on,.gh-view .g-lvls .g-lvl[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* resources card: three columns now that the swatch is the pill itself */
+.g-head2>.gh-terms{grid-template-columns:auto auto auto!important}
+.gh-terms .gh-thead .gh-th1{grid-column:auto!important}
+.gh-view .vswitch .vbtn{white-space:nowrap}
