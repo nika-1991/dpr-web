@@ -1403,3 +1403,15 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .x-cnt.on .x-p{border-left-color:color-mix(in srgb,var(--ink) 15%,transparent)}
 .x-cnt.on .x-p.lo{color:#c2410c}.x-cnt.on .x-p.hi{color:#dc2626}.x-cnt.on .x-p.ok{color:#15803d}
 .x-cnt-h span+span{text-align:left;padding-left:8px}
+/* totals column v3: amber below 100, red above; the divider always in the same place; the picked cell outlined as a whole */
+.x-cnt-h,.x-cnt{grid-template-columns:34px minmax(0,1fr)!important}
+.x-cnt{padding:3px 0;border-radius:0;background:none!important;box-shadow:none!important}
+.x-cnt .x-n{text-align:right;padding-right:8px}
+.x-cnt-h span:first-child{text-align:right;padding-right:8px}
+.x-cnt .x-p,.x-cnt-h span+span{border-left:1px solid #cbd5e1!important;padding-left:8px;text-align:left}
+.x-cnt .x-p.lo{color:#d97706}
+.x-cnt .x-p.hi{color:#dc2626}
+.xtable td.x-sum:hover{background:#e9ecf1!important}
+.xtable td.x-sum.x-sel{background:#e8eefc!important;box-shadow:inset 0 0 0 2px #6366f1}
+.x-cnt.on .x-p.lo{color:#d97706}
+.gtable.xtable{--w5:112px}

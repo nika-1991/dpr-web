@@ -1587,6 +1587,8 @@ function scheduleIssues(positions,T){
   addP("გეგმა სცდება BoQ-ის ვადას",positions.filter(r=>{ const ds=posDays(r); return r.it.end&&ds.length&&ds[ds.length-1]>r.it.end; }),r=>posLbl(r)+" · "+tr("ვადა")+" "+fmtDate(r.it.end));
   return out;
 }
+/* Esc in an execution-plan cell puts back what it held when editing began (like Excel) */
+document.addEventListener("focusin",e=>{ const t=e.target; if(t&&t.matches&&t.matches(".xtable input.x-in")) t.dataset.orig=t.value; });
 /* an icon naming a row of the view controls (its meaning on hover) */
 const ghLbl=(ic,t)=>h("span",{class:"gh-ll tip","data-tip":tr(t),"aria-label":tr(t)},icon(ic));
 function checksView(issues,active,pick){
@@ -1785,13 +1787,16 @@ function renderExec(p){
     ex.dates=ex.dates.filter(x=>x!==d); for(const v of Object.values(ex.vals)) delete v[d]; save(); redraw(); };
   const setVal=(code,d,raw)=>{ const n=numOrNull(raw); const v=ex.vals[code]||(ex.vals[code]={}); if(n==null||n===0) delete v[d]; else v[d]=n; save(); };
   /* Enter moves to the same date in the next position, like a spreadsheet */
-  const onKey=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const all=[...document.querySelectorAll('.xtable input.x-in[data-col="'+e.target.dataset.col+'"]')];
+  const onKey=e=>{
+    if(e.key==="Escape"){ e.preventDefault(); if(e.target.dataset.orig!=null) e.target.value=e.target.dataset.orig; e.target.blur(); return; }
+    if(e.key!=="Enter") return; e.preventDefault(); const all=[...document.querySelectorAll('.xtable input.x-in[data-col="'+e.target.dataset.col+'"]')];
     const i=all.indexOf(e.target); const n=all[i+(e.shiftKey?-1:1)]; if(n){ n.focus(); n.select(); } else e.target.blur(); };
   /* month and year once above the dates of that month; a stronger line where a new month starts */
   const MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
   /* a position's "count | %" cell picked: only the dates that position is planned on are shown */
-  if(S.xonly&&!Object.keys(ex.vals[S.xonly]||{}).length) S.xonly=null;
-  const DS=S.xonly?ex.dates.filter(d=>num((ex.vals[S.xonly]||{})[d])):ex.dates;
+  /* several can be picked with Ctrl (Cmd); then the dates of any of them are shown */
+  const sel=S.xonly=(Array.isArray(S.xonly)?S.xonly:S.xonly?[S.xonly]:[]).filter(c=>Object.keys(ex.vals[c]||{}).length);
+  const DS=sel.length?ex.dates.filter(d=>sel.some(c=>num((ex.vals[c]||{})[d]))):ex.dates;
   const months=[]; DS.forEach(d=>{ const k=d.slice(0,7), l=months[months.length-1]; if(l&&l.k===k) l.n++; else months.push({k,n:1}); });
   /* a date column is as wide as its longest quantity, at least as wide as the date */
   const qtyOf=new Map(boq.filter(it=>it.type==="პოზიცია").map(it=>[normCode(it.code),num(it.qty)]));
@@ -1823,7 +1828,7 @@ function renderExec(p){
   const ms=DS.map((d,i)=>i>0&&d.slice(0,7)!==DS[i-1].slice(0,7)?" ms":"");
   const thead=h("thead",null,h("tr",null,
     ["BoQ","დასახელება",[h("span",null,"ჯამური"),h("br"),h("span",null,"რაოდ.")],"განზ.","ერთ. ფასი",
-      S.xonly?h("button",{type:"button",class:"x-cnt-clr",title:tr("ყველა თარიღის ჩვენება"),onclick:()=>{ S.xonly=null; redraw(); }},"✕ ",h("span",null,(boq.find(it=>normCode(it.code)===S.xonly)||{}).code||""))
+      sel.length?h("button",{type:"button",class:"x-cnt-clr",title:tr("ყველა თარიღის ჩვენება"),onclick:()=>{ S.xonly=[]; redraw(); }},"✕ ",h("span",null,sel.length>1?sel.length+" "+tr("პოზ."):(boq.find(it=>normCode(it.code)===sel[0])||{}).code||""))
         :h("div",{class:"x-cnt-h"},h("span",{title:tr("რამდენ თარიღზეა დაგეგმილი")},"რაოდ."),h("span",{title:tr("დაგეგმილი რაოდენობის % ჯამურიდან")},"%"))].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":""),rowspan:"2"},l)),
     months.map((m,i)=>{ const full=MN[+m.k.slice(5)-1]+" "+m.k.slice(0,4);
       return h("th",{class:"x-month"+(i>0?" ms":""),colspan:String(m.n),title:full},h("span",{class:"gm-l"},m.n>1?full:MN[+m.k.slice(5)-1].slice(0,3)+". "+m.k.slice(0,4))); }),
@@ -1847,10 +1852,10 @@ function renderExec(p){
      clicking it shows only those dates (again: all dates) */
   const sumCell=(code,q,label)=>{ const v=ex.vals[code]||{}, ds=ex.dates.filter(d=>num(v[d])), t=ds.reduce((a,d)=>a+num(v[d]),0), pc=q?t/q*100:null;
     if(!ds.length) return h("td",{class:"g-fz f5 x-sum"});
-    const on=S.xonly===code;
-    return h("td",{class:"g-fz f5 x-sum"+(pc!=null&&pc>100.0001?" over":"")},h("button",{type:"button",class:"x-cnt"+(on?" on":""),"aria-pressed":String(on),
+    const on=sel.includes(code);
+    return h("td",{class:"g-fz f5 x-sum"+(pc!=null&&pc>100.0001?" over":"")+(on?" x-sel":"")},h("button",{type:"button",class:"x-cnt"+(on?" on":""),"aria-pressed":String(on),
       title:tr(on?"ყველა თარიღის ჩვენება":"მხოლოდ ამ პოზიციის თარიღები")+" · "+fmtNum(t),"aria-label":(label||"")+": "+ds.length+" "+tr("თარიღი")+(pc!=null?", "+fmtNum(Math.round(pc))+"%":""),
-      onclick:()=>{ S.xonly=on?null:code; redraw(); }},h("span",{class:"x-n"},String(ds.length)),h("span",{class:"x-p"+(pc==null?"":Math.abs(pc-100)<0.05?" ok":pc>100?" hi":" lo")},pc!=null?fmtNum(Math.round(pc*10)/10)+"%":"—"))); };
+      onclick:e=>{ const multi=e.ctrlKey||e.metaKey; S.xonly=multi?(on?sel.filter(c=>c!==code):[...sel,code]):(on&&sel.length===1?[]:[code]); redraw(); }},h("span",{class:"x-n"},String(ds.length)),h("span",{class:"x-p"+(pc==null?"":Math.abs(pc-100)<0.05?" ok":pc>100?" hi":" lo")},pc!=null?fmtNum(Math.round(pc*10)/10)+"%":"—"))); };
   const body=rows.map(r=>{
     const it=r.it, head=it.type!=="პოზიცია";
     const toggle=head?h("button",{class:"g-fold",type:"button","aria-expanded":String(!fold.has(r.key)),"aria-label":(fold.has(r.key)?tr("გაშლა"):tr("აკეცვა"))+": "+(it.name||""),
