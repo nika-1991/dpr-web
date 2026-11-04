@@ -1443,3 +1443,5 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 /* resource pills: one width, count at the end */
 .gh-pill{min-width:104px;text-align:center;box-sizing:border-box}
 .g-dur{padding:1px 4px}.gtable td.f7{text-overflow:clip}.g-hmeta{font-size:.64rem}
+.gh-pill{min-width:0}
+.gtable th.gd.gap,.gtable td.gc.gap{border-left:10px solid var(--surface)!important;box-shadow:none!important}
