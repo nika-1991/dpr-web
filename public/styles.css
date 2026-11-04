@@ -1336,3 +1336,4 @@ div.cd-v.cd-2l{display:flex;flex-direction:column;gap:1px;white-space:normal;fon
 .tabs.tgroups .tico{border:0;font-weight:800;font-size:.78rem;min-width:24px}
 .tabs.tgroups .tico.est{border:0}
 body.wide .tabs.tgroups .tgrp.on{background:none!important}
+.pside-card{font-size:.74rem;gap:6px;padding:8px 10px}.pside-li .ico{width:14px;height:14px}.pside-li+.pside-li{padding-top:6px}
