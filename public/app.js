@@ -1891,6 +1891,11 @@ function renderExec(p){
       edit?h("td",{class:"x-add"}):null);
   });
   const xt=h("table",{class:"gtable xtable"},thead,h("tbody",null,body));
+  /* the "count | %" column fits its contents: the count part as wide as the longest count, the rest for the % */
+  { let nMax=1, pMax=4; for(const r of posAll){ const v=ex.vals[r.code]||{}, ds=ex.dates.filter(d=>num(v[d])); if(!ds.length) continue;
+      nMax=Math.max(nMax,String(ds.length).length); const q=num(r.it.qty), t=ds.reduce((a,d)=>a+num(v[d]),0);
+      if(q) pMax=Math.max(pMax,(fmtNum(Math.round(t/q*1000)/10)+"%").length); }
+    const xn=Math.ceil(nMax*7.6+12); xt.style.setProperty("--xn",xn+"px"); xt.style.setProperty("--w5",Math.max(76,xn+Math.ceil(pMax*7.4)+30)+"px"); }
   colResize(xt,"exec");
   const wrap=h("div",{class:"gwrap",onscroll:()=>{ gTip().hidden=true; }},xt);
   wrap.addEventListener("mouseover",e=>{ const t=e.target.closest(".g-tipsrc"), tip=gTip();
