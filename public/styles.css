@@ -1505,3 +1505,5 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .as-row.co-ev{grid-template-columns:30px minmax(0,1fr) 130px 130px 90px 30px}
 .co-vat{display:flex;justify-content:center}
 .pr-ratio.pr-r3{--c:#0284c7}
+.co-sec th{text-align:left;font-size:.66rem;font-weight:800;color:var(--muted);letter-spacing:.04em;padding:14px 12px 4px!important;background:var(--surface)!important}
+.co-open{max-width:420px}

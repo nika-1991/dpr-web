@@ -2239,8 +2239,8 @@ const nextMonthDay=(d,day)=>{ const [y,m]=d.split("-").map(Number), ny=m===12?y+
 function dueDay(d,t,first){ let m;
   if(t==="adv") return first||d; if(t==="0"||!t) return d; if((m=/^d:(\d+)$/.exec(t))) return addDays(d,+m[1]);
   if(t==="eom") return monthEnd(d); if((m=/^nmd:(\d+)$/.exec(t))) return nextMonthDay(d,+m[1]); if(t==="nme") return monthEnd(nextMonthDay(d,1)); return d; }
-function cfData(p){
-  const sc=S.sched, f=cfFin(sc), T=normTerms(sc.terms), PL=plData(p), r=num(f.vat)/100;
+function cfData(p,sc=S.sched){
+  const f=cfFin(sc), T=normTerms(sc.terms), PL=plData(p,sc,[]), r=num(f.vat)/100;
   const flows=[]; /* {row, sub, date, v} */
   const put=(row,date,v,sub)=>{ if(v&&date) flows.push({row,sub,date,v}); };
   const vatIn={}, vatOut={}; const mk=d=>d.slice(0,7);
@@ -2468,9 +2468,9 @@ function renderCompany(){
   if(!(S.admin||S.reviewer)) return renderMissing();
   if(!S.co){ loadCompany(); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   const tab=S.coTab||"pl";
-  const tabs=h("div",{class:"vswitch pl-sw",role:"group","aria-label":"კომპანიის ფინანსები"},[["pl","კონსოლიდირებული P&L"],["set","კომპანიის დაშვებები"]].map(([k,l])=>
+  const tabs=h("div",{class:"vswitch pl-sw",role:"group","aria-label":"კომპანიის ფინანსები"},[["pl","კონსოლიდირებული P&L"],["cf","კონსოლიდირებული CF"],["set","კომპანიის დაშვებები"]].map(([k,l])=>
     h("button",{type:"button","aria-pressed":String(tab===k),class:"vbtn vtxt"+(tab===k?" on":""),onclick:()=>{S.coTab=k;render();}},l)));
-  return h("div",{class:"co-page"},h("div",{class:"pl-head pr-bar"},tabs,h("div",{class:"pl-note"}),h("span",{id:"co-status",class:"muted small"})),tab==="set"?renderCoSettings():renderCoPL());
+  return h("div",{class:"co-page"},h("div",{class:"pl-head pr-bar"},tabs,h("div",{class:"pl-note"}),h("span",{id:"co-status",class:"muted small"})),tab==="set"?renderCoSettings():tab==="cf"?renderCoCF():renderCoPL());
 }
 function renderCoPL(){
   const view=S.coView||"plan", D=coData(view), vr=1.18;
@@ -2525,6 +2525,75 @@ function renderCoPL(){
       h("div",{class:"pr-cur"},D.sel.length+" "+tr("პროექტი"))),
       h("div",{class:"pr-wrap"},finResize(table,"co."+M.length)),note?h("p",{class:"muted small"},note):null)];
 }
+/* consolidated cash flow: each chosen project's cash flow by month, plus company payments when all projects are in */
+function renderCoCF(){
+  const co=S.co, all=[...S.projects.values()].filter(p=>canReview(p)).sort((a,b)=>String(pShort(a)).localeCompare(String(pShort(b)),"ka"));
+  const sel=S.coSel?all.filter(p=>S.coSel.has(p.id)):all, allIn=!S.coSel||S.coSel.size===all.length;
+  const per=sel.map(p=>{ const sc=co.scheds[p.id]||{rows:{},exec:{dates:[],vals:{}}}; const {flows}=cfData(p,sc); const g={};
+    for(const x of flows){ const k=x.row.startsWith("cost:")?"cost":x.row, m=x.date.slice(0,7); (g[k]||(g[k]={}))[m]=((g[k]||{})[m]||0)+x.v; }
+    return {p,g,open:num(cfFin(sc).open)}; });
+  const ks=new Set(); per.forEach(x=>Object.values(x.g).forEach(o=>Object.keys(o).forEach(k=>ks.add(k))));
+  if(allIn) for(const e of co.fin.events||[]) if(e.on&&e.month) ks.add(e.month);
+  let M=[...ks].sort();
+  const pick=h("div",{class:"co-pick"},h("span",{class:"co-pl"},tr("პროექტები")+":"),
+    h("button",{type:"button",class:"co-chip"+(!S.coSel?" on":""),onclick:()=>{ S.coSel=null; render(); }},"ყველა"),
+    all.map(p=>{ const on=!S.coSel||S.coSel.has(p.id); return h("button",{type:"button",class:"co-chip"+(S.coSel&&on?" on":"")+(p.archived?" arch":""),title:p.name,
+      onclick:()=>{ const s=S.coSel?new Set(S.coSel):new Set(); if(!S.coSel) s.add(p.id); else s.has(p.id)?s.delete(p.id):s.add(p.id); S.coSel=s.size?s:null; render(); }},pShort(p)); }));
+  if(!M.length) return [h("div",{class:"co-bar"},pick),h("div",{class:"empty"},h("p",{class:"muted"},"არჩეულ პროექტებზე მონაცემი ჯერ არ არის."))];
+  { const out=[]; for(let m=M[0]; m<=M[M.length-1]; ){ out.push(m); const [y,mo]=m.split("-").map(Number); m=mo===12?(y+1)+"-01":y+"-"+pad(mo+1); } M=out; }
+  const z=()=>M.map(()=>0), sum=arrs=>{ const t=z(); arrs.forEach(a=>a.forEach((v,i)=>t[i]+=v)); return t; }, tot=a=>a.reduce((x,y)=>x+y,0);
+  const vecOf=(x,keys)=>M.map(m=>keys.reduce((a,k)=>a+((x.g[k]||{})[m]||0),0));
+  const open=S.coCfOpen||(S.coCfOpen=new Set());
+  const rows=[];
+  const block=(key,label,keys,kind)=>{ const lines=per.map(x=>({l:pShort(x.p),v:vecOf(x,keys)})).filter(x=>tot(x.v.map(Math.abs))>0.5);
+    const t=sum(lines.map(x=>x.v)); if(!lines.length) return t;
+    if(open.has(key)) lines.forEach(x=>rows.push({k:"item",l:x.l,v:x.v})); rows.push({k:kind||"item",l:label,v:t,key,fold:true}); return t; };
+  const sec=t=>rows.push({k:"sec",l:t});
+  sec("ფულადი ჩარიცხვა");
+  const a1=block("adv","მიღებული ავანსი",["advIn"]);
+  const a2=block("rec","მიღებული ფული შესრულებიდან",["works","advDed","ret","retRel"]);
+  const a3=block("hold","cash cover / ფულის დაკავება / გამოთავისუფლება",["cover","hold","holdRel"]);
+  const rin=sum([a1,a2,a3]); rows.push({k:"rev",l:"სულ ჩარიცხვა",v:rin});
+  sec("ფულადი გადახდა");
+  const b1=block("cost","პირდაპირი ხარჯების გადახდა",["cost"]);
+  const b2=block("ov","პროექტების ზედნადები ხარჯები",["ov"]);
+  const b3=block("cm","გაუთვალისწინებელი / მობილიზაცია",["cont","mob"]);
+  const b4=block("vat","დღგ-ს გადახდა / დაბრუნება",["vat"]);
+  const rout=sum([b1,b2,b3,b4]); rows.push({k:"cost",l:"სულ გადახდა პროექტებზე",v:rout});
+  let net=sum([rin,rout]); rows.push({k:"gross",l:"პროექტების წმინდა ნაკადი",v:net});
+  let openBal=per.reduce((a,x)=>a+x.open,0);
+  if(allIn){
+    sec("კომპანია");
+    const vr=1.18, nextM=m=>{ const [y,mo]=m.split("-").map(Number); return mo===12?(y+1)+"-01":y+"-"+pad(mo+1); };
+    const lineOf=(list,withVat)=>list.filter(x=>x.name||num(x.monthly)).map(x=>({l:x.name||"—",v:M.map(m=>(x.from&&m<x.from)||(x.to&&m>x.to)?0:-num(x.monthly))}));
+    const fold=(key,label,lines)=>{ const t=sum(lines.map(x=>x.v)); if(!lines.length) return t; if(open.has(key)) lines.forEach(x=>rows.push({k:"item",l:x.l,v:x.v})); rows.push({k:"item",l:label,v:t,key,fold:true}); return t; };
+    const evL=(co.fin.events||[]).filter(e=>e.on&&e.month&&num(e.amount)).map(e=>{ const v=z(), n=Math.max(1,e.spread||1); let m=e.month; for(let j=0;j<n;j++){ const i=M.indexOf(m); if(i>=0) v[i]+=num(e.amount)/n; m=nextM(m); } return {l:e.name||"—",v}; });
+    const c1=fold("cev","ერთჯერადი დაშვებები",evL);
+    const c2=fold("cadm","ადმინისტრაციული ხარჯების გადახდა",lineOf(co.fin.admin||[]));
+    /* VAT on administrative costs marked with VAT comes back the next month */
+    const vc=z(); for(const x of co.fin.admin||[]) if(x.vat) M.forEach((m,i)=>{ if((x.from&&m<x.from)||(x.to&&m>x.to)) return; const j=M.indexOf(nextM(m)); if(j>=0) vc[j]+=num(x.monthly)*(vr-1)/vr; });
+    if(tot(vc)) rows.push({k:"item",l:"ადმინისტრაციული ხარჯების დღგ-ს ჩათვლა",v:vc});
+    const c3=fold("cfin","ფინანსური ხარჯების გადახდა",lineOf(co.fin.fin||[]));
+    const cTot=sum([c1,c2,vc,c3]); rows.push({k:"ind",l:"კომპანიის ნაკადი",v:cTot});
+    net=sum([net,cTot]); openBal=num(co.fin.open);
+  }
+  const close=[], opening=[]; net.reduce((a,v,i)=>{ opening[i]=a; return (close[i]=a+v); },openBal);
+  rows.push({k:"gap",l:""}); rows.push({k:"item",l:"საწყისი ნაშთი",v:opening,noTot:true}); rows.push({k:"net",l:"წმინდა ნაკადი",v:net}); rows.push({k:"gross",l:"საბოლოო ნაშთი",v:close,noTot:true});
+  const MN=LANG==="en"?MONTHS_EN:MONTHS_KA, lab=m=>MN[+m.slice(5)-1].slice(0,3)+". "+m.slice(0,4);
+  const td=(v,cls)=>h("td",{class:"num"+(v<-0.5?" neg":"")+(cls?" "+cls:"")},plMoney(v)), nC=M.length+2;
+  const body=rows.map(r=>{
+    if(r.k==="gap") return h("tr",{class:"pr-gap"},h("td",{colspan:String(nC)}));
+    if(r.k==="sec") return h("tr",{class:"co-sec"},h("th",{colspan:String(nC)},tr(r.l)));
+    const tg=r.fold?h("button",{class:"pl-tg",type:"button","aria-expanded":String(open.has(r.key)),"aria-label":(open.has(r.key)?"აკეცვა":"გაშლა")+": "+r.l,onclick:()=>{ open.has(r.key)?open.delete(r.key):open.add(r.key); render(); }},open.has(r.key)?"▾":"▸"):null;
+    return h("tr",{class:"pr-"+r.k},h("th",{scope:"row"},tg,tr(r.l)),r.v.map(v=>td(v)),r.noTot?h("td",{class:"num pr-t"}):td(tot(r.v),"pr-t")); });
+  let minV=Infinity, minAt=null; close.forEach((v,i)=>{ if(v<minV){ minV=v; minAt=M[i]; } });
+  const table=h("table",{class:"pl-table pr-table co-table"},h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"მუხლი"),M.map(m=>h("th",{class:"num"},lab(m))),h("th",{class:"num pr-t"},"სულ"))),h("tbody",null,body));
+  return [h("div",{class:"co-bar"},pick),
+    h("article",{class:"pr-card"},h("div",{class:"pr-top"},h("div",null,h("h2",{class:"pr-title"},tr("კონსოლიდირებული ფულადი ნაკადი")+" ",h("span",null,"("+tr("გეგმა")+", "+tr("ლარი")+")"))),
+      h("div",{class:"pr-cur"},sel.length+" "+tr("პროექტი")+(minAt?" · "+tr("ყველაზე დაბალი ნაშთი")+": "+lab(minAt)+" "+gel0(minV):""))),
+      h("div",{class:"pr-wrap"},finResize(table,"cocf."+M.length)),
+      allIn?null:h("p",{class:"muted small"},tr("კომპანიის ხარჯები მხოლოდ „ყველა“ პროექტის არჩევისას ითვლება; საწყისი ნაშთი — არჩეული პროექტების ნაშთების ჯამი.")))];
+}
 function renderCoSettings(){
   const F=S.co.fin, edit=S.admin;
   const list=(key,title,hint,withVat)=>{ const arr=F[key]||(F[key]=[]), box=h("div",{class:"as-ind"}), sumEl=h("b",{class:"as-sum"});
@@ -2556,7 +2625,10 @@ function renderCoSettings(){
       h("small",null,tr("მაგ. საგარანტიო გამოსასწორებელი სამუშაოები −500 000 ₾, 6 თვეზე; ჩართვა/გამორთვით ჩანს, როგორ ცვლის შედეგს."))));
   edraw();
   const ev=h("section",{class:"as-grp as-wide"},h("div",{class:"as-gt"},icon("issues"),h("span",null,tr("ერთჯერადი დაშვებები (P&L)"))),ebox);
-  return h("div",{class:"as-page co-set"},
+  const openF=h("section",{class:"as-grp co-open"},h("div",{class:"as-gt"},icon("coins"),h("span",null,tr("ფულადი ნაშთი"))),
+    h("label",{class:"as-f"},h("span",{class:"as-l"},tr("კომპანიის საწყისი ნაშთი"),h("small",null,tr("კონსოლიდირებული CF-ის დასაწყისი"))),
+      h("span",{class:"as-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(F.open??0),disabled:!edit,"aria-label":tr("კომპანიის საწყისი ნაშთი"),onchange:e=>{ F.open=num(e.target.value); saveCoFin(); }}),h("em",null,"₾"))));
+  return h("div",{class:"as-page co-set"},openF,
     list("admin","ადმინისტრაციული ხარჯები","კომპანიის საერთო ხარჯი თვეში; დღგ მონიშნულზე P&L-ში დღგ-ს გარეშე ჩაითვლება.",true),
     list("fin","ფინანსური ხარჯები","ბანკის და გარანტიების საკომისიო, სესხის პროცენტი — თვეში.",false),
     ev);
