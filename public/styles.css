@@ -1523,3 +1523,11 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .ln-dlg textarea{width:100%;font-family:var(--f-mono);font-size:.74rem}
 .co-openin{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--muted);margin-left:auto}
 .co-openin input{width:120px;height:28px;text-align:right}
+/* loan terms in one line, small captions above */
+.ln-tline{display:flex;align-items:flex-end;gap:8px;margin-left:auto;flex-wrap:wrap}
+.ln-tf{display:flex;flex-direction:column;gap:1px}
+.ln-tf>span{font-size:.6rem;color:var(--muted);padding-left:2px}
+.ln-tf input.inp{height:26px;padding:2px 6px;font-size:.74rem;min-height:0}
+.ln-cb{align-items:center}
+.ln-cb input{width:16px;height:16px;margin:4px 0}
+.ln-tline{margin-left:12px}

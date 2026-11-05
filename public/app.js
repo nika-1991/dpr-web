@@ -2691,9 +2691,12 @@ function renderCoLoans(){
       h("input",{class:"inp ln-name",value:L.name||"",placeholder:tr("მაგ. ბანკი / სესხის დასახელება"),disabled:!edit,"aria-label":tr("სესხის დასახელება"),onchange:e=>{ L.name=e.target.value.trim(); redraw(); }}),
       h("div",{class:"ln-kpi"},h("span",null,tr("ძირი")),h("b",null,gel0(T("p")))),h("div",{class:"ln-kpi"},h("span",null,tr("პროცენტი")),h("b",null,gel0(T("i")))),h("div",{class:"ln-kpi"},h("span",null,tr("სულ")),h("b",null,gel0(T("pay")))),
       edit?h("button",{class:"btn sm ghost",type:"button","aria-label":tr("სესხის წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო სესხი?"))){ loans.splice(li,1); redraw(); } }},"✕"):null);
-    const terms=h("div",{class:"ln-terms"},fld("amount","სესხის თანხა","₾"),fld("start","დაწყების თარიღი","",{type:"date"}),
-      L.mode==="manual"?null:[fld("rate","წლიური საპროცენტო განაკვეთი","%"),fld("n","გადახდების რაოდენობა","თვე"),fld("grace","საშეღავათო პერიოდი","თვე")],
-      h("label",{class:"as-f"},h("span",{class:"as-l"},tr("თანხის მიღება CF-ში"),h("small",null,tr("დაწყების თარიღზე"))),h("span",{class:"as-v"},h("input",{type:"checkbox",checked:L.recv!==false,disabled:!edit,"aria-label":tr("თანხის მიღება CF-ში"),onchange:e=>{ L.recv=e.target.checked; redraw(); }}),h("em"))));
+    /* terms in one compact line: a small caption above each field */
+    const tf=(k,cap,title,w,attrs={})=>h("label",{class:"ln-tf",title:tr(title)},h("span",null,tr(cap)),h("input",{class:"inp"+(attrs.type?"":" num"),style:"width:"+w+"px",value:String(L[k]??""),disabled:!edit,"aria-label":tr(title),...attrs,
+      onchange:e=>{ L[k]=attrs.type==="date"?e.target.value:num(e.target.value); redraw(); }}));
+    const terms=h("div",{class:"ln-tline"},tf("amount","სესხი, ₾","სესხის თანხა",96),tf("start","დაწყება","დაწყების თარიღი",126,{type:"date"}),
+      L.mode==="manual"?null:[tf("rate","%","წლიური საპროცენტო განაკვეთი",52),tf("n","თვე","გადახდების რაოდენობა",52),tf("grace","საშ. პერ.","საშეღავათო პერიოდი (თვე)",52)],
+      h("label",{class:"ln-tf ln-cb",title:tr("თანხის მიღება CF-ში დაწყების თარიღზე")},h("span",null,"CF"),h("input",{type:"checkbox",checked:L.recv!==false,disabled:!edit,"aria-label":tr("თანხის მიღება CF-ში"),onchange:e=>{ L.recv=e.target.checked; redraw(); }})));
     const tbl=h("table",{class:"pl-table ln-table"},h("thead",null,h("tr",null,["#","თარიღი","საწყისი ნაშთი","გადახდა","ძირი","პროცენტი","საბოლოო ნაშთი",L.mode==="manual"&&edit?"":null].filter(x=>x!==null).map((l,i)=>h("th",{class:i<2?"pl-c0":"num"},l)))),
       h("tbody",null,rows.map((r,k)=>{ const src=L.mode==="manual"?(L.rows||[]).filter(x=>x.d).sort((a,b)=>a.d.localeCompare(b.d))[k]:null;
         const cellIn=(key)=>h("td",{class:"num"},h("input",{class:"inp num ln-in",value:String(src[key]??""),"aria-label":key,onchange:e=>{ src[key]=key==="d"?e.target.value:num(e.target.value); redraw(); },...(key==="d"?{type:"date"}:{})}));
@@ -2702,8 +2705,8 @@ function renderCoLoans(){
           src&&edit?h("td",null,h("button",{class:"btn sm ghost",type:"button","aria-label":"წაშლა",onclick:()=>{ L.rows.splice(L.rows.indexOf(src),1); redraw(); }},"✕")):null); }),
         h("tr",{class:"pl-net"},h("th",{colspan:"3"},"სულ"),h("td",{class:"num"},fmtNum(Math.round(T("pay")))),h("td",{class:"num"},fmtNum(Math.round(T("p")))),h("td",{class:"num"},fmtNum(Math.round(T("i")))),h("td"),L.mode==="manual"&&edit?h("td"):null)));
     const addRow=edit&&L.mode==="manual"?h("button",{class:"btn sm",type:"button",onclick:()=>{ const last=(L.rows||[]).map(x=>x.d).filter(Boolean).sort().pop(); (L.rows||(L.rows=[])).push({d:last?addMonths(last,1):(L.start||todayISO()),p:null,i:null}); redraw(); }},"+ სტრიქონი"):null;
-    return h("section",{class:"as-grp as-wide ln-card"},head,h("div",{class:"ln-bar"},mode,paste,h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ S.coLoanOpen=open?null:L.id; render(); }},open?"▾ "+tr("გრაფიკის დამალვა"):"▸ "+tr("გრაფიკის ნახვა")+" ("+rows.length+")")),
-      terms,open?[h("div",{class:"pl-wrap ln-wrap"},tbl),addRow]:null);
+    return h("section",{class:"as-grp as-wide ln-card"},head,h("div",{class:"ln-bar"},mode,paste,h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ S.coLoanOpen=open?null:L.id; render(); }},open?"▾ "+tr("გრაფიკის დამალვა"):"▸ "+tr("გრაფიკის ნახვა")+" ("+rows.length+")"),terms),
+      open?[h("div",{class:"pl-wrap ln-wrap"},tbl),addRow]:null);
   });
   /* paste dialog */
   const L0=S.coPaste&&loans.find(x=>x.id===S.coPaste);
