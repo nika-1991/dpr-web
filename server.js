@@ -541,6 +541,35 @@ api.get("/analysis", auth, (req, res) => {
   const additional = db.prepare("SELECT project_id,data FROM additional").all().filter((row) => mine(row.project_id)).map((row) => ({ projectId: row.project_id, ...JSON.parse(row.data) }));
   res.json({ reports, additional });
 });
+/* company finance: every project's schedule the user may review (for the consolidated P&L / CF) */
+api.get("/company/schedules", auth, (req, res) => {
+  const out = {};
+  for (const row of db.prepare("SELECT project_id,data FROM schedules").all()) {
+    const p = getProject(row.project_id); if (p && canReview(p, req.user)) out[row.project_id] = JSON.parse(row.data);
+  }
+  res.json(out);
+});
+/* company-level assumptions: administrative and financial costs per month, one-off events, opening balance */
+const cleanCoFin = (b) => {
+  const str = (v, n) => String(v ?? "").slice(0, n);
+  const M = /^\d{4}-\d{2}$/, num = (v) => { const n = parseFloat(String(v ?? "").replace(",", ".")); return isFinite(n) ? Math.round(n * 100) / 100 : null; };
+  const list = (a, vat) => (Array.isArray(a) ? a : []).slice(0, 200).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), monthly: num(x?.monthly),
+    from: M.test(x?.from || "") ? x.from : "", to: M.test(x?.to || "") ? x.to : "", ...(vat ? { vat: !!x?.vat } : {}) }));
+  return { admin: list(b?.admin, true), fin: list(b?.fin, false),
+    events: (Array.isArray(b?.events) ? b.events : []).slice(0, 200).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), amount: num(x?.amount),
+      month: M.test(x?.month || "") ? x.month : "", spread: Math.max(1, Math.min(60, parseInt(x?.spread, 10) || 1)), on: x?.on !== false })),
+    open: num(b?.open) ?? 0 };
+};
+api.get("/company/finance", auth, (req, res) => {
+  if (req.user.role !== "admin" && !db.prepare("SELECT data FROM projects").all().some((r) => canReview(JSON.parse(r.data), req.user))) return res.status(403).json({ error: "წვდომა არ გაქვთ" });
+  const row = db.prepare("SELECT data FROM config WHERE key='cofin'").get();
+  res.json(row ? JSON.parse(row.data) : cleanCoFin({}));
+});
+api.put("/company/finance", auth, admin, (req, res) => {
+  const d = cleanCoFin(req.body || {});
+  db.prepare("INSERT INTO config(key,data) VALUES('cofin',?) ON CONFLICT(key) DO UPDATE SET data=excluded.data").run(JSON.stringify(d));
+  res.json(d);
+});
 /* schedule (გეგმა-გრაფიკი): resources under each BoQ position and planned quantities per day */
 const RES_TYPES = ["მასალა", "ტექნიკა", "შრომა", "ქვეკონტრაქტორი"];
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
