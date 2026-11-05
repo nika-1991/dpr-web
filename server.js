@@ -558,7 +558,12 @@ const cleanCoFin = (b) => {
   return { admin: list(b?.admin, true), fin: list(b?.fin, false),
     events: (Array.isArray(b?.events) ? b.events : []).slice(0, 200).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), amount: num(x?.amount),
       month: M.test(x?.month || "") ? x.month : "", spread: Math.max(1, Math.min(60, parseInt(x?.spread, 10) || 1)), on: x?.on !== false })),
-    open: num(b?.open) ?? 0 };
+    open: num(b?.open) ?? 0,
+    /* loans: an annuity worked out from its terms, or a schedule typed / pasted row by row */
+    loans: (Array.isArray(b?.loans) ? b.loans : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(),
+      amount: num(x?.amount), rate: num(x?.rate), n: Math.max(0, Math.min(600, parseInt(x?.n, 10) || 0)), grace: Math.max(0, Math.min(120, parseInt(x?.grace, 10) || 0)),
+      start: /^\d{4}-\d{2}-\d{2}$/.test(x?.start || "") ? x.start : "", mode: x?.mode === "manual" ? "manual" : "auto", recv: x?.recv !== false,
+      rows: (Array.isArray(x?.rows) ? x.rows : []).slice(0, 600).map((r) => ({ d: /^\d{4}-\d{2}-\d{2}$/.test(r?.d || "") ? r.d : "", p: num(r?.p), i: num(r?.i) })) })) };
 };
 api.get("/company/finance", auth, (req, res) => {
   if (req.user.role !== "admin" && !db.prepare("SELECT data FROM projects").all().some((r) => canReview(JSON.parse(r.data), req.user))) return res.status(403).json({ error: "წვდომა არ გაქვთ" });

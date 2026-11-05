@@ -2443,7 +2443,7 @@ async function loadCompany(){
 function saveCoFin(){
   clearTimeout(S.coTimer); const st=()=>document.getElementById("co-status");
   if(st()) st().textContent=tr("ინახება…");
-  S.coTimer=setTimeout(async()=>{ try{ S.co.fin=await api("PUT","/company/finance",S.co.fin); if(st()) st().textContent=tr("შენახულია"); }
+  S.coTimer=setTimeout(async()=>{ try{ await api("PUT","/company/finance",S.co.fin); if(st()) st().textContent=tr("შენახულია"); }
     catch(e){ if(st()) st().textContent=tr("ვერ შეინახა")+": "+errMsg(e); } },600);
 }
 /* the company's monthly amounts: a monthly line between its months (VAT taken out where marked) */
@@ -2468,9 +2468,9 @@ function renderCompany(){
   if(!(S.admin||S.reviewer)) return renderMissing();
   if(!S.co){ loadCompany(); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   const tab=S.coTab||"pl";
-  const tabs=h("div",{class:"vswitch pl-sw",role:"group","aria-label":"კომპანიის ფინანსები"},[["pl","კონსოლიდირებული P&L"],["cf","კონსოლიდირებული CF"],["set","კომპანიის დაშვებები"]].map(([k,l])=>
+  const tabs=h("div",{class:"vswitch pl-sw",role:"group","aria-label":"კომპანიის ფინანსები"},[["pl","კონსოლიდირებული P&L"],["cf","კონსოლიდირებული CF"],["fixed","ფიქსირებული ხარჯები"],["loans","სესხები"],["set","ერთჯერადი დაშვებები"]].map(([k,l])=>
     h("button",{type:"button","aria-pressed":String(tab===k),class:"vbtn vtxt"+(tab===k?" on":""),onclick:()=>{S.coTab=k;render();}},l)));
-  return h("div",{class:"co-page"},h("div",{class:"pl-head pr-bar"},tabs,h("div",{class:"pl-note"}),h("span",{id:"co-status",class:"muted small"})),tab==="set"?renderCoSettings():tab==="cf"?renderCoCF():renderCoPL());
+  return h("div",{class:"co-page"},h("div",{class:"pl-head pr-bar"},tabs,h("div",{class:"pl-note"}),h("span",{id:"co-status",class:"muted small"})),tab==="set"?renderCoEvents():tab==="fixed"?renderCoFixed():tab==="loans"?renderCoLoans():tab==="cf"?renderCoCF():renderCoPL());
 }
 function renderCoPL(){
   const view=S.coView||"plan", D=coData(view), vr=1.18;
@@ -2501,7 +2501,9 @@ function renderCoPL(){
     if(evLines.length){ ev=block("ev",evLines,"ერთჯერადი დაშვებები","ind"); }
     const admL=coMonthly(S.co.fin.admin||[],M,vr).map(x=>({l:x.name,v:x.vals})); adm=block("adm",admL,"ადმინისტრაციული ხარჯები","ind");
     const op=sum([afterInd,ev,adm]); rows.push({k:"gross",l:"საოპერაციო მოგება / (ზარალი)",v:op});
-    const finL=coMonthly(S.co.fin.fin||[],M,vr).map(x=>({l:x.name,v:x.vals})); fin=block("fin",finL,"ფინანსური ხარჯები","ind");
+    const finL=coMonthly(S.co.fin.fin||[],M,vr).map(x=>({l:x.name,v:x.vals}));
+    for(const L of S.co.fin.loans||[]){ const v=z(); for(const r of loanRows(L)){ const i=M.indexOf(r.d.slice(0,7)); if(i>=0) v[i]-=r.i; } if(v.some(x=>x)) finL.push({l:tr("პროცენტი")+" — "+(L.name||tr("სესხი")),v}); }
+    fin=block("fin",finL,"ფინანსური ხარჯები","ind");
     result=sum([op,fin]);
   }
   rows.push({k:"gap",l:""}); rows.push({k:"net",l:D.allIn?"მოგება / (ზარალი) დაბეგვრამდე":"არჩეული პროექტების მოგება / (ზარალი)",v:result});
@@ -2574,7 +2576,14 @@ function renderCoCF(){
     const vc=z(); for(const x of co.fin.admin||[]) if(x.vat) M.forEach((m,i)=>{ if((x.from&&m<x.from)||(x.to&&m>x.to)) return; const j=M.indexOf(nextM(m)); if(j>=0) vc[j]+=num(x.monthly)*(vr-1)/vr; });
     if(tot(vc)) rows.push({k:"item",l:"ადმინისტრაციული ხარჯების დღგ-ს ჩათვლა",v:vc});
     const c3=fold("cfin","ფინანსური ხარჯების გადახდა",lineOf(co.fin.fin||[]));
-    const cTot=sum([c1,c2,vc,c3]); rows.push({k:"ind",l:"კომპანიის ნაკადი",v:cTot});
+    /* loans: money received, principal and interest paid by the repayment schedule */
+    const rcv=[], prn=[], int_=[];
+    for(const L of co.fin.loans||[]){ const nm=L.name||tr("სესხი"), a=z(), b=z(), c=z();
+      if(L.recv&&L.start&&num(L.amount)){ const i=M.indexOf(L.start.slice(0,7)); if(i>=0) a[i]+=num(L.amount); }
+      for(const r of loanRows(L)){ const i=M.indexOf(r.d.slice(0,7)); if(i>=0){ b[i]-=r.p; c[i]-=r.i; } }
+      if(a.some(x=>x)) rcv.push({l:nm,v:a}); if(b.some(x=>x)) prn.push({l:nm,v:b}); if(c.some(x=>x)) int_.push({l:nm,v:c}); }
+    const d1=fold("lrcv","სესხის მიღება",rcv), d2=fold("lprn","სესხის ძირის დაფარვა",prn), d3=fold("lint","სესხის პროცენტის გადახდა",int_);
+    const cTot=sum([c1,c2,vc,c3,d1,d2,d3]); rows.push({k:"ind",l:"კომპანიის ნაკადი",v:cTot});
     net=sum([net,cTot]); openBal=num(co.fin.open);
   }
   const close=[], opening=[]; net.reduce((a,v,i)=>{ opening[i]=a; return (close[i]=a+v); },openBal);
@@ -2588,13 +2597,15 @@ function renderCoCF(){
     return h("tr",{class:"pr-"+r.k},h("th",{scope:"row"},tg,tr(r.l)),r.v.map(v=>td(v)),r.noTot?h("td",{class:"num pr-t"}):td(tot(r.v),"pr-t")); });
   let minV=Infinity, minAt=null; close.forEach((v,i)=>{ if(v<minV){ minV=v; minAt=M[i]; } });
   const table=h("table",{class:"pl-table pr-table co-table"},h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"მუხლი"),M.map(m=>h("th",{class:"num"},lab(m))),h("th",{class:"num pr-t"},"სულ"))),h("tbody",null,body));
-  return [h("div",{class:"co-bar"},pick),
+  const openIn=allIn?h("label",{class:"co-openin"},h("span",null,tr("კომპანიის საწყისი ნაშთი")),h("input",{class:"inp num",inputmode:"decimal",value:String(co.fin.open??0),disabled:!S.admin,"aria-label":tr("კომპანიის საწყისი ნაშთი"),
+    onchange:e=>{ co.fin.open=num(e.target.value); saveCoFin(); render(); }}),h("em",null,"₾")):null;
+  return [h("div",{class:"co-bar"},pick,openIn),
     h("article",{class:"pr-card"},h("div",{class:"pr-top"},h("div",null,h("h2",{class:"pr-title"},tr("კონსოლიდირებული ფულადი ნაკადი")+" ",h("span",null,"("+tr("გეგმა")+", "+tr("ლარი")+")"))),
       h("div",{class:"pr-cur"},sel.length+" "+tr("პროექტი")+(minAt?" · "+tr("ყველაზე დაბალი ნაშთი")+": "+lab(minAt)+" "+gel0(minV):""))),
       h("div",{class:"pr-wrap"},finResize(table,"cocf."+M.length)),
       allIn?null:h("p",{class:"muted small"},tr("კომპანიის ხარჯები მხოლოდ „ყველა“ პროექტის არჩევისას ითვლება; საწყისი ნაშთი — არჩეული პროექტების ნაშთების ჯამი.")))];
 }
-function renderCoSettings(){
+function coListEditor(key,title,hint,withVat){
   const F=S.co.fin, edit=S.admin;
   const list=(key,title,hint,withVat)=>{ const arr=F[key]||(F[key]=[]), box=h("div",{class:"as-ind"}), sumEl=h("b",{class:"as-sum"});
     const upSum=()=>{ sumEl.textContent=gel(arr.reduce((a,x)=>a+num(x.monthly),0))+" / "+tr("თვე"); }; upSum();
@@ -2611,6 +2622,17 @@ function renderCoSettings(){
         h("small",null,tr(hint))));
     draw();
     return h("section",{class:"as-grp as-wide"},h("div",{class:"as-gt"},icon(key==="admin"?"building":"coins"),h("span",null,tr(title)),sumEl),box); };
+  return list(key,title,hint,withVat);
+}
+/* fixed company costs: administrative costs and bank / guarantee fees, per month */
+function renderCoFixed(){
+  return h("div",{class:"as-page co-set"},
+    coListEditor("admin","ადმინისტრაციული ხარჯები","კომპანიის საერთო ხარჯი თვეში; დღგ მონიშნულზე P&L-ში დღგ-ს გარეშე ჩაითვლება, CF-ში დღგ მომდევნო თვეში ჩაითვლება.",true),
+    coListEditor("fin","საკომისიოები","ბანკის და გარანტიების საკომისიო — თვეში. სესხის პროცენტი „სესხების“ ჩანართიდან მოდის.",false));
+}
+/* one-off items: amount, month, spread, on/off */
+function renderCoEvents(){
+  const F=S.co.fin, edit=S.admin;
   const evs=F.events||(F.events=[]), ebox=h("div",{class:"as-ind"});
   const edraw=()=>ebox.replaceChildren(
     h("div",{class:"as-row co-ev as-hd"},["","დასახელება","თანხა, ₾ (+/−)","თვე","თვეზე გაშლა",""].map(t=>h("span",null,t))),
@@ -2625,15 +2647,79 @@ function renderCoSettings(){
       h("small",null,tr("მაგ. საგარანტიო გამოსასწორებელი სამუშაოები −500 000 ₾, 6 თვეზე; ჩართვა/გამორთვით ჩანს, როგორ ცვლის შედეგს."))));
   edraw();
   const ev=h("section",{class:"as-grp as-wide"},h("div",{class:"as-gt"},icon("issues"),h("span",null,tr("ერთჯერადი დაშვებები (P&L)"))),ebox);
-  const openF=h("section",{class:"as-grp co-open"},h("div",{class:"as-gt"},icon("coins"),h("span",null,tr("ფულადი ნაშთი"))),
-    h("label",{class:"as-f"},h("span",{class:"as-l"},tr("კომპანიის საწყისი ნაშთი"),h("small",null,tr("კონსოლიდირებული CF-ის დასაწყისი"))),
-      h("span",{class:"as-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(F.open??0),disabled:!edit,"aria-label":tr("კომპანიის საწყისი ნაშთი"),onchange:e=>{ F.open=num(e.target.value); saveCoFin(); }}),h("em",null,"₾"))));
-  return h("div",{class:"as-page co-set"},openF,
-    list("admin","ადმინისტრაციული ხარჯები","კომპანიის საერთო ხარჯი თვეში; დღგ მონიშნულზე P&L-ში დღგ-ს გარეშე ჩაითვლება.",true),
-    list("fin","ფინანსური ხარჯები","ბანკის და გარანტიების საკომისიო, სესხის პროცენტი — თვეში.",false),
-    ev);
+  return h("div",{class:"as-page co-set"},ev);
 }
-
+/* ---------- loans: repayment schedule (annuity from the terms, or typed / pasted from Excel) ---------- */
+const addMonths=(iso,k)=>{ const [y,m,d]=iso.split("-").map(Number), t=new Date(y,m-1+k,1), last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate(); return isoDay(new Date(t.getFullYear(),t.getMonth(),Math.min(d,last))); };
+/* rows {n,d,open,pay,p,i,close}; in the grace months only interest, then equal payments over the rest */
+function loanRows(L){
+  const A=num(L.amount);
+  if(L.mode==="manual"){ let bal=A; return (L.rows||[]).filter(r=>r.d).slice().sort((a,b)=>a.d.localeCompare(b.d)).map((r,k)=>{ const o=bal; bal=Math.max(0,bal-num(r.p)); return {n:k+1,d:r.d,open:o,pay:num(r.p)+num(r.i),p:num(r.p),i:num(r.i),close:bal}; }); }
+  const n=parseInt(L.n,10)||0, g=Math.min(parseInt(L.grace,10)||0,n), r=num(L.rate)/100/12; if(!A||!n||!L.start) return [];
+  const m=n-g, pmt=m<=0?0:r?A*r/(1-Math.pow(1+r,-m)):A/m; const out=[]; let bal=A;
+  for(let k=1;k<=n;k++){ const i=bal*r, p=k<=g?0:Math.min(bal,pmt-i); out.push({n:k,d:addMonths(L.start,k-1),open:bal,pay:p+i,p,i,close:bal-p}); bal-=p; }
+  return out;
+}
+/* pasted Excel rows: the first date in a row, then its numbers — principal and interest are taken by how many numbers the row has
+   (the loan template: begin, payment, principal, interest, end → 3rd and 4th) */
+function parseLoanPaste(text){
+  const toDate=c=>{ c=String(c).trim(); let m;
+    if((m=/^(\d{4})-(\d{2})-(\d{2})/.exec(c))) return m[1]+"-"+m[2]+"-"+m[3];
+    if((m=/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/.exec(c))) return m[3]+"-"+pad(+m[2])+"-"+pad(+m[1]);
+    if(/^\d{5}$/.test(c)&&+c>30000&&+c<80000) return isoDay(new Date(Date.UTC(1899,11,30)+ +c*864e5));
+    return null; };
+  const toNum=c=>{ const t=String(c).replace(/[\s ₾]/g,"").replace(/,(?=\d{3}(\D|$))/g,"").replace(",","."); return /^[-(]?\d+(\.\d+)?\)?$/.test(t)?Math.abs(parseFloat(t.replace(/[()]/g,""))):null; };
+  const out=[];
+  for(const line of text.split(/\r?\n/)){ const cells=line.split("\t"); let d=null, at=-1;
+    for(let j=0;j<cells.length;j++){ const x=toDate(cells[j]); if(x){ d=x; at=j; break; } } if(!d) continue;
+    const nums=cells.slice(at+1).filter(c=>!toDate(c)).map(toNum).filter(v=>v!=null);
+    let p=null,i=null; if(nums.length>=5){ p=nums[2]; i=nums[3]; } else if(nums.length===4){ p=nums[1]; i=nums[2]; } else if(nums.length>=2){ p=nums[0]; i=nums[1]; } else if(nums.length===1){ p=nums[0]; i=0; }
+    if(p!=null) out.push({d,p:Math.round(p*100)/100,i:Math.round((i||0)*100)/100}); }
+  return out;
+}
+function renderCoLoans(){
+  const F=S.co.fin, edit=S.admin, loans=F.loans||(F.loans=[]);
+  const redraw=()=>{ saveCoFin(); render(); };
+  const cards=loans.map((L,li)=>{
+    const rows=loanRows(L), T=k=>rows.reduce((a,r)=>a+r[k],0), open=S.coLoanOpen===L.id;
+    const fld=(k,l,u,attrs={})=>h("label",{class:"as-f"},h("span",{class:"as-l"},tr(l)),h("span",{class:"as-v"},h("input",{class:"inp"+(attrs.type?"":" num"),value:String(L[k]??""),disabled:!edit,"aria-label":tr(l),...attrs,
+      onchange:e=>{ L[k]=attrs.type==="date"?e.target.value:num(e.target.value); redraw(); }}),h("em",null,u||"")));
+    const mode=h("div",{class:"vswitch pl-sw",role:"group","aria-label":tr("გრაფიკი")},[["auto","ავტომატური"],["manual","ხელით / Excel-იდან"]].map(([k,l])=>
+      h("button",{type:"button",class:"vbtn vtxt"+((L.mode||"auto")===k?" on":""),disabled:!edit,"aria-pressed":String((L.mode||"auto")===k),onclick:()=>{ if(k==="manual"&&!(L.rows||[]).length) L.rows=loanRows({...L,mode:"auto"}).map(r=>({d:r.d,p:Math.round(r.p*100)/100,i:Math.round(r.i*100)/100})); L.mode=k; redraw(); }},l)));
+    const paste=edit&&L.mode==="manual"?h("button",{class:"btn sm",type:"button",onclick:()=>{ S.coPaste=L.id; render(); }},icon("list"),tr("ჩასმა Excel-იდან")):null;
+    const head=h("div",{class:"ln-head"},
+      h("input",{class:"inp ln-name",value:L.name||"",placeholder:tr("მაგ. ბანკი / სესხის დასახელება"),disabled:!edit,"aria-label":tr("სესხის დასახელება"),onchange:e=>{ L.name=e.target.value.trim(); redraw(); }}),
+      h("div",{class:"ln-kpi"},h("span",null,tr("ძირი")),h("b",null,gel0(T("p")))),h("div",{class:"ln-kpi"},h("span",null,tr("პროცენტი")),h("b",null,gel0(T("i")))),h("div",{class:"ln-kpi"},h("span",null,tr("სულ")),h("b",null,gel0(T("pay")))),
+      edit?h("button",{class:"btn sm ghost",type:"button","aria-label":tr("სესხის წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო სესხი?"))){ loans.splice(li,1); redraw(); } }},"✕"):null);
+    const terms=h("div",{class:"ln-terms"},fld("amount","სესხის თანხა","₾"),fld("start","დაწყების თარიღი","",{type:"date"}),
+      L.mode==="manual"?null:[fld("rate","წლიური საპროცენტო განაკვეთი","%"),fld("n","გადახდების რაოდენობა","თვე"),fld("grace","საშეღავათო პერიოდი","თვე")],
+      h("label",{class:"as-f"},h("span",{class:"as-l"},tr("თანხის მიღება CF-ში"),h("small",null,tr("დაწყების თარიღზე"))),h("span",{class:"as-v"},h("input",{type:"checkbox",checked:L.recv!==false,disabled:!edit,"aria-label":tr("თანხის მიღება CF-ში"),onchange:e=>{ L.recv=e.target.checked; redraw(); }}),h("em"))));
+    const tbl=h("table",{class:"pl-table ln-table"},h("thead",null,h("tr",null,["#","თარიღი","საწყისი ნაშთი","გადახდა","ძირი","პროცენტი","საბოლოო ნაშთი",L.mode==="manual"&&edit?"":null].filter(x=>x!==null).map((l,i)=>h("th",{class:i<2?"pl-c0":"num"},l)))),
+      h("tbody",null,rows.map((r,k)=>{ const src=L.mode==="manual"?(L.rows||[]).filter(x=>x.d).sort((a,b)=>a.d.localeCompare(b.d))[k]:null;
+        const cellIn=(key)=>h("td",{class:"num"},h("input",{class:"inp num ln-in",value:String(src[key]??""),"aria-label":key,onchange:e=>{ src[key]=key==="d"?e.target.value:num(e.target.value); redraw(); },...(key==="d"?{type:"date"}:{})}));
+        return h("tr",null,h("td",{class:"mono"},String(r.n)),src&&edit?cellIn("d"):h("td",null,fmtDate(r.d)),h("td",{class:"num"},fmtNum(Math.round(r.open))),h("td",{class:"num"},fmtNum(Math.round(r.pay))),
+          src&&edit?cellIn("p"):h("td",{class:"num"},fmtNum(Math.round(r.p))),src&&edit?cellIn("i"):h("td",{class:"num"},fmtNum(Math.round(r.i))),h("td",{class:"num"},fmtNum(Math.round(r.close))),
+          src&&edit?h("td",null,h("button",{class:"btn sm ghost",type:"button","aria-label":"წაშლა",onclick:()=>{ L.rows.splice(L.rows.indexOf(src),1); redraw(); }},"✕")):null); }),
+        h("tr",{class:"pl-net"},h("th",{colspan:"3"},"სულ"),h("td",{class:"num"},fmtNum(Math.round(T("pay")))),h("td",{class:"num"},fmtNum(Math.round(T("p")))),h("td",{class:"num"},fmtNum(Math.round(T("i")))),h("td"),L.mode==="manual"&&edit?h("td"):null)));
+    const addRow=edit&&L.mode==="manual"?h("button",{class:"btn sm",type:"button",onclick:()=>{ const last=(L.rows||[]).map(x=>x.d).filter(Boolean).sort().pop(); (L.rows||(L.rows=[])).push({d:last?addMonths(last,1):(L.start||todayISO()),p:null,i:null}); redraw(); }},"+ სტრიქონი"):null;
+    return h("section",{class:"as-grp as-wide ln-card"},head,h("div",{class:"ln-bar"},mode,paste,h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ S.coLoanOpen=open?null:L.id; render(); }},open?"▾ "+tr("გრაფიკის დამალვა"):"▸ "+tr("გრაფიკის ნახვა")+" ("+rows.length+")")),
+      terms,open?[h("div",{class:"pl-wrap ln-wrap"},tbl),addRow]:null);
+  });
+  /* paste dialog */
+  const L0=S.coPaste&&loans.find(x=>x.id===S.coPaste);
+  const dlg=L0?(()=>{ const ta=h("textarea",{class:"inp",rows:"10",placeholder:tr("მონიშნეთ Excel-ში გრაფიკის სტრიქონები (თარიღით) და ჩასვით აქ — Ctrl+V")});
+    const info=h("div",{class:"muted small"});
+    ta.addEventListener("input",()=>{ const r=parseLoanPaste(ta.value); info.textContent=r.length?r.length+" "+tr("სტრიქონი ამოიცნო")+" · "+tr("ძირი")+" "+gel0(r.reduce((a,x)=>a+x.p,0))+" · "+tr("პროცენტი")+" "+gel0(r.reduce((a,x)=>a+x.i,0)):tr("სტრიქონი ვერ ამოიცნო"); });
+    const close=()=>{ S.coPaste=null; render(); };
+    return h("div",{class:"g-modal",onclick:e=>{ if(e.target===e.currentTarget) close(); }},h("div",{class:"g-dlg ln-dlg",role:"dialog","aria-modal":"true"},
+      h("h3",null,tr("გრაფიკის ჩასმა Excel-იდან")),
+      h("p",{class:"muted small"},tr("თითო სტრიქონში: თარიღი, შემდეგ თანხები. ტესენის შაბლონიდან (საწყისი ნაშთი, გადახდა, ძირი, პროცენტი, საბოლოო) ძირი და პროცენტი ავტომატურად აირჩევა; ორი რიცხვის შემთხვევაში — ძირი, პროცენტი.")),
+      ta,info,h("div",{class:"row",style:"justify-content:flex-end;gap:8px;margin-top:8px"},h("button",{class:"btn ghost",type:"button",onclick:close},"გაუქმება"),
+        h("button",{class:"btn primary",type:"button",onclick:()=>{ const r=parseLoanPaste(ta.value); if(!r.length){ toast(tr("სტრიქონი ვერ ამოიცნო")); return; } L0.rows=r; L0.mode="manual"; if(!L0.start) L0.start=r[0].d; if(!num(L0.amount)) L0.amount=Math.round(r.reduce((a,x)=>a+x.p,0)*100)/100; S.coPaste=null; S.coLoanOpen=L0.id; redraw(); }},tr("ჩასმა")))));
+  })():null;
+  return h("div",{class:"as-page co-set"},cards.length?cards:h("div",{class:"empty"},h("p",{class:"muted"},tr("სესხი ჯერ არ არის დამატებული."))),
+    edit?h("div",null,h("button",{class:"btn",type:"button",onclick:()=>{ const id=Math.random().toString(36).slice(2,8); loans.push({id,name:"",amount:null,rate:null,n:null,grace:0,start:"",mode:"auto",recv:true,rows:[]}); S.coLoanOpen=id; redraw(); }},"+ სესხი")):null,dlg);
+}
 /* ---------- ANALYSIS (admin): revenue = priced works, cost = priced expenses ---------- */
 function analysisData(){
   const A=S.analysis||{reports:[],additional:[]}, F=S.anFilter||(S.anFilter={approvedOnly:true,from:"",to:""});
