@@ -1616,3 +1616,4 @@ body.has-side,body.wide{--lp:var(--side-w)}
 /* the first tab starts at the panel edge: no foot or curve on its left */
 .tn-i.on:first-child::before{display:none!important}
 .tn-i.on:first-child{border-top-left-radius:0}
+.co-st{display:flex;justify-content:flex-end;min-height:0;margin-bottom:-8px}

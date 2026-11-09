@@ -271,6 +271,12 @@ function renderPlaceholder([en,title,ic]){
 }
 /* left navigation panel on the app-level pages (projects, analysis, settings) */
 function renderAppNav(){
+  /* consolidation has its own menu: the statements, then the company-level assumptions */
+  if(S.view==="company"){ const t=S.coTab||"pl";
+    const ci=(k,ic,label)=>h("button",{type:"button",class:"anav-i"+(t===k?" on":""),"aria-current":t===k?"page":null,onclick:()=>{ S.coTab=k; render(); }},icon(ic),h("span",null,label));
+    return h("nav",{class:"anav","aria-label":"კონსოლიდაცია"},
+      h("div",{class:"anav-g"},ci("pl","chart","კონსოლიდირებული P&L"),ci("cf","pulse","კონსოლიდირებული CF")),
+      h("div",{class:"anav-g anav-set"},h("div",{class:"hb-l"},"დაშვებები"),ci("fixed","building","ფიქსირებული ხარჯები"),ci("loans","coins","სესხები"),ci("set","issues","ერთჯერადი დაშვებები"))); }
   const item=(view,ic,label)=>h("button",{type:"button",class:"anav-i"+(S.view===view?" on":""),"aria-current":S.view===view?"page":null,onclick:()=>go(view)},icon(ic),h("span",null,label));
   return h("nav",{class:"anav","aria-label":"მენიუ"},
     h("div",{class:"anav-g"},
@@ -2471,9 +2477,7 @@ function renderCompany(){
   if(!(S.admin||S.reviewer)) return renderMissing();
   if(!S.co){ loadCompany(); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   const tab=S.coTab||"pl";
-  const tabs=h("div",{class:"vswitch pl-sw",role:"group","aria-label":"კომპანიის ფინანსები"},[["pl","კონსოლიდირებული P&L"],["cf","კონსოლიდირებული CF"],["fixed","ფიქსირებული ხარჯები"],["loans","სესხები"],["set","ერთჯერადი დაშვებები"]].map(([k,l])=>
-    h("button",{type:"button","aria-pressed":String(tab===k),class:"vbtn vtxt"+(tab===k?" on":""),onclick:()=>{S.coTab=k;render();}},l)));
-  return h("div",{class:"co-page"},h("div",{class:"pl-head pr-bar"},tabs,h("div",{class:"pl-note"}),h("span",{id:"co-status",class:"muted small"})),tab==="set"?renderCoEvents():tab==="fixed"?renderCoFixed():tab==="loans"?renderCoLoans():tab==="cf"?renderCoCF():renderCoPL());
+  return h("div",{class:"co-page"},h("div",{class:"co-st"},h("span",{id:"co-status",class:"muted small"})),tab==="set"?renderCoEvents():tab==="fixed"?renderCoFixed():tab==="loans"?renderCoLoans():tab==="cf"?renderCoCF():renderCoPL());
 }
 function renderCoPL(){
   const view=S.coView||"plan", D=coData(view), vr=1.18;
