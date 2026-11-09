@@ -1568,3 +1568,11 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .ln-hint small{font-size:.64rem;color:var(--muted)}
 .ln-tline{flex-wrap:nowrap}.ln-name{width:200px}.ln-bar .ln-tline input[type=date]{width:112px!important}
 .ln-name{width:180px}.ln-calc{gap:10px}
+/* top menu beside the logo */
+.brand-sep,.brand-name{display:none!important}
+.topnav{display:flex;align-items:stretch;gap:2px;align-self:stretch;margin-left:18px;padding-left:14px;border-left:1px solid var(--line)}
+.tn-i{border:0;background:none;font:inherit;font-family:var(--f-caps);font-size:.82rem;font-weight:700;letter-spacing:.02em;color:var(--muted);padding:0 14px;cursor:pointer;border-bottom:3px solid transparent;border-top:3px solid transparent}
+.tn-i:hover{color:var(--ink)}
+.tn-i.on{color:var(--accent);border-bottom-color:var(--accent)}
+.crumbs{margin-left:10px}
+@media (max-width:640px){.topnav{margin-left:6px;padding-left:6px}.tn-i{padding:0 7px;font-size:.72rem}}
