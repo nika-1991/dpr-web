@@ -255,6 +255,7 @@ function render(){
   else if(S.view==="users") v=renderUsers();
   else if(S.view==="analysis") v=renderAnalysis();
   else if(S.view==="company") v=renderCompany();
+  else if(S.view==="reports") v=renderReportsHub();
   else if(PLACEHOLDERS[S.view]) v=renderPlaceholder(PLACEHOLDERS[S.view]);
   else if(S.view==="project") v=P()?renderProject():renderMissing();
   else if(S.view==="report") v=renderReport();
@@ -264,7 +265,10 @@ function render(){
   main.replaceChildren(...[nav?renderAppNav():null,v].flat(Infinity).filter(Boolean));
 }
 /* pages listed in the menu whose content is still to be designed */
-const PLACEHOLDERS={reports:["Reports","რეპორტები","report"],budget:["Budget vs Costs","ბიუჯეტი vs ხარჯები","expenses"],workforce:["Workforce","პერსონალი","personnel"],materials:["Materials","მასალები","materials"],issues:["Issues & Delays","პრობლემები და შეფერხებები","issues"]};
+const PLACEHOLDERS={budget:["Budget vs Costs","ბიუჯეტი vs ხარჯები","expenses"],workforce:["Workforce","პერსონალი","personnel"],materials:["Materials","მასალები","materials"],issues:["Issues & Delays","პრობლემები და შეფერხებები","issues"]};
+/* reports hub: one page per register, chosen in the left menu (content still to be designed) */
+const RP_PAGES={ibl:["Interest bearing liabilities","coins"],ret:["Retention","pause"],pledge:["Pledged assets","building"],guar:["Guarantees","checkc"]};
+function renderReportsHub(){ const [t,ic]=RP_PAGES[S.rpTab||"ibl"]; return renderPlaceholder(["Reports",t,ic]); }
 function renderPlaceholder([en,title,ic]){
   return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},en),h("h1",null,title))),
     h("div",{class:"empty"},icon(ic),h("p",{class:"muted"},"გვერდი მზადდება."))];
@@ -277,6 +281,11 @@ function renderAppNav(){
     return h("nav",{class:"anav","aria-label":"კონსოლიდაცია"},
       h("div",{class:"anav-g"},ci("pl","chart","კონსოლიდირებული P&L"),ci("cf","pulse","კონსოლიდირებული CF")),
       h("div",{class:"anav-g anav-set"},h("div",{class:"hb-l"},"დაშვებები"),ci("fixed","building","ფიქსირებული ხარჯები"),ci("loans","coins","სესხები"),ci("set","issues","ერთჯერადი დაშვებები"))); }
+  /* reports: the company registers */
+  if(S.view==="reports"){ const t=S.rpTab||"ibl";
+    const ri=(k,ic,label)=>h("button",{type:"button",class:"anav-i"+(t===k?" on":""),"aria-current":t===k?"page":null,onclick:()=>{ S.rpTab=k; render(); }},icon(ic),h("span",null,label));
+    return h("nav",{class:"anav","aria-label":"რეპორტები"},h("div",{class:"anav-g"},
+      ri("ibl","coins","Interest bearing liabilities"),ri("ret","pause","Retention"),ri("pledge","building","Pledged assets"),ri("guar","checkc","Guarantees"))); }
   const item=(view,ic,label)=>h("button",{type:"button",class:"anav-i"+(S.view===view?" on":""),"aria-current":S.view===view?"page":null,onclick:()=>go(view)},icon(ic),h("span",null,label));
   return h("nav",{class:"anav","aria-label":"მენიუ"},
     h("div",{class:"anav-g"},
