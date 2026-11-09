@@ -1613,3 +1613,6 @@ body.has-side,body.wide{--lp:var(--side-w)}
 .tn-i.on::before,.tn-i.on::after{width:8px;height:8px}
 .tn-i.on::before{left:-8px;background:radial-gradient(circle at 0 0,transparent 7.5px,var(--accent) 8px)}
 .tn-i.on::after{right:-8px;background:radial-gradient(circle at 100% 0,transparent 7.5px,var(--accent) 8px)}
+/* the first tab starts at the panel edge: no foot or curve on its left */
+.tn-i.on:first-child::before{display:none!important}
+.tn-i.on:first-child{border-top-left-radius:0}
