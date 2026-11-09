@@ -1631,3 +1631,9 @@ body.has-side,body.wide{--lp:var(--side-w)}
 .tiles-grid .ptile{background:linear-gradient(180deg,#4b5563,#374151)}
 .tiles-grid .ptile:hover{background:linear-gradient(180deg,#566070,#3f4a5a)}
 .tiles-grid .ptile.archived{background:linear-gradient(180deg,#9aa3ad,#838c96)}
+/* one left-panel width everywhere: the app menu and the project sidebar */
+@media (min-width:981px){
+  body.has-nav{--nav-w:250px}
+  body.has-side,body.wide{--side-w:250px}
+}
+@media (min-width:981px) and (max-width:1180px){ body.has-nav{--nav-w:232px} body.has-side,body.wide{--side-w:232px} }
