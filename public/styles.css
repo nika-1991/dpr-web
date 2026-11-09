@@ -1576,3 +1576,17 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .tn-i.on{color:var(--accent);border-bottom-color:var(--accent)}
 .crumbs{margin-left:10px}
 @media (max-width:640px){.topnav{margin-left:6px;padding-left:6px}.tn-i{padding:0 7px;font-size:.72rem}}
+/* top menu v2: starts at the left panel's right edge; tabs as solid blocks, the open one filled */
+:root{--lp:230px}
+body.has-nav{--lp:var(--nav-w)}
+body.has-side,body.wide{--lp:var(--side-w)}
+.bar-in{align-items:stretch}
+.brand{align-self:center}
+@media (min-width:981px){ .brand{width:calc(var(--lp) - max(16px,env(safe-area-inset-left,0px)) - 12px);flex:none} }
+.me,.crumbs{align-self:center}
+.topnav{margin-left:0;padding-left:0;border-left:1px solid var(--line);gap:0}
+.tn-i{position:relative;font-family:var(--f-body);font-size:.84rem;font-weight:700;letter-spacing:0;color:var(--ink);background:#f3f5f7;padding:0 22px;border:0;border-right:1px solid var(--line);transition:background .15s,color .15s}
+.tn-i:hover{background:#e8ecef;color:var(--ink)}
+.tn-i.on{background:var(--accent);color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.tn-i.on::after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--accent);border-bottom:0;z-index:2}
+@media (max-width:980px){ .tn-i{padding:0 12px;font-size:.76rem} }
