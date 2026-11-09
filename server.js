@@ -563,6 +563,7 @@ const cleanCoFin = (b) => {
     loans: (Array.isArray(b?.loans) ? b.loans : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(),
       amount: num(x?.amount), rate: num(x?.rate), n: Math.max(0, Math.min(600, parseInt(x?.n, 10) || 0)), grace: Math.max(0, Math.min(120, parseInt(x?.grace, 10) || 0)),
       start: /^\d{4}-\d{2}-\d{2}$/.test(x?.start || "") ? x.start : "", mode: x?.mode === "manual" ? "manual" : "auto", recv: x?.recv !== false,
+      ovr: Object.fromEntries(Object.entries(x?.ovr && typeof x.ovr === "object" ? x.ovr : {}).filter(([k, v]) => /^\d{1,3}$/.test(k) && num(v) != null).slice(0, 600).map(([k, v]) => [k, num(v)])),
       rows: (Array.isArray(x?.rows) ? x.rows : []).slice(0, 600).map((r) => ({ d: /^\d{4}-\d{2}-\d{2}$/.test(r?.d || "") ? r.d : "", p: num(r?.p), i: num(r?.i) })) })) };
 };
 api.get("/company/finance", auth, (req, res) => {
