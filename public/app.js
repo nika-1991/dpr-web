@@ -289,8 +289,6 @@ function renderAppNav(){
   const item=(view,ic,label)=>h("button",{type:"button",class:"anav-i"+(S.view===view?" on":""),"aria-current":S.view===view?"page":null,onclick:()=>go(view)},icon(ic),h("span",null,label));
   return h("nav",{class:"anav","aria-label":"მენიუ"},
     h("div",{class:"anav-g"},
-      item("home","folder","პროექტები"),
-      S.admin||S.reviewer?item("budget","expenses","ბიუჯეტი vs ხარჯები"):null,
       item("workforce","personnel","პერსონალი"),
       item("materials","materials","მასალები"),
       item("issues","issues","პრობლემები და შეფერხებები"),
