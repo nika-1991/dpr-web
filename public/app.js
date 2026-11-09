@@ -231,7 +231,7 @@ function renderBar(){
   let tn=document.getElementById("topnav");
   if(!tn){ tn=h("nav",{id:"topnav",class:"topnav","aria-label":"მთავარი მენიუ"}); document.getElementById("brand").after(tn); }
   const cur=["home","project","report"].includes(S.view)?"home":S.view;
-  const ti=(v,l)=>h("button",{type:"button",class:"tn-i"+(cur===v?" on":""),"aria-current":cur===v?"page":null,onclick:()=>go(v)},tr(l));
+  const ti=(v,l)=>h("button",{type:"button",class:"tn-i"+(cur===v?" on":""),"aria-current":cur===v?"page":null,onclick:()=>go(v)},h("span",{class:"tn-l"},tr(l)));
   tn.replaceChildren(...(S.me&&!S.me.mustChange?[ti("home","პროექტები"),S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,ti("reports","რეპორტები")].filter(Boolean):[]));
   me.append(h("button",{class:"lang-btn",type:"button",title:LANG==="en"?"ქართული":"English","aria-label":LANG==="en"?"ქართული":"English",onclick:()=>setLang(LANG==="en"?"ka":"en")},LANG==="en"?"ქა":"EN"));
   if(S.me){
