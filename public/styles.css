@@ -1531,3 +1531,27 @@ body.wide .tabs.tgroups .tgrp.on{background:none!important}
 .ln-cb{align-items:center}
 .ln-cb input{width:16px;height:16px;margin:4px 0}
 .ln-tline{margin-left:12px}
+/* loan card: everything on one line */
+.ln-bar{align-items:flex-end;gap:10px}
+.ln-name{width:170px;min-width:0;flex:none;height:26px;font-size:.76rem;font-weight:700;padding:2px 8px}
+.ln-tline{margin-left:0}
+.ln-bar .vswitch{align-self:flex-end}
+.ln-bar .vswitch .vbtn{padding:3px 10px;font-size:.72rem}
+.ln-tg{align-self:flex-end}
+.ln-calc{display:flex;align-items:flex-end;gap:14px;margin-left:auto}
+.ln-kpi b{font-size:.78rem}
+/* loan card v3: one line, sections divided by thin rules, low height */
+.ln-card{padding:6px 10px!important}
+.ln-bar{flex-wrap:nowrap;gap:0;align-items:stretch;overflow-x:auto}
+.ln-sec{display:flex;align-items:flex-end;gap:6px;padding:0 10px;border-left:1px solid var(--line)}
+.ln-sec:first-child{border-left:0;padding-left:0}
+.ln-name{width:140px}
+.ln-bar .vswitch{padding:1px}
+.ln-bar .vswitch .vbtn{padding:2px 8px;font-size:.7rem}
+.ln-tf input[type=date].inp{padding:2px 4px}
+.ln-paste{height:26px;padding:0 8px;font-size:.7rem}
+.ln-paste .ico{width:13px;height:13px}
+.ln-paste.tip::after{font-family:var(--f-body)}
+.ln-tg{height:26px;padding:0 6px;font-size:.72rem;white-space:nowrap}
+.ln-calc{padding-left:12px;border-left:1px solid var(--line);gap:12px;flex:none}
+.ln-kpi{white-space:nowrap}
