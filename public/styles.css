@@ -1617,3 +1617,9 @@ body.has-side,body.wide{--lp:var(--side-w)}
 .tn-i.on:first-child::before{display:none!important}
 .tn-i.on:first-child{border-top-left-radius:0}
 .co-st{display:flex;justify-content:flex-end;min-height:0;margin-bottom:-8px}
+/* no separator line or seam beside the open tab's feet */
+.tn-i:has(+ .tn-i.on){background:#f3f5f7}
+.tn-i:has(+ .tn-i.on):hover{background:#e8ecef}
+.tn-i.on::before,.tn-i.on::after{bottom:5px;height:9px;background-position:0 1px;background-repeat:no-repeat}
+.tn-i.on::before{background-image:radial-gradient(circle at 0 0,transparent 7.5px,var(--accent) 8px);background-color:transparent}
+.tn-i.on::after{background-image:radial-gradient(circle at 100% 0,transparent 7.5px,var(--accent) 8px);background-color:transparent}
