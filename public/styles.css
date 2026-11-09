@@ -1623,3 +1623,11 @@ body.has-side,body.wide{--lp:var(--side-w)}
 .tn-i.on::before,.tn-i.on::after{bottom:5px;height:9px;background-position:0 1px;background-repeat:no-repeat}
 .tn-i.on::before{background-image:radial-gradient(circle at 0 0,transparent 7.5px,var(--accent) 8px);background-color:transparent}
 .tn-i.on::after{background-image:radial-gradient(circle at 100% 0,transparent 7.5px,var(--accent) 8px);background-color:transparent}
+/* project tiles: graphite frame, like the reports table heading */
+.tiles-grid .ptile{background:linear-gradient(180deg,#4b5563,#374151)}
+.tiles-grid .ptile:hover{background:linear-gradient(180deg,#566070,#3f4a5a)}
+.tiles-grid .ptile.archived{background:linear-gradient(180deg,#9aa3ad,#838c96)}
+/* project tiles: graphite frame, like the reports table heading */
+.tiles-grid .ptile{background:linear-gradient(180deg,#4b5563,#374151)}
+.tiles-grid .ptile:hover{background:linear-gradient(180deg,#566070,#3f4a5a)}
+.tiles-grid .ptile.archived{background:linear-gradient(180deg,#9aa3ad,#838c96)}
