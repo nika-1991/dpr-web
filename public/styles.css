@@ -1605,3 +1605,11 @@ body.has-side,body.wide{--lp:var(--side-w)}
 .tn-i.on::before,.tn-i.on::after{content:"";display:block!important;position:absolute;bottom:6px;width:14px;height:14px;border:0;transform:none;pointer-events:none}
 .tn-i.on::before{left:-14px;background:radial-gradient(circle at 0 0,transparent 13.5px,var(--accent) 14px)}
 .tn-i.on::after{left:auto;right:-14px;background:radial-gradient(circle at 100% 0,transparent 13.5px,var(--accent) 14px)}
+/* separators stop above the rule so it runs unbroken; smaller curves */
+.tn-i{border-right:0;background:linear-gradient(var(--line),var(--line)) right top/1px calc(100% - 6px) no-repeat,#f3f5f7}
+.tn-i:hover{background:linear-gradient(var(--line),var(--line)) right top/1px calc(100% - 6px) no-repeat,#e8ecef}
+.tn-i.on{background:var(--accent);border-radius:8px 8px 0 0}
+.topnav{border-left:0}
+.tn-i.on::before,.tn-i.on::after{width:8px;height:8px}
+.tn-i.on::before{left:-8px;background:radial-gradient(circle at 0 0,transparent 7.5px,var(--accent) 8px)}
+.tn-i.on::after{right:-8px;background:radial-gradient(circle at 100% 0,transparent 7.5px,var(--accent) 8px)}
