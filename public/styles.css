@@ -1659,3 +1659,18 @@ body{background:var(--page)}
 .tn-i.on:first-child{border-top-left-radius:0}
 .tn-i.on{border-radius:0}
 @media (max-width:980px){ .tn-l{padding:0 12px} }
+/* interest-bearing liabilities */
+.ibl-asof input{width:140px}
+.ibl-sel{width:auto;height:30px;font-size:.76rem}
+.ibl-table td,.ibl-table th{white-space:nowrap;font-size:.76rem}
+.ibl-table tr.ibl-od th{color:#b42318}
+.ibl-odt{font-weight:700}
+.ibl-bar{flex-wrap:wrap;row-gap:6px}
+.ibl-bar .ln-sec{flex-wrap:nowrap}
+.ibl-st{font-size:.68rem;padding:1px 7px;border-radius:999px;white-space:nowrap}
+.ibl-st.future{background:var(--sunk);color:var(--muted)}
+.ibl-st.paid{background:#e7f6ec;color:#067647}
+.ibl-st.over{background:#fdecec;color:#b42318;font-weight:700}
+.ln-grid tr.ibl-od td{background:#fff7f7}
+.ibl-fx{max-width:420px}
+.ln-tf select.inp{height:26px;padding:0 6px;font-size:.74rem;min-height:0}

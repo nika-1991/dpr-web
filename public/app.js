@@ -268,7 +268,7 @@ function render(){
 const PLACEHOLDERS={budget:["Budget vs Costs","ბიუჯეტი vs ხარჯები","expenses"],workforce:["Workforce","პერსონალი","personnel"],materials:["Materials","მასალები","materials"],issues:["Issues & Delays","პრობლემები და შეფერხებები","issues"]};
 /* reports hub: one page per register, chosen in the left menu (content still to be designed) */
 const RP_PAGES={ibl:["Interest bearing liabilities","coins"],ret:["Retention","pause"],pledge:["Pledged assets","building"],guar:["Guarantees","checkc"]};
-function renderReportsHub(){ const [t,ic]=RP_PAGES[S.rpTab||"ibl"]; return renderPlaceholder(["Reports",t,ic]); }
+function renderReportsHub(){ const k=S.rpTab||"ibl"; if(k==="ibl") return renderIBL(); const [t,ic]=RP_PAGES[k]; return renderPlaceholder(["Reports",t,ic]); }
 function renderPlaceholder([en,title,ic]){
   return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},en),h("h1",null,title))),
     h("div",{class:"empty"},icon(ic),h("p",{class:"muted"},"გვერდი მზადდება."))];
@@ -2756,6 +2756,137 @@ function renderCoLoans(){
   return h("div",{class:"as-page co-set"},cards.length?cards:h("div",{class:"empty"},h("p",{class:"muted"},tr("სესხი ჯერ არ არის დამატებული."))),
     edit?h("div",null,h("button",{class:"btn",type:"button",onclick:()=>{ const id=Math.random().toString(36).slice(2,8); loans.push({id,name:"",amount:null,rate:null,n:null,grace:0,start:"",mode:"auto",recv:true,rows:[]}); S.coLoanOpen=id; redraw(); }},"+ სესხი")):null);
 }
+/* ---------- REPORTS: interest-bearing liabilities (loans, leases) ----------
+   each item has a payment schedule (date, principal, interest) and what was actually paid; as of a chosen date:
+   a payment not yet due is outstanding, a past one not fully paid is overdue. Overdue principal earns the loan's
+   interest by the day (rate/365) and the overdue amount (principal + interest + that interest as it builds up)
+   bears the daily penalty — summed day by day, without compounding the penalty itself. */
+async function loadIbl(){ if(S.iblLoading) return; S.iblLoading=true;
+  try{ S.ibl=await api("GET","/company/ibl"); }catch(e){ toast(errMsg(e)); S.ibl={rates:{},items:[]}; }
+  S.iblLoading=false; if(S.view==="reports"&&!typing()) render(); }
+function saveIbl(){ clearTimeout(S.iblTimer); const st=()=>document.getElementById("ibl-status"); if(st()) st().textContent=tr("ინახება…");
+  S.iblTimer=setTimeout(async()=>{ try{ await api("PUT","/company/ibl",S.ibl); if(st()) st().textContent=tr("შენახულია"); }catch(e){ if(st()) st().textContent=tr("ვერ შეინახა")+": "+errMsg(e); } },600); }
+const IBL_CUR=["GEL","USD","EUR","GBP","CHF","TRY"];
+const dayDiff=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
+/* one item as of date A, amounts in GEL */
+function iblCalc(x,A,rates){
+  const fx=x.currency==="GEL"?1:num(rates[x.currency])||0, r=num(x.rate)/100, pen=num(x.penalty)/100;
+  const o={fx,outP:0,futP:0,futI:0,odP:0,odI:0,odInt:0,pen:0,rows:[]};
+  for(const row of (x.rows||[]).filter(r=>r.d).sort((a,b)=>a.d.localeCompare(b.d))){
+    const P=num(row.p)*fx, I=num(row.i)*fx, pp=num(row.pp)*fx, pi=num(row.pi)*fx, rp=Math.max(0,P-pp), ri=Math.max(0,I-pi);
+    let st="future", di=0, dp=0;
+    if(row.d>=A){ o.futP+=rp; o.futI+=ri; if(rp+ri<0.005) st="paid"; }
+    else if(rp+ri>0.005){ st="over"; const n=dayDiff(row.d,A); o.odP+=rp; o.odI+=ri;
+      di=rp*r/365*n; dp=pen*(n*(rp+ri)+rp*r/365*n*(n-1)/2); o.odInt+=di; o.pen+=dp; }
+    else st="paid";
+    o.rows.push({...row,src:row,P,I,pp,pi,rp,ri,st,di,dp});
+  }
+  o.outP=o.futP+o.odP; o.odTot=o.odP+o.odI+o.odInt+o.pen; return o;
+}
+function renderIBL(){
+  if(!S.ibl){ loadIbl(); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
+  const B=S.ibl, A=S.iblAsOf||todayISO(), v=S.iblView||"sum", edit=S.admin;
+  const sw=h("div",{class:"vswitch pl-sw",role:"group"},[["sum","შეჯამება"],["reg","სესხები და ლიზინგები"],["mat","Maturity"],["fx","ვალუტის კურსები"]].map(([k,l])=>
+    h("button",{type:"button",class:"vbtn vtxt"+(v===k?" on":""),"aria-pressed":String(v===k),onclick:()=>{ S.iblView=k; render(); }},l)));
+  const asOf=h("label",{class:"ln-tf ibl-asof"},h("span",null,tr("მდგომარეობა თარიღზე")),h("input",{class:"inp",type:"date",value:A,onchange:e=>{ S.iblAsOf=e.target.value||todayISO(); render(); }}));
+  const head=h("div",{class:"pl-head pr-bar"},sw,h("div",{class:"pl-note"}),asOf,h("span",{id:"ibl-status",class:"muted small"}));
+  const body=v==="reg"?iblRegister(B,A,edit):v==="mat"?iblMaturity(B,A):v==="fx"?iblRates(B,edit):iblSummary(B,A);
+  return h("div",{class:"co-page"},head,body);
+}
+function iblSummary(B,A){
+  const items=B.items, kind=S.iblKind||"", co=S.iblCo||"", mode=S.iblMode||"p";
+  const comps=[...new Set(items.map(x=>x.company).filter(Boolean))].sort();
+  const sel=items.filter(x=>(!kind||x.kind===kind)&&(!co||x.company===co));
+  const M=[]; { let m=A.slice(0,7); for(let k=0;k<12;k++){ M.push(m); const [y,mo]=m.split("-").map(Number); m=mo===12?(y+1)+"-01":y+"-"+pad(mo+1); } }
+  const MN=LANG==="en"?MONTHS_EN:MONTHS_KA, lab=m=>MN[+m.slice(5)-1].slice(0,3)+". "+m.slice(2,4);
+  const f=v=>Math.abs(v)<0.5?"—":fmtNum(Math.round(v));
+  const filt=h("div",{class:"co-bar"},
+    h("div",{class:"vswitch pl-sw"},[["","ყველა"],["loan","სესხი"],["lease","ლიზინგი"]].map(([k,l])=>h("button",{type:"button",class:"vbtn vtxt"+(kind===k?" on":""),onclick:()=>{ S.iblKind=k; render(); }},l))),
+    h("select",{class:"inp ibl-sel","aria-label":"კომპანია",onchange:e=>{ S.iblCo=e.target.value; render(); }},[h("option",{value:""},"ყველა კომპანია"),...comps.map(c=>{ const o=h("option",{value:c},c); if(c===co) o.selected=true; return o; })]),
+    h("span",{class:"co-pl"},tr("მომავალი გადახდები")+":"),
+    h("div",{class:"vswitch pl-sw"},[["p","ძირი"],["i","პროცენტი"],["t","სულ"]].map(([k,l])=>h("button",{type:"button",class:"vbtn vtxt"+(mode===k?" on":""),onclick:()=>{ S.iblMode=k; render(); }},l))));
+  const T={outP:0,odP:0,odI:0,odInt:0,pen:0,odTot:0}, TM=M.map(()=>0);
+  const rows=sel.map(x=>{ const c=iblCalc(x,A,B.rates); Object.keys(T).forEach(k=>T[k]+=c[k]);
+    const fm=M.map((m,i)=>{ const v=c.rows.filter(r=>r.st!=="over"&&r.d>=A&&r.d.slice(0,7)===m).reduce((a,r)=>a+(mode==="p"?r.rp:mode==="i"?r.ri:r.rp+r.ri),0); TM[i]+=v; return v; });
+    return h("tr",{class:c.odTot>0.5?"ibl-od":""},h("td",null,x.company||"—"),h("td",null,tr(x.kind==="lease"?"ლიზინგი":"სესხი")),h("th",{scope:"row"},(x.lender?x.lender+" · ":"")+(x.name||x.no||"—")),
+      h("td",{class:"num"},f(c.outP)),h("td",{class:"num"+(c.odP+c.odI>0.5?" neg":"")},f(c.odP+c.odI)),h("td",{class:"num"+(c.odInt>0.5?" neg":"")},f(c.odInt)),h("td",{class:"num"+(c.pen>0.5?" neg":"")},f(c.pen)),
+      h("td",{class:"num ibl-odt"+(c.odTot>0.5?" neg":"")},f(c.odTot)),fm.map(v=>h("td",{class:"num"},f(v)))); });
+  const table=h("table",{class:"pl-table ibl-table"},
+    h("thead",null,h("tr",null,["კომპანია","ტიპი","პროდუქტი","ნარჩენი ძირი","ვადაგადაცილება","ვადაგ. ძირის %","დარიცხული ჯარიმა","სულ ვადაგადაცილება"].map((l,i)=>h("th",{class:i<3?"pl-c0":"num"},l)),M.map(m=>h("th",{class:"num"},lab(m))))),
+    h("tbody",null,rows.length?rows:h("tr",null,h("td",{colspan:String(8+M.length),class:"muted"},tr("ჯერ არაფერია დამატებული — „სესხები და ლიზინგები“."))),
+      h("tr",{class:"pl-net"},h("th",{colspan:"3"},"სულ"),["outP"].map(k=>h("td",{class:"num"},f(T[k]))),h("td",{class:"num"},f(T.odP+T.odI)),h("td",{class:"num"},f(T.odInt)),h("td",{class:"num"},f(T.pen)),h("td",{class:"num"},f(T.odTot)),TM.map(v=>h("td",{class:"num"},f(v))))));
+  return [filt,h("div",{class:"pl-wrap"},finResize(table,"ibl.sum")),h("p",{class:"muted small"},tr("ლარში, ვალუტის კურსით „ვალუტის კურსებიდან“. ვადაგადაცილება — გასული თარიღის გადაუხდელი ძირი და პროცენტი; ჯარიმა დღიურად ითვლება."))];
+}
+function iblRegister(B,A,edit){
+  const items=B.items, redraw=()=>{ saveIbl(); render(); };
+  const comps=[...new Set(items.map(x=>x.company).filter(Boolean))], lenders=[...new Set(items.map(x=>x.lender).filter(Boolean))];
+  const cards=items.map((x,xi)=>{ const c=iblCalc(x,A,B.rates), open=S.iblOpen===x.id;
+    const tf=(k,cap,w,attrs={})=>h("label",{class:"ln-tf"},h("span",null,tr(cap)),h("input",{class:"inp"+(attrs.type==="date"||attrs.text?"":" num"),style:"width:"+w+"px",value:String(x[k]??""),disabled:!edit,"aria-label":tr(cap),...attrs,
+      onchange:e=>{ x[k]=attrs.type==="date"||attrs.text?e.target.value.trim():num(e.target.value); redraw(); }}));
+    const kindSw=h("div",{class:"vswitch pl-sw"},[["loan","სესხი"],["lease","ლიზინგი"]].map(([k,l])=>h("button",{type:"button",class:"vbtn vtxt"+(x.kind===k?" on":""),disabled:!edit,onclick:()=>{ x.kind=k; redraw(); }},l)));
+    const cur=h("label",{class:"ln-tf"},h("span",null,tr("ვალუტა")),h("select",{class:"inp",disabled:!edit,onchange:e=>{ x.currency=e.target.value; redraw(); }},IBL_CUR.map(k=>{ const o=h("option",{value:k},k); if(k===(x.currency||"GEL")) o.selected=true; return o; })));
+    const tgl=h("button",{class:"btn sm ghost ln-tg",type:"button",onclick:()=>{ S.iblOpen=open?null:x.id; render(); }},(open?"▾ ":"▸ ")+(x.rows||[]).length+" "+tr("გადახდა"));
+    const kpi=(l,v,bad)=>h("div",{class:"ln-kpi"},h("span",null,tr(l)),h("b",{class:bad&&v>0.5?"neg":""},gel0(v)));
+    const bar=h("div",{class:"ln-bar ibl-bar"},
+      h("div",{class:"ln-sec"},h("label",{class:"ln-tf"},h("span",null,tr("ტიპი")),kindSw)),
+      h("div",{class:"ln-sec"},tf("company","კომპანია",150,{text:true,list:"ibl-co"}),tf("lender","ბანკი / გამცემი",110,{text:true,list:"ibl-ln"}),tf("name","დასახელება",140,{text:true}),tf("no","ხელშ. №",110,{text:true})),
+      h("div",{class:"ln-sec"},cur,tf("amount","თანხა",92),tf("rate","%",48),tf("penalty","ჯარიმა, დღე %",62),tf("open","გახსნა",118,{type:"date"}),tf("maturity","დაფარვა",118,{type:"date"}),
+        x.kind==="lease"?h("label",{class:"ln-tf ln-cb"},h("span",null,"დღგ"),h("input",{type:"checkbox",checked:!!x.vat,disabled:!edit,onchange:e=>{ x.vat=e.target.checked; redraw(); }})):null),
+      h("div",{class:"ln-calc"},tgl,kpi("ნარჩენი ძირი",c.outP),kpi("ვადაგადაცილება",c.odTot,true),
+        edit?h("button",{class:"btn sm ghost",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?"))){ items.splice(xi,1); redraw(); } }},"✕"):null));
+    let grid=null;
+    if(open){ const R=x.rows||(x.rows=[]), view=[...R,...Array.from({length:edit?3:0},()=>null)], keys=["d","p","i","pp","pi"];
+      const ensure=i=>{ while(R.length<=i) R.push({d:"",p:null,i:null,pp:null,pi:null}); return R[i]; };
+      const onPaste=(ri,ci)=>e=>{ const text=(e.clipboardData||window.clipboardData).getData("text"); if(!/[\t\n]/.test(text.trim())) return; e.preventDefault();
+        text.replace(/\r/g,"").replace(/\n$/,"").split("\n").forEach((l,j)=>l.split("\t").forEach((cv,k)=>{ const col=ci+k; if(col>4) return; const row=ensure(ri+j);
+          if(col===0){ const d=parseLoanPaste(cv+"\t0")[0]; if(d) row.d=d.d; } else { const t=String(cv).replace(/[\s ₾$€]/g,"").replace(/,(?=\d{3}(\D|$))/g,"").replace(",","."); const n=parseFloat(t.replace(/[()-]/g,"")); row[keys[col]]=isFinite(n)?Math.abs(n):null; } }));
+        redraw(); };
+      const nav=e=>{ if(e.key!=="Enter") return; e.preventDefault(); const t=e.target, all=[...t.closest("tbody").querySelectorAll('input[data-c="'+t.dataset.c+'"]')], i=all.indexOf(t); if(all[i+1]){ all[i+1].focus(); all[i+1].select&&all[i+1].select(); } };
+      const byRow=new Map(c.rows.map(r=>[r.src,r]));
+      const ST={future:"მომავალი",paid:"გადახდილი",over:"ვადაგადაცილება"};
+      grid=h("div",{class:"pl-wrap ln-wrap"},h("table",{class:"pl-table ln-table ln-grid"},
+        h("thead",null,h("tr",null,["#","თარიღი","ძირი","პროცენტი","გადახდილი ძირი","გადახდილი %","სტატუსი","ვადაგ. %","ჯარიმა",""].map((l,i)=>h("th",{class:i<2||i===6?"pl-c0":"num"},l)))),
+        h("tbody",null,view.map((src,ri)=>{ const row=src||{}, cr=src&&byRow.get(src);
+          const cell=(key,ci)=>h("td",{class:"num"},h("input",{class:"inp ln-in"+(ci?" num":""),type:ci?"text":"date",value:String(row[key]??""),disabled:!edit,"data-c":String(ci),"aria-label":key+" "+(ri+1),
+            onpaste:onPaste(ri,ci),onkeydown:nav,onchange:e=>{ const r=ensure(ri); r[key]=ci?(e.target.value.trim()===""?null:num(e.target.value)):e.target.value; redraw(); }}));
+          return h("tr",{class:(src?"":"ln-blank ")+(cr&&cr.st==="over"?"ibl-od":"")},h("td",{class:"mono"},String(ri+1)),cell("d",0),cell("p",1),cell("i",2),cell("pp",3),cell("pi",4),
+            h("td",null,cr?h("span",{class:"ibl-st "+cr.st},tr(ST[cr.st])+(cr.st==="over"?" "+dayDiff(cr.d,A)+" "+tr("დღე"):"")):""),
+            h("td",{class:"num"},cr&&cr.di?fmtNum(Math.round(cr.di*100)/100):""),h("td",{class:"num"},cr&&cr.dp?fmtNum(Math.round(cr.dp*100)/100):""),
+            h("td",null,src&&edit?h("button",{class:"btn sm ghost",type:"button","aria-label":"წაშლა",onclick:()=>{ R.splice(ri,1); redraw(); }},"✕"):null)); }))),
+        edit?h("div",{class:"ln-hint"},
+          h("button",{class:"btn sm",type:"button",onclick:()=>{ const last=R.map(q=>q.d).filter(Boolean).sort().pop(); R.push({d:last?addMonths(last,1):(x.open||todayISO()),p:null,i:null,pp:null,pi:null}); redraw(); }},"+ სტრიქონი"),
+          h("button",{class:"btn sm ghost",type:"button",title:tr("თანხიდან, %-იდან, გახსნიდან და დაფარვიდან — თანაბარი თვიური გადახდებით"),onclick:()=>{
+            if(!num(x.amount)||!x.open||!x.maturity){ toast(tr("შეავსეთ თანხა, გახსნა და დაფარვა")); return; } if(R.length&&!confirm(tr("არსებული გრაფიკი შეიცვლება. გავაგრძელო?"))) return;
+            const n=Math.max(1,(+x.maturity.slice(0,4)-+x.open.slice(0,4))*12+(+x.maturity.slice(5,7)-+x.open.slice(5,7)));
+            x.rows=loanRows({amount:x.amount,rate:x.rate,n,grace:0,start:addMonths(x.open,1),mode:"auto"}).map(q=>({d:q.d,p:Math.round(q.p*100)/100,i:Math.round(q.i*100)/100,pp:null,pi:null})); redraw(); }},tr("ანუიტეტის აწყობა")),
+          h("small",null,tr("Excel-იდან: მონიშნეთ თარიღი, ძირი, პროცენტი, გადახდილი ძირი, გადახდილი % → Ctrl+C → აქ თარიღის უჯრაზე Ctrl+V."))):null); }
+    return h("section",{class:"as-grp as-wide ln-card"},bar,grid);
+  });
+  return h("div",{class:"as-page co-set ibl-reg"},h("datalist",{id:"ibl-co"},comps.map(c=>h("option",{value:c}))),h("datalist",{id:"ibl-ln"},lenders.map(c=>h("option",{value:c}))),
+    cards.length?cards:h("div",{class:"empty"},h("p",{class:"muted"},tr("ჯერ არაფერია დამატებული."))),
+    edit?h("div",{class:"row",style:"gap:8px"},h("button",{class:"btn",type:"button",onclick:()=>{ const id=Math.random().toString(36).slice(2,8); items.push({id,kind:"loan",company:"",lender:"",name:"",no:"",currency:"GEL",amount:null,rate:null,penalty:null,open:"",maturity:"",purpose:"",vat:false,rows:[]}); S.iblOpen=id; redraw(); }},"+ სესხი / ლიზინგი")):null);
+}
+/* maturity: principal falling due within 12 months of the reporting date and after it (overdue counts as due now) */
+function iblMaturity(B,A){
+  const R=S.iblRep||A, E=addMonths(R,12), f=v=>Math.abs(v)<0.5?"—":fmtNum(Math.round(v));
+  const pick=h("div",{class:"co-bar"},h("label",{class:"ln-tf"},h("span",null,tr("საანგარიშო თარიღი")),h("input",{class:"inp",type:"date",value:R,onchange:e=>{ S.iblRep=e.target.value; render(); }})),
+    h("span",{class:"co-pl"},fmtDate(R)+" → "+fmtDate(E)));
+  const part=kind=>{ const T={o:0,w:0,a:0}; const rows=B.items.filter(x=>x.kind===kind).map(x=>{ const c=iblCalc(x,R,B.rates); let w=c.odP, a=0;
+      c.rows.forEach(r=>{ if(r.d>=R){ if(r.d<=E) w+=r.rp; else a+=r.rp; } }); T.o+=c.outP; T.w+=w; T.a+=a;
+      return h("tr",null,h("td",null,x.company||"—"),h("th",{scope:"row"},(x.lender?x.lender+" · ":"")+(x.name||x.no||"—")),h("td",{class:"mono"},x.no||""),h("td",{class:"num"},f(c.outP)),h("td",{class:"num"},f(w)),h("td",{class:"num"},f(a))); });
+    return h("section",{class:"as-grp as-wide"},h("div",{class:"as-gt"},icon(kind==="lease"?"building":"coins"),h("span",null,kind==="lease"?"Leases":"Loans")),
+      h("div",{class:"pl-wrap"},h("table",{class:"pl-table ibl-table"},h("thead",null,h("tr",null,["კომპანია","პროდუქტი","ID","Outstanding","Principal repayment within 12 months","after 12 months"].map((l,i)=>h("th",{class:i<3?"pl-c0":"num"},l)))),
+        h("tbody",null,rows,h("tr",{class:"pl-net"},h("th",{colspan:"3"},"სულ"),h("td",{class:"num"},f(T.o)),h("td",{class:"num"},f(T.w)),h("td",{class:"num"},f(T.a))))))); };
+  return [pick,part("loan"),part("lease"),h("p",{class:"muted small"},tr("ვადაგადაცილებული ძირი 12 თვის განმავლობაში დასაფარშია ჩათვლილი."))];
+}
+function iblRates(B,edit){
+  const R=B.rates||(B.rates={}), cur=[...new Set([...IBL_CUR,...B.items.map(x=>x.currency)])].filter(c=>c&&c!=="GEL");
+  const load=async()=>{ try{ const j=await api("GET","/company/nbg-rates"); cur.forEach(c=>{ if(j.rates[c]>0) R[c]=j.rates[c]; }); B.ratesAt=j.date||todayISO(); saveIbl(); render(); toast(tr("კურსები განახლდა")); }catch(e){ toast(errMsg(e)); } };
+  return h("section",{class:"as-grp ibl-fx"},h("div",{class:"as-gt"},icon("coins"),h("span",null,tr("ვალუტის კურსები (₾ ერთეულზე)")),B.ratesAt?h("b",{class:"as-sum"},fmtDate(B.ratesAt)):null),
+    cur.map(c=>h("label",{class:"as-f"},h("span",{class:"as-l"},c),h("span",{class:"as-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(R[c]??""),disabled:!edit,"aria-label":c,onchange:e=>{ const v=num(e.target.value); if(v>0) R[c]=v; else delete R[c]; B.ratesAt=todayISO(); saveIbl(); }}),h("em",null,"₾")))),
+    edit?h("div",{class:"as-foot"},h("button",{class:"btn sm",type:"button",onclick:load},tr("NBG-დან განახლება"))):null);
+}
+
 /* ---------- ANALYSIS (admin): revenue = priced works, cost = priced expenses ---------- */
 function analysisData(){
   const A=S.analysis||{reports:[],additional:[]}, F=S.anFilter||(S.anFilter={approvedOnly:true,from:"",to:""});

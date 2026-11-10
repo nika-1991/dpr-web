@@ -566,6 +566,38 @@ const cleanCoFin = (b) => {
       ovr: Object.fromEntries(Object.entries(x?.ovr && typeof x.ovr === "object" ? x.ovr : {}).filter(([k, v]) => /^\d{1,3}$/.test(k) && num(v) != null).slice(0, 600).map(([k, v]) => [k, num(v)])),
       rows: (Array.isArray(x?.rows) ? x.rows : []).slice(0, 600).map((r) => ({ d: /^\d{4}-\d{2}-\d{2}$/.test(r?.d || "") ? r.d : "", p: num(r?.p), i: num(r?.i) })) })) };
 };
+/* interest-bearing liabilities register (reports): loans and leases with their payment schedules, currency rates */
+const cleanIbl = (b) => {
+  const str = (v, n) => String(v ?? "").slice(0, n), D = /^\d{4}-\d{2}-\d{2}$/;
+  const num = (v) => { const n = parseFloat(String(v ?? "").replace(",", ".")); return isFinite(n) ? Math.round(n * 10000) / 10000 : null; };
+  const rates = {}; for (const [k, v] of Object.entries(b?.rates && typeof b.rates === "object" ? b.rates : {}).slice(0, 60)) if (/^[A-Z]{3}$/.test(k) && num(v) > 0) rates[k] = num(v);
+  return { rates, ratesAt: D.test(b?.ratesAt || "") ? b.ratesAt : "",
+    items: (Array.isArray(b?.items) ? b.items : []).slice(0, 300).map((x) => ({ id: str(x?.id, 20) || newId(6), kind: x?.kind === "lease" ? "lease" : "loan",
+      company: str(x?.company, 120).trim(), lender: str(x?.lender, 120).trim(), name: str(x?.name, 160).trim(), no: str(x?.no, 60).trim(), currency: /^[A-Z]{3}$/.test(x?.currency || "") ? x.currency : "GEL",
+      amount: num(x?.amount), rate: num(x?.rate), penalty: num(x?.penalty), open: D.test(x?.open || "") ? x.open : "", maturity: D.test(x?.maturity || "") ? x.maturity : "",
+      purpose: str(x?.purpose, 200).trim(), vat: !!x?.vat,
+      rows: (Array.isArray(x?.rows) ? x.rows : []).slice(0, 1200).map((r) => ({ d: D.test(r?.d || "") ? r.d : "", p: num(r?.p), i: num(r?.i), pp: num(r?.pp), pi: num(r?.pi) })) })) };
+};
+const canFin = (req) => req.user.role === "admin" || db.prepare("SELECT data FROM projects").all().some((r) => canReview(JSON.parse(r.data), req.user));
+api.get("/company/ibl", auth, (req, res) => {
+  if (!canFin(req)) return res.status(403).json({ error: "წვდომა არ გაქვთ" });
+  const row = db.prepare("SELECT data FROM config WHERE key='ibl'").get();
+  res.json(row ? JSON.parse(row.data) : cleanIbl({}));
+});
+api.put("/company/ibl", auth, admin, (req, res) => {
+  const d = cleanIbl(req.body || {});
+  db.prepare("INSERT INTO config(key,data) VALUES('ibl',?) ON CONFLICT(key) DO UPDATE SET data=excluded.data").run(JSON.stringify(d));
+  res.json({ ok: true });
+});
+/* official NBG rates (GEL per unit), fetched by the server */
+api.get("/company/nbg-rates", auth, async (req, res) => {
+  try {
+    const r = await fetch("https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json");
+    const j = await r.json(); const list = (j && j[0] && j[0].currencies) || [];
+    const rates = {}; for (const c of list) if (c.code && c.rate && c.quantity) rates[c.code] = Math.round(c.rate / c.quantity * 10000) / 10000;
+    res.json({ rates, date: (j && j[0] && j[0].date || "").slice(0, 10) });
+  } catch (e) { res.status(502).json({ error: "NBG-ის კურსები ვერ წამოვიღე" }); }
+});
 api.get("/company/finance", auth, (req, res) => {
   if (req.user.role !== "admin" && !db.prepare("SELECT data FROM projects").all().some((r) => canReview(JSON.parse(r.data), req.user))) return res.status(403).json({ error: "წვდომა არ გაქვთ" });
   const row = db.prepare("SELECT data FROM config WHERE key='cofin'").get();
