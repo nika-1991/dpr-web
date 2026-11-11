@@ -235,8 +235,8 @@ function renderBar(){
   tn.replaceChildren(...(S.me&&!S.me.mustChange?[ti("home","პროექტები"),S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,ti("reports","რეპორტები")].filter(Boolean):[]));
   me.append(h("button",{class:"lang-btn",type:"button",title:LANG==="en"?"ქართული":"English","aria-label":LANG==="en"?"ქართული":"English",onclick:()=>setLang(LANG==="en"?"ka":"en")},LANG==="en"?"ქა":"EN"));
   if(S.me){
-    me.append(h("button",{class:"me-btn",type:"button",title:"ჩემი ანგარიში",onclick:()=>go("account")},
-      h("span",{class:"avatar"},initials(S.me.name)),h("span",null,S.me.name),roleTag(S.me)));
+    me.append(h("button",{class:"me-btn",type:"button",title:tr("ჩემი ანგარიში")+" · "+S.me.name,"aria-label":tr("ჩემი ანგარიში"),onclick:()=>go("account")},
+      h("span",{class:"avatar"},initials(S.me.name))));
   }
 }
 
@@ -293,10 +293,9 @@ function renderAppNav(){
       item("materials","materials","მასალები"),
       item("issues","issues","პრობლემები და შეფერხებები"),
       S.admin||S.reviewer?item("analysis","chart","ანალიტიკა"):null),
-    h("div",{class:"anav-g anav-set"},h("div",{class:"hb-l"},"პარამეტრები"),
-      S.admin?item("users","personnel","მომხმარებლები"):null,
-      S.admin?item("settings","list","სიები"):null,
-      item("account","gear","ჩემი ანგარიში")));
+    S.admin?h("div",{class:"anav-g anav-set"},h("div",{class:"hb-l"},"პარამეტრები"),
+      item("users","personnel","მომხმარებლები"),
+      item("settings","list","სიები")):null);
 }
 function renderMissing(){ return h("div",{class:"empty"},h("h2",null,"პროექტი ვერ მოიძებნა"),h("p",{class:"muted"},"შესაძლოა წვდომა შეგეზღუდათ."),h("button",{class:"btn",type:"button",onclick:()=>go("home")},"პროექტების სია")); }
 
