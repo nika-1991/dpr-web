@@ -1943,3 +1943,8 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .u-pw{background:none;border:0;padding:0;cursor:pointer;font:inherit;font-size:.7rem;line-height:1.15;color:#2563a8;width:64px;white-space:normal;text-align:left}
 .u-pw:hover{text-decoration:underline}
 .u-off{padding:4px 8px}
+/* list tables only as wide as their content, not stretched to the screen edge */
+.panel:has(.users),.panel:has(.ptable),.panel:has(.rlist-t),.panel:has(.team-t),.panel:has(.an-t){width:fit-content;max-width:100%}
+:is(.users,.ptable,.rlist-t,.team-t,.an-t){width:auto!important;min-width:0!important}
+:is(.users,.ptable,.rlist-t,.team-t,.an-t) :is(th,td){padding-left:12px;padding-right:12px}
+.users td.u-accc,.users td.u-actc{width:auto}
