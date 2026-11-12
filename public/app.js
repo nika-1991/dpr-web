@@ -429,8 +429,8 @@ function renderHome(){
     rbGrp("ძებნა და ფილტრი",h("label",{class:"home-search"},icon("search"),search),
       companies.length?h("div",{class:"vswitch"},coChip("","ყველა"),companies.map(c=>coChip(c,c))):null,
       h("div",{class:"vswitch"},stBtn("active","pulse","აქტიური პროექტები"),stBtn("archived","checkc","დასრულებული პროექტები"),stBtn("all","layers","ყველა პროექტი"))),
-    S.admin?rbGrp("მოქმედებები",h("button",{class:"btn primary hb-add tip",type:"button","aria-label":tr("ახალი პროექტის დამატება"),"data-tip":tr("ახალი პროექტის დამატება"),onclick:newProject},"+")):null,
     rbGrp("ხედი",h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")),
+      S.admin?h("button",{class:"btn primary hb-add tip",type:"button","aria-label":tr("ახალი პროექტის დამატება"),"data-tip":tr("ახალი პროექტის დამატება"),onclick:newProject},"+"):null,
       h("button",{type:"button",class:"vbtn rb-sq tip","aria-label":tr("განახლება"),"data-tip":tr("განახლება"),onclick:refresh},icon("refresh")))].filter(Boolean);
   out.push(h("div",{class:"dash-left"},listEl));
   return out;

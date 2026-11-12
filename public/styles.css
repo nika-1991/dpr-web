@@ -1803,3 +1803,7 @@ body{background:var(--page)}
 .rb-g .vswitch .vbtn.on,.rb-b.on,.tabs.tgroups button[aria-selected="true"]{background:var(--sel)!important;color:var(--sel-ink)!important;box-shadow:var(--sel-sh)!important;font-weight:700}
 .rb-g .vswitch .vbtn.on .ico,.rb-b.on .ico,.tabs.tgroups button[aria-selected="true"] .ico{color:var(--sel-ink)}
 .ptabs .tgrp.on .tgrp-l{color:#8a6a00}
+/* ribbon tooltips must spill over the page below (no clipping by the ribbon, above the content) */
+@media (min-width:981px){ .rb-in{overflow:visible} }
+.ribbon .tip::after{z-index:60;font-family:var(--f-body);letter-spacing:0;text-transform:none}
+.ribbon .tip:hover::after,.ribbon .tip:focus-visible::after{opacity:1}
