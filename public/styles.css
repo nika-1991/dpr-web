@@ -1969,3 +1969,9 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .sec-conditions .cond-f label{font-size:.7rem;line-height:1.2;gap:5px}
 .sec-conditions .cond-f label .ico{width:14px;height:14px;flex:none}
 .sec-conditions .cond>.cond-f:nth-child(n+3) label{min-height:2.4em}
+/* HSE text a size smaller so the section is about as low as conditions */
+.sec-hse .rt,.sec-hse .rt .ro,.sec-hse .rt td.ed>textarea{font-size:.7rem;line-height:1.35}
+.sec-hse .rt th{font-size:.7rem}
+.sec-hse .rt .ro{padding:5px 8px}
+.sec-hse .rt td.ed>textarea{min-height:30px}
+.sec-hse td.chk.ed .ck-wrap{min-height:30px}
