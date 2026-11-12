@@ -1674,3 +1674,60 @@ body{background:var(--page)}
 .ln-grid tr.ibl-od td{background:#fff7f7}
 .ibl-fx{max-width:420px}
 .ln-tf select.inp{height:26px;padding:0 6px;font-size:.74rem;min-height:0}
+/* ===== top bar with tabs + ribbon (Office-style): dark navy bar, the open tab in the ribbon's colour so the two join ===== */
+:root{--nb:#141c32;--nb-ink:#c7d0e0;--rb:#f1f4f7}
+.bar{background:var(--nb)!important;box-shadow:0 1px 0 rgba(15,23,42,.06)!important;border:0!important}
+.bar-in{max-width:none!important;padding-inline:max(14px,env(safe-area-inset-left,0px)) max(14px,env(safe-area-inset-right,0px));min-height:52px}
+.brand{width:auto!important;flex:none;margin-right:18px;width:36px;height:36px;justify-content:center;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(255,255,255,.04)}
+.brand .logo{width:24px;height:auto}
+.bar .logo-l{display:none!important}.bar .logo-d{display:block!important}
+.topnav{flex:1;box-shadow:none!important;border:0!important;gap:2px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.topnav::-webkit-scrollbar{display:none}
+.tn-i,.tn-i:hover,.tn-i.on,.tn-i:has(+ .tn-i.on){background:none!important;box-shadow:none!important;border:0!important;border-radius:0!important;padding:0!important;color:var(--nb-ink)}
+.tn-i::before,.tn-i::after{display:none!important;content:none!important}
+.tn-i{flex:none;font-family:var(--f-caps);font-size:.8rem;font-weight:600;letter-spacing:.02em}
+.tn-l{margin-top:10px!important;padding:0 20px!important;border-radius:9px 9px 0 0!important;background:transparent!important;color:inherit;box-shadow:none!important;transition:background .15s,color .15s}
+.tn-i:hover .tn-l{background:rgba(255,255,255,.07)!important;color:#fff}
+.tn-i.on .tn-l{background:var(--rb)!important;color:var(--accent)!important;font-weight:800}
+.tn-ic .tn-l{padding:0 12px!important}.tn-ic .ico{width:17px;height:17px}
+.bar .lang-btn{background:transparent;color:#e7ecf5;border-color:rgba(255,255,255,.25)}
+.bar .lang-btn:hover{background:rgba(255,255,255,.08)}
+.bar .me-btn{padding:2px}.bar .me-btn:hover{background:transparent}
+.bar .me-btn .avatar{background:var(--accent);color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.85);width:30px;height:30px}
+/* ribbon */
+.ribbon{background:var(--rb);border-bottom:2px solid var(--accent)}
+.ribbon[hidden]{display:none}
+.rb-in{display:flex;align-items:stretch;gap:0;padding:8px max(14px,env(safe-area-inset-left,0px)) 10px;overflow-x:auto;scrollbar-width:thin}
+.rb-g{display:flex;flex-direction:column;gap:6px;padding:0 18px;border-left:1px solid #d8dee5;flex:none}
+.rb-g:first-child{padding-left:4px;border-left:0}
+.rb-gl{font-size:.68rem;font-weight:700;color:var(--muted);white-space:nowrap}
+.rb-gb{display:flex;align-items:center;gap:8px;flex:1}
+.rb-g .home-search{flex:none;width:300px;min-height:36px;background:#fff;border-color:#d5dce4}
+.rb-g .home-search .inp{padding:7px 0}
+.rb-g .vswitch{min-height:36px;align-items:center;background:#fff}
+.rb-g .hb-add{width:38px;height:38px;min-width:38px;padding:0;border-radius:9px;font-size:1.45rem;font-weight:400;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.rb-g .hb-add.tip::after,.rb-g .tip::after{top:calc(100% + 8px);bottom:auto}
+.rb-sq{width:38px;height:36px;border:1px solid var(--line);border-radius:9px;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.rb-sq:hover{background:var(--sunk)}
+.rb-b{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px;height:52px;padding:4px 10px;border:1px solid transparent;border-radius:9px;background:none;font:inherit;font-size:.72rem;color:var(--ink);cursor:pointer;white-space:nowrap}
+.rb-b .ico{width:19px;height:19px}
+.rb-b:hover{background:#fff;border-color:var(--line)}
+.rb-b.on{background:#fff;border-color:var(--accent);color:var(--accent);font-weight:700;box-shadow:0 1px 2px rgba(15,23,42,.06)}
+.rb-fold{margin-left:auto;align-self:flex-end;flex:none;width:28px;height:28px;border:0;background:none;border-radius:6px;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.rb-fold:hover{background:#e3e8ee;color:var(--ink)}
+.rb-fold .ico{width:16px;height:16px}
+.bar .rb-fold.up{transform:rotate(180deg);color:var(--nb-ink);align-self:center;margin:0}
+.bar .rb-fold.up:hover{background:rgba(255,255,255,.08)}
+/* the project page's own section row continues the ribbon look */
+@media (min-width:981px){
+  .ptabs,.ptabs>.tabs.tgroups{background:var(--rb)!important}
+  .ptabs{border-bottom:2px solid var(--accent)}
+  .ptabs>.tabs.tgroups{border-bottom:0!important}
+  .pid,body.wide .pid{background:var(--rb)!important;border-right:0!important;border-bottom:2px solid var(--accent)!important}
+}
+.dash-left{margin-top:0}
+@media (max-width:640px){ .tn-l{padding:0 12px!important}.brand{margin-right:8px}.rb-g .home-search{width:220px} }
+@media (min-width:981px){
+  .pid{width:calc(var(--side-w) + 26px)!important;margin-right:0!important;border-bottom:2px solid var(--accent)!important;margin-bottom:-2px}
+  body.wide .pid{width:var(--side-w)!important}
+}
