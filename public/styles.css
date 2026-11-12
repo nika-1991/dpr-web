@@ -1948,3 +1948,5 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 :is(.users,.ptable,.rlist-t,.team-t,.an-t){width:auto!important;min-width:0!important}
 :is(.users,.ptable,.rlist-t,.team-t,.an-t) :is(th,td){padding-left:12px;padding-right:12px}
 .users td.u-accc,.users td.u-actc{width:auto}
+/* reports tab: the export button lines up with the table's right edge */
+.rep-tab{width:fit-content;max-width:100%}
