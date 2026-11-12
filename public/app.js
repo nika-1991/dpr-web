@@ -426,9 +426,9 @@ function renderHome(){
         prog(p),
         last(p)))));
   RB.groups=[
-    rbGrp("ძებნა და ფილტრი",h("label",{class:"home-search"},icon("search"),search),
-      companies.length?h("div",{class:"vswitch"},coChip("","ყველა"),companies.map(c=>coChip(c,c))):null,
-      h("div",{class:"vswitch"},stBtn("active","pulse","აქტიური პროექტები"),stBtn("archived","checkc","დასრულებული პროექტები"),stBtn("all","layers","ყველა პროექტი"))),
+    h("div",{class:"rb-g rb-search"},h("label",{class:"home-search"},icon("search"),search)),
+    companies.length?rbGrp("კომპანია",h("div",{class:"vswitch"},coChip("","ყველა"),companies.map(c=>coChip(c,c)))):null,
+    rbGrp("პროექტი",h("div",{class:"vswitch"},stBtn("active","pulse","აქტიური პროექტები"),stBtn("archived","checkc","დასრულებული პროექტები"),stBtn("all","layers","ყველა პროექტი"))),
     rbGrp("ხედი",h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")),
     ),
     rbGrp("პრობლემები",h("div",{class:"rb-iss"},

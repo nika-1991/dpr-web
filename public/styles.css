@@ -1878,3 +1878,8 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .iss-t td:last-child{width:1%;padding-right:12px}
 .iss-t td:last-child .btn{white-space:nowrap}
 .iss-t td:nth-child(2) .muted{max-width:240px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* search: its own block, as tall as a labelled group */
+.rb-search{justify-content:center;padding-left:4px!important}
+.rb-g.rb-search .home-search{height:58px;min-height:58px;width:320px;border-radius:16px}
+.rb-g.rb-search .home-search .ico{width:19px;height:19px}
+.rb-g.rb-search .home-search .inp{font-size:.86rem}
