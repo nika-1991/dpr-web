@@ -353,7 +353,12 @@ function projectStats(p, id) {
   for (const r of reps) for (const w of r.works || []) if (w.code) done.set(codeKey(w.code), (done.get(codeKey(w.code)) || 0) + qtyNum(w.qty));
   const perItem = items.map((it) => { const q = done.get(codeKey(it.code)) || 0; return { done: q, pct: Math.min(q / qtyNum(it.qty), 1) * 100 }; });
   const last = reps[reps.length - 1];
-  return { reports: reps.length, approved: reps.filter((r) => r.status === "approved").length,
+  /* critical issues: those listed in the latest report are still open; any listed earlier but gone from it count as resolved */
+  const ik = (x) => (String(x.code || "").trim() + "|" + String(x.desc || "").trim().toLowerCase());
+  const openK = new Set((last && last.issues || []).filter((x) => x.code || x.desc).map(ik));
+  const everK = new Set(); for (const r of reps) for (const x of r.issues || []) if (x.code || x.desc) everK.add(ik(x));
+  const issuesResolved = [...everK].filter((k) => !openK.has(k)).length;
+  return { reports: reps.length, issuesOpen: openK.size, issuesResolved, approved: reps.filter((r) => r.status === "approved").length,
     lastDate: last ? last.date : "", lastStatus: last ? last.status : "",
     progress: Math.round(avg() * 1000) / 10, itemsDone: perItem.filter((x) => x.pct >= 100).length, itemsStarted: perItem.filter((x) => x.done > 0).length,
  };
