@@ -558,7 +558,7 @@ function renderProjectForm(pid){
 /* ---------- PROJECT ---------- */
 /* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
 const tabIcon=k=>{ const n=TAB_ICONS[k]||""; return n.startsWith("txt:")?h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)):icon(n); };
-const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["ზოგადი ინფო",["info","boq","team"]]];
+const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost"]],["დაშვებები",["assume"]],["ზოგადი ინფო",["info","boq","team"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
 const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"],["assume","დაშვებები"]];
 const TAB_ICONS={assume:"coins",pl:"txt:P&L",cf:"txt:CF",othercost:"expenses",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
