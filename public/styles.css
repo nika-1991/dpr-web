@@ -1987,3 +1987,8 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .secs .rt tfoot td,.secs .rt tfoot th{font-size:.72rem}
 /* exec totals header: one merged label over the count and % */
 .x-cnt-h1{display:block;text-align:center;font-size:.68rem;line-height:1.15;white-space:normal}
+/* the section row sits at the same place with or without the finance side panel */
+@media (min-width:981px){
+  body.has-side .ptabs{margin-left:-26px}
+  body.has-side .pid{width:var(--side-w)!important;margin-left:calc(-1 * var(--side-w))!important}
+}
