@@ -1849,3 +1849,7 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 /* folded ribbon / project row: the tab still lands on a surface of the same colour */
 @media (min-width:981px){ .ptabs,.ptabs>.tabs.tgroups,.pid,body.wide .pid{background:linear-gradient(180deg,var(--rb-top),#e3e8ee)!important} }
 .ribbon{background:linear-gradient(180deg,var(--rb-top) 0%,#e3e8ee 100%)}
+/* open tab: square, marked by a teal cap and bold dark text */
+.topnav .tn-l{border-radius:0!important}
+.topnav .tn-i.on::before,.topnav .tn-i.on::after{display:none!important;content:none!important}
+.topnav .tn-i.on .tn-l{color:#0f2a2b!important;font-weight:800;box-shadow:inset 0 4px 0 #2bc4a8,0 -2px 12px -2px rgba(0,0,0,.45)!important}
