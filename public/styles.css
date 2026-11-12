@@ -2042,3 +2042,10 @@ body.side-drag{user-select:none;cursor:col-resize}
 .ln-card .ln-bar .ln-tg:hover,.ln-card .ln-bar .ln-tg:focus,.ln-card .ln-bar .ln-calc>.btn.ghost:hover{background:rgba(255,255,255,.16)!important;color:#fff!important}
 /* loan card outline back to a quiet grey */
 .co-set .ln-card,.ibl-reg .ln-card{box-shadow:0 0 0 1px #e1e7ee,0 10px 24px -14px rgba(15,23,42,.35)!important}
+/* loan card: name + schedule mode (+ totals) on the first line, the terms on a line of their own; card only as wide as needed */
+.co-set .ln-card .ln-bar{flex-wrap:wrap!important;row-gap:8px;overflow:visible}
+.co-set .ln-card .ln-bar>.ln-calc{margin-left:auto}
+.co-set .ln-card .ln-bar>:nth-child(4){order:5;flex:1 0 100%;border-left:0!important;padding-left:0;padding-top:8px;border-top:1px solid rgba(255,255,255,.18)}
+.co-set .ln-card,.co-set .ln-card:has(.ln-wrap){width:fit-content!important;min-width:720px;max-width:100%}
+.co-set .ln-card .ln-bar>:nth-child(4)>.ln-tf:first-child{padding-left:2px}
+.co-set .ln-card,.co-set .ln-card:has(.ln-wrap){width:min(100%,940px)!important;min-width:0}
