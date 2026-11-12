@@ -397,7 +397,7 @@ function renderHome(){
   const shown=all.filter(p=>(F.f==="all"||(F.f==="archived")===!!p.archived)&&(!F.co||(p.companyCode||"").trim()===F.co)
     &&(!q||[p.name,p.client,p.location,p.companyCode,p.projectCode,p.accountingCode].some(v=>String(v||"").toLowerCase().includes(q))));
   const open=id=>go("project",{pid:id,tab:"reports"});
-  const search=h("input",{class:"inp",type:"search",placeholder:"ძებნა: დასახელება, დამკვეთი, კოდი…","aria-label":"ძებნა",value:F.q,oninput:e=>{ F.q=e.target.value; const c=e.target.selectionStart; render(); const el=document.querySelector(".home-search input"); if(el){ el.focus(); el.setSelectionRange(c,c); } }});
+  const search=h("input",{class:"inp",type:"search",placeholder:"დასახელება, დამკვეთი, კოდი…","aria-label":"ძებნა",value:F.q,oninput:e=>{ F.q=e.target.value; const c=e.target.selectionStart; render(); const el=document.querySelector(".home-search input"); if(el){ el.focus(); el.setSelectionRange(c,c); } }});
   const stBtn=(k,ic,l)=>h("button",{type:"button",class:"vbtn tip"+(F.f===k?" on":""),"aria-label":l,"data-tip":tr(l),"aria-pressed":String(F.f===k),onclick:()=>{F.f=k;render();}},icon(ic));
   const coChip=(k,l)=>h("button",{type:"button",class:"vbtn vtxt"+(k?" co":"")+(F.co===k?" on":""),"aria-pressed":String(F.co===k),onclick:()=>{F.co=k;render();}},l);
   const viewBtn=(k,ic,l)=>h("button",{type:"button",class:"vbtn tip"+(F.view===k?" on":""),"aria-label":l,"data-tip":tr(l),"aria-pressed":String(F.view===k),onclick:()=>{ F.view=k; try{ localStorage.setItem("dpr.homeView",k); }catch(e){} render(); }},icon(ic));
@@ -426,7 +426,7 @@ function renderHome(){
         prog(p),
         last(p)))));
   RB.groups=[
-    h("div",{class:"rb-g rb-search"},h("label",{class:"home-search"},icon("search"),search)),
+    rbGrp("ძებნა",h("label",{class:"home-search"},icon("search"),search)),
     companies.length?rbGrp("კომპანია",h("div",{class:"vswitch"},coChip("","ყველა"),companies.map(c=>coChip(c,c)))):null,
     rbGrp("პროექტი",h("div",{class:"vswitch"},stBtn("active","pulse","აქტიური პროექტები"),stBtn("archived","checkc","დასრულებული პროექტები"),stBtn("all","layers","ყველა პროექტი"))),
     rbGrp("ხედი",h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")),
