@@ -1828,3 +1828,7 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .tabs.tgroups button.st-ic.finish{background:linear-gradient(145deg,#e3f0ff,#c9e1fb);color:#2563a8;box-shadow:2px 2px 5px rgba(60,110,170,.22),-2px -2px 5px rgba(255,255,255,.9)}
 .tabs.tgroups button.st-ic.finish:hover{background:linear-gradient(145deg,#d4e8ff,#b7d6f8)}
 .tabs.tgroups button.st-ic.reopen{background:linear-gradient(145deg,#e6f6ec,#cdebd8);color:#1f7a45;box-shadow:2px 2px 5px rgba(40,120,70,.2),-2px -2px 5px rgba(255,255,255,.9)}
+/* projects table: plain rectangle, quiet grey header */
+.panel:has(> .tw > .ptable),.panel:has(.ptable){border-radius:0;box-shadow:none;border:1px solid #d6dde5;overflow:hidden}
+.ptable th{background:#eef2f6!important;color:#3b4656!important;border-bottom:1px solid #d6dde5!important;font-weight:700}
+.ptable,.ptable thead tr,.ptable th:first-child,.ptable th:last-child{border-radius:0!important}
