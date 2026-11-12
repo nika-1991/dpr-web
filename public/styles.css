@@ -1950,3 +1950,7 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .users td.u-accc,.users td.u-actc{width:auto}
 /* reports tab: the export button lines up with the table's right edge */
 .rep-tab{width:fit-content;max-width:100%}
+/* list tables: heading and body text in one size */
+:is(.users,.ptable,.rlist-t,.team-t,.an-t,.an-sub,.ua-t,.iss-t) :is(th,td),:is(.users,.ptable,.rlist-t,.team-t,.an-t,.an-sub,.ua-t,.iss-t) thead th{font-size:.82rem!important}
+:is(.users,.ptable,.rlist-t,.team-t,.an-t,.an-sub,.ua-t,.iss-t) td :is(.small,.muted.small){font-size:.74rem}
+:is(.users,.ptable,.rlist-t,.team-t,.an-t,.an-sub,.ua-t,.iss-t) thead th{font-family:var(--f-body)!important;text-transform:none!important;letter-spacing:0!important;font-weight:700}
