@@ -250,6 +250,7 @@ S.admin||S.reviewer?ti("analysis","ანალიტიკა"):null].filter(Bo
 /* ---------- render root ---------- */
 function render(){
   RB.groups=null;
+  try{ const w=+localStorage.getItem("dpr.sideW"); if(w>=200&&w<=560) document.body.style.setProperty("--side-w",w+"px"); }catch(e){}
   const projView=!!(S.me&&!S.me.mustChange&&S.view==="project"&&P());
   /* the project's left panel is only kept on the finance tabs (their assumptions); every other tab uses the full width */
   const wideTab=!(projView&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(P()));
@@ -570,7 +571,12 @@ function renderProject(){
   const tabBtn=k=>h("button",{type:"button",role:"tab",class:"tip","data-tip":tr(tabName.get(k)),"aria-label":tr(tabName.get(k)),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},tabIcon(k));
   /* on the finance tabs the sidebar shows the assumptions that page uses, editable in place */
   const finTab=FIN_TABS.some(([k])=>k===S.tab)&&canReview(p);
-  const finSide=finTab?h("aside",{class:"pside"},renderFinSide(p)):null;
+  /* the finance side panel can be widened or narrowed by dragging its right edge; the width is remembered */
+  const sideGrip=h("div",{class:"pside-grip",title:tr("გადაათრიეთ ზომის შესაცვლელად"),onpointerdown:e=>{ e.preventDefault(); const x0=e.clientX, w0=document.querySelector(".pside").getBoundingClientRect().width;
+    const mv=ev=>{ const w=Math.max(200,Math.min(560,Math.round(w0+ev.clientX-x0))); document.body.style.setProperty("--side-w",w+"px"); try{ localStorage.setItem("dpr.sideW",String(w)); }catch(err){} };
+    const up=()=>{ document.removeEventListener("pointermove",mv); document.removeEventListener("pointerup",up); document.body.classList.remove("side-drag"); };
+    document.body.classList.add("side-drag"); document.addEventListener("pointermove",mv); document.addEventListener("pointerup",up); }});
+  const finSide=finTab?h("aside",{class:"pside"},renderFinSide(p),sideGrip):null;
   const stateTip=tr(p.archived?"აქტიურად დაბრუნება":"დასრულებულად მონიშვნა");
   const stateBtn=S.admin?h("div",{class:"tgrp tgrp-state"},h("span",{class:"tgrp-l"},"სტატუსი"),h("div",{class:"tgrp-b"},
     h("button",{type:"button",class:"tip st-ic "+(p.archived?"reopen":"finish"),"data-tip":stateTip,"aria-label":stateTip,onclick:async()=>{

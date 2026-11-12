@@ -1992,3 +1992,13 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
   body.has-side .ptabs{margin-left:-26px}
   body.has-side .pid{width:var(--side-w)!important;margin-left:calc(-1 * var(--side-w))!important}
 }
+/* finance side panel: smaller text, drag handle on its right edge */
+.pside .fs-box .pside-fact{font-size:.7rem}
+.pside .fs-t{font-size:.7rem}
+.pside .fs-v input{font-size:.7rem;height:24px;width:48px}
+.pside .fs-v em{font-size:.66rem}
+.pside{font-size:.72rem}
+.pside-grip{position:fixed;top:0;bottom:0;left:calc(var(--side-w) - 3px);width:6px;cursor:col-resize;z-index:11}
+body:not(.has-side) .pside-grip{display:none}
+.pside-grip:hover,body.side-drag .pside-grip{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+body.side-drag{user-select:none;cursor:col-resize}
