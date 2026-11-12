@@ -588,7 +588,9 @@ const cleanCoFin = (b) => {
       month: M.test(x?.month || "") ? x.month : "", spread: Math.max(1, Math.min(60, parseInt(x?.spread, 10) || 1)), on: x?.on !== false })),
     open: num(b?.open) ?? 0,
     /* loans: an annuity worked out from its terms, or a schedule typed / pasted row by row */
-    loans: (Array.isArray(b?.loans) ? b.loans : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), color: /^#[0-9a-fA-F]{6}$/.test(x?.color || "") ? x.color : "",
+    /* banks with the colour their loans are shown in */
+    banks: (Array.isArray(b?.banks) ? b.banks : []).slice(0, 60).map((x) => ({ name: str(x?.name, 80).trim(), color: /^#[0-9a-fA-F]{6}$/.test(x?.color || "") ? x.color : "#0d3b3d" })).filter((x) => x.name),
+    loans: (Array.isArray(b?.loans) ? b.loans : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), bank: str(x?.bank, 80).trim(),
       amount: num(x?.amount), rate: num(x?.rate), n: Math.max(0, Math.min(600, parseInt(x?.n, 10) || 0)), grace: Math.max(0, Math.min(120, parseInt(x?.grace, 10) || 0)),
       start: /^\d{4}-\d{2}-\d{2}$/.test(x?.start || "") ? x.start : "", mode: x?.mode === "manual" ? "manual" : "auto", recv: x?.recv !== false,
       ovr: Object.fromEntries(Object.entries(x?.ovr && typeof x.ovr === "object" ? x.ovr : {}).filter(([k, v]) => /^\d{1,3}$/.test(k) && num(v) != null).slice(0, 600).map(([k, v]) => [k, num(v)])),

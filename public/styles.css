@@ -2049,3 +2049,21 @@ body.side-drag{user-select:none;cursor:col-resize}
 .co-set .ln-card,.co-set .ln-card:has(.ln-wrap){width:fit-content!important;min-width:720px;max-width:100%}
 .co-set .ln-card .ln-bar>:nth-child(4)>.ln-tf:first-child{padding-left:2px}
 .co-set .ln-card,.co-set .ln-card:has(.ln-wrap){width:min(100%,940px)!important;min-width:0}
+/* loans page: the bank list with each bank's colour; loan card in two tidy lines */
+.ln-page .ln-swc{padding-right:0}
+.ln-banks{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 16px;width:min(100%,940px)}
+.ln-banks-t{font-size:.72rem;font-weight:700;color:var(--muted);margin-right:4px}
+.ln-bk{position:relative;display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px #e1e7ee,0 2px 6px -3px rgba(15,23,42,.2);font-size:.78rem;font-weight:600}
+.ln-bk .ln-sw{width:18px;height:18px;border-width:2px}
+.ln-bk .ln-pal{top:30px;left:0}
+.ln-bk-x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:.7rem;padding:0 0 0 2px}
+.ln-bk-new{width:120px;height:28px;border-radius:999px;font-size:.76rem;padding:0 12px}
+.co-set .ln-card .ln-bar.ln-bar2{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0!important;flex-wrap:nowrap!important}
+.ln-l1,.ln-l2{display:flex;align-items:flex-end;gap:14px;padding:10px 16px}
+.ln-l2{padding-top:8px;background:rgba(0,0,0,.12);border-top:1px solid rgba(255,255,255,.14)}
+.ln-l1>.ln-calc{margin-left:auto;display:flex;align-items:flex-end;gap:16px}
+.ln-l2 .ln-tline{display:flex;align-items:flex-end;gap:12px}
+.ln-bank{width:120px}
+.ln-l1 .ln-name{width:200px}
+.co-set .ln-card,.co-set .ln-card:has(.ln-wrap){width:min(100%,940px)!important}
+.ln-name::placeholder,.ln-bank::placeholder{font-weight:400;color:#94a3b8}
