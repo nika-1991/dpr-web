@@ -1816,3 +1816,5 @@ body{background:var(--page)}
 .tiles-grid .ptile-hd{background:#eef2f6;border-bottom:1px solid #dfe5ec;border-radius:3px 3px 0 0;padding:8px 12px}
 .tiles-grid .ptile-name{color:var(--ink)}
 .tiles-grid .ptile-bd{border-radius:0 0 3px 3px}
+/* app pages (projects, consolidation, reports…) start at the left edge, in line with the ribbon */
+body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
