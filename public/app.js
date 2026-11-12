@@ -1906,7 +1906,7 @@ function renderExec(p){
   const thead=h("thead",null,h("tr",null,
     ["BoQ","დასახელება",[h("span",null,"ჯამური"),h("br"),h("span",null,"რაოდ.")],"განზ.","ერთ. ფასი",
       sel.length?h("button",{type:"button",class:"x-cnt-clr",title:tr("ყველა თარიღის ჩვენება"),onclick:()=>{ S.xonly=[]; redraw(); }},"✕ ",h("span",null,sel.length>1?sel.length+" "+tr("პოზ."):(boq.find(it=>normCode(it.code)===sel[0])||{}).code||""))
-        :h("div",{class:"x-cnt-h"},h("span",{title:tr("რამდენ თარიღზეა დაგეგმილი")},"რაოდ."),h("span",{title:tr("დაგეგმილი რაოდენობის % ჯამურიდან")},"%"))].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":""),rowspan:"2"},l)),
+        :h("div",{class:"x-cnt-h1",title:tr("რამდენ თარიღზეა დაგეგმილი · დაგეგმილი რაოდენობის % ჯამურიდან")},"რაოდ. / %")].map((l,i)=>h("th",{class:"g-fz f"+i+(i===5?" g-fz-last":""),rowspan:"2"},l)),
     months.map((m,i)=>{ const full=MN[+m.k.slice(5)-1]+" "+m.k.slice(0,4);
       return h("th",{class:"x-month"+(i>0?" ms":""),colspan:String(m.n),title:full},h("span",{class:"gm-l"},m.n>1?full:MN[+m.k.slice(5)-1].slice(0,3)+". "+m.k.slice(0,4))); }),
     edit&&pend.n?h("th",{class:"x-month ms",colspan:String(pend.n)}):null,
