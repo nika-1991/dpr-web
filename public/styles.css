@@ -1954,3 +1954,13 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 :is(.users,.ptable,.rlist-t,.team-t,.an-t,.an-sub,.ua-t,.iss-t) :is(th,td),:is(.users,.ptable,.rlist-t,.team-t,.an-t,.an-sub,.ua-t,.iss-t) thead th{font-size:.82rem!important}
 :is(.users,.ptable,.rlist-t,.team-t,.an-t,.an-sub,.ua-t,.iss-t) td :is(.small,.muted.small){font-size:.74rem}
 :is(.users,.ptable,.rlist-t,.team-t,.an-t,.an-sub,.ua-t,.iss-t) thead th{font-family:var(--f-body)!important;text-transform:none!important;letter-spacing:0!important;font-weight:700}
+/* report: conditions packed at the top (no stretched gaps); HSE takes more width so the pair is lower and even */
+@media (min-width:1001px){ .secs{grid-template-columns:minmax(360px,1fr) minmax(0,3fr)} }
+.sec-conditions .cond{flex:0 0 auto;align-content:start;row-gap:14px}
+/* conditions: weather + temperature on one row, the three hour fields on the next */
+.sec-conditions .cond{grid-template-columns:repeat(6,minmax(0,1fr))}
+.sec-conditions .cond>.cond-f:nth-child(1),.sec-conditions .cond>.cond-f:nth-child(2){grid-column:span 3}
+.sec-conditions .cond>.cond-f:nth-child(n+3){grid-column:span 2}
+.sec-conditions .cond-f.wide{grid-column:span 2}
+.sec-conditions .cond>.cond-f:nth-child(n+3) label{align-items:flex-start;min-height:2.5em}
+.sec-conditions .cond>.cond-f:nth-child(n+3) .inp{text-align:center}
