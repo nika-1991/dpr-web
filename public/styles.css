@@ -2067,3 +2067,10 @@ body.side-drag{user-select:none;cursor:col-resize}
 .ln-l1 .ln-name{width:200px}
 .co-set .ln-card,.co-set .ln-card:has(.ln-wrap){width:min(100%,940px)!important}
 .ln-name::placeholder,.ln-bank::placeholder{font-weight:400;color:#94a3b8}
+/* loan schedule grid: narrow date column, inputs sized to their content */
+.ln-card .ln-grid{table-layout:fixed;width:100%}
+.ln-card .ln-grid th:first-child,.ln-card .ln-grid td:first-child{width:36px}
+.ln-card .ln-grid th:nth-child(2),.ln-card .ln-grid td:nth-child(2){width:150px;text-align:left}
+.ln-card .ln-grid th:last-child,.ln-card .ln-grid td:last-child{width:40px}
+.ln-card .ln-grid td:nth-child(2) .ln-in{width:132px}
+.ln-card .ln-grid .ln-in.num{width:110px;margin-left:auto;display:block}
