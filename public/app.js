@@ -432,14 +432,48 @@ function renderHome(){
     rbGrp("ხედი",h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")),
     ),
     rbGrp("პრობლემები",h("div",{class:"rb-iss"},
-      h("div",{class:"ok"},h("span",null,tr("გადაჭრილი")),h("b",null,String(shown.reduce((a,p)=>a+(st(p).issuesResolved||0),0)))),
-      h("div",{class:"bad"},h("span",null,tr("გადასაჭრელი")),h("b",null,String(shown.reduce((a,p)=>a+(st(p).issuesOpen||0),0)))))),
+      h("button",{type:"button",class:"ok",title:tr("მოგვარებული საკითხების სია"),onclick:()=>openIssues("done",shown)},h("span",null,tr("გადაჭრილი")),h("b",null,String(shown.reduce((a,p)=>a+(st(p).issuesResolved||0),0)))),
+      h("button",{type:"button",class:"bad",title:tr("გადასაჭრელი საკითხების სია"),onclick:()=>openIssues("open",shown)},h("span",null,tr("გადასაჭრელი")),h("b",null,String(shown.reduce((a,p)=>a+(st(p).issuesOpen||0),0)))))),
     S.admin?rbGrp("მოქმედებები",h("button",{type:"button",class:"vbtn rb-sq rb-add tip","aria-label":tr("ახალი პროექტის დამატება"),"data-tip":tr("ახალი პროექტის დამატება"),onclick:newProject},icon("add"))):null].filter(Boolean);
   out.push(h("div",{class:"dash-left"},listEl));
   return out;
 }
 
 /* a new project starts with the standard HSE items (editable in the form) */
+/* critical issues from all reports of the shown projects: open ones can be marked resolved, resolved ones reopened */
+async function openIssues(mode,projects){
+  let list; try{ list=await api("GET","/issues"); }catch(e){ toast(errMsg(e)); return; }
+  const ids=new Set(projects.map(p=>p.id));
+  let tab=mode;
+  const ov=h("div",{class:"g-modal iss-modal",onclick:e=>{ if(e.target===e.currentTarget) close(); }});
+  const close=()=>{ ov.remove(); document.removeEventListener("keydown",esc); }, esc=e=>{ if(e.key==="Escape") close(); };
+  document.addEventListener("keydown",esc);
+  const dpr=n=>"DPR-"+String(n||0).padStart(3,"0");
+  const draw=()=>{
+    const rows=list.filter(x=>ids.has(x.pid)&&(tab==="open"?!x.done:!!x.done)).sort((a,b)=>a.project.localeCompare(b.project,"ka")||String(b.last).localeCompare(String(a.last)));
+    const nOpen=list.filter(x=>ids.has(x.pid)&&!x.done).length, nDone=list.filter(x=>ids.has(x.pid)&&x.done).length;
+    const act=x=>x.can?h("button",{type:"button",class:"btn sm "+(x.done?"ghost":"iss-ok"),onclick:async e=>{ e.target.disabled=true;
+        try{ await api("POST","/projects/"+x.pid+"/issues/resolve",{key:x.key,done:!x.done}); x.done=x.done?null:{at:todayISO(),by:S.me.name}; await loadProjects(); render(); draw(); }catch(err){ toast(errMsg(err)); e.target.disabled=false; } }},
+      x.done?tr("ხელახლა გახსნა"):"✓ "+tr("მოგვარებულია")):null;
+    ov.replaceChildren(h("div",{class:"g-dlg iss-dlg",role:"dialog","aria-modal":"true","aria-label":tr("კრიტიკული საკითხები")},
+      h("div",{class:"iss-hd"},h("h3",null,tr("კრიტიკული საკითხები")),
+        h("div",{class:"vswitch"},h("button",{type:"button",class:"vbtn vtxt"+(tab==="open"?" on":""),onclick:()=>{ tab="open"; draw(); }},tr("გადასაჭრელი")+" · "+nOpen),
+          h("button",{type:"button",class:"vbtn vtxt"+(tab==="done"?" on":""),onclick:()=>{ tab="done"; draw(); }},tr("გადაჭრილი")+" · "+nDone)),
+        h("button",{type:"button",class:"btn sm ghost iss-x","aria-label":tr("დახურვა"),onclick:close},"✕")),
+      rows.length?h("div",{class:"iss-wrap"},h("table",{class:"iss-t"},
+        h("thead",null,h("tr",null,["პროექტი","BoQ","საკითხი","შენიშვნა","ანგარიშებში",tab==="done"?"მოგვარდა":"",""].map(l=>h("th",null,l)))),
+        h("tbody",null,rows.map(x=>h("tr",null,
+          h("td",{class:"iss-p"},x.project),
+          h("td",null,x.code?h("b",{class:"mono"},x.code):"—",x.item?h("div",{class:"muted small"},x.item):null),
+          h("td",{class:"iss-d"},x.desc||"—"),
+          h("td",{class:"muted small"},x.comment||""),
+          h("td",{class:"small nowrap"},dpr(x.firstNum)+(x.n>1?" → "+dpr(x.lastNum):""),h("div",{class:"muted"},fmtDate(x.first)+(x.last!==x.first?" – "+fmtDate(x.last):""))),
+          h("td",{class:"small nowrap"},x.done?[fmtDate(x.done.at),h("div",{class:"muted"},x.done.by||"")]:""),
+          h("td",{class:"nowrap"},act(x))))))):
+        h("p",{class:"muted",style:"margin:8px 0"},tr(tab==="open"?"გადასაჭრელი საკითხი არ არის.":"მოგვარებული საკითხი ჯერ არ არის."))));
+  };
+  draw(); document.body.append(ov);
+}
 async function newProject(){
   if(!S.hseDefault){ try{ S.hseDefault=await api("GET","/config/hse-default"); }catch(e){ S.hseDefault=[]; } }
   S.creating="project"; render();

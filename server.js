@@ -344,6 +344,7 @@ const withId = (id, d) => ({ id, ...d });
 /* per-project summary for the dashboard: reports, last report, BoQ progress (average share done over BoQ items) */
 const codeKey = (c) => String(c ?? "").trim().replace(/\./g, ",");
 const qtyNum = (v) => parseFloat(String(v ?? "").replace(",", ".")) || 0;
+const issueKey = (x) => codeKey(x.code) + "|" + String(x.desc || "").trim().replace(/\s+/g, " ").toLowerCase();
 function projectStats(p, id) {
   const reps = db.prepare("SELECT data FROM reports WHERE project_id=?").all(id).map((r) => JSON.parse(r.data))
     .sort((a, b) => (a.date < b.date ? -1 : 1));
@@ -353,16 +354,38 @@ function projectStats(p, id) {
   for (const r of reps) for (const w of r.works || []) if (w.code) done.set(codeKey(w.code), (done.get(codeKey(w.code)) || 0) + qtyNum(w.qty));
   const perItem = items.map((it) => { const q = done.get(codeKey(it.code)) || 0; return { done: q, pct: Math.min(q / qtyNum(it.qty), 1) * 100 }; });
   const last = reps[reps.length - 1];
-  /* critical issues: those listed in the latest report are still open; any listed earlier but gone from it count as resolved */
-  const ik = (x) => (String(x.code || "").trim() + "|" + String(x.desc || "").trim().toLowerCase());
-  const openK = new Set((last && last.issues || []).filter((x) => x.code || x.desc).map(ik));
-  const everK = new Set(); for (const r of reps) for (const x of r.issues || []) if (x.code || x.desc) everK.add(ik(x));
-  const issuesResolved = [...everK].filter((k) => !openK.has(k)).length;
-  return { reports: reps.length, issuesOpen: openK.size, issuesResolved, approved: reps.filter((r) => r.status === "approved").length,
+  /* critical issues from every report, one per BoQ code + description; resolved once someone marks it so */
+  const everK = new Set(); for (const r of reps) for (const x of r.issues || []) if (x.code || x.desc) everK.add(issueKey(x));
+  const doneK = p.issuesDone || {}, issuesResolved = [...everK].filter((k) => doneK[k]).length;
+  return { reports: reps.length, issuesOpen: everK.size - issuesResolved, issuesResolved, approved: reps.filter((r) => r.status === "approved").length,
     lastDate: last ? last.date : "", lastStatus: last ? last.status : "",
     progress: Math.round(avg() * 1000) / 10, itemsDone: perItem.filter((x) => x.pct >= 100).length, itemsStarted: perItem.filter((x) => x.done > 0).length,
  };
 }
+/* every critical issue raised in the reports of the projects the user can see, with where it was seen and whether it is resolved */
+api.get("/issues", auth, (req, res) => {
+  const out = [];
+  for (const row of db.prepare("SELECT id,data FROM projects").all()) {
+    const p = withId(row.id, JSON.parse(row.data)); if (!canSee(p, req.user)) continue;
+    const name = (code) => { const it = (p.boq || []).find((b) => codeKey(b.code) === codeKey(code)); return it ? it.name || "" : ""; };
+    const m = new Map();
+    const reps = db.prepare("SELECT data FROM reports WHERE project_id=?").all(row.id).map((r) => JSON.parse(r.data)).sort((a, b) => (a.date < b.date ? -1 : 1));
+    for (const r of reps) for (const x of r.issues || []) { if (!x.code && !x.desc) continue; const k = issueKey(x);
+      const e = m.get(k) || { key: k, code: x.code || "", item: name(x.code), first: r.date, firstNum: r.num, n: 0 };
+      Object.assign(e, { desc: x.desc || "", comment: x.comment || "", updatedDate: x.updatedDate || "", last: r.date, lastNum: r.num, n: e.n + 1 }); m.set(k, e); }
+    for (const e of m.values()) out.push({ pid: row.id, project: p.shortName || p.name || "", ...e, done: (p.issuesDone || {})[e.key] || null, can: canReview(p, req.user) && !p.archived });
+  }
+  res.json(out);
+});
+api.post("/projects/:id/issues/resolve", auth, (req, res) => {
+  const p = getProject(req.params.id); if (!p) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
+  if (!canReview(p, req.user)) return res.status(403).json({ error: "წვდომა არ გაქვთ" });
+  const key = String(req.body.key || "").slice(0, 2000); if (!key) return res.status(400).json({ error: "საკითხი არ არის მითითებული" });
+  p.issuesDone = p.issuesDone || {};
+  if (req.body.done) p.issuesDone[key] = { at: new Date().toISOString().slice(0, 10), by: req.user.name || req.user.username || "" }; else delete p.issuesDone[key];
+  db.prepare("UPDATE projects SET data=?, updated_at=? WHERE id=?").run(JSON.stringify(p), now(), req.params.id);
+  res.json({ ok: true });
+});
 api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
   res.json(rows.filter((p) => canSee(p, req.user)).map((p) => ({ ...p, stats: projectStats(p, p.id) })));

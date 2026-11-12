@@ -1859,3 +1859,22 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .rb-iss b{font-family:var(--f-mono);font-size:.82rem}
 .rb-iss .ok b{color:#15803d}
 .rb-iss .bad b{color:#c0262d}
+/* issues summary lines are buttons; the issues dialog */
+.rb-iss>button{display:flex;justify-content:space-between;align-items:baseline;gap:14px;font:inherit;font-size:.74rem;line-height:1.1;color:#3b4656;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.rb-iss>button:hover span{text-decoration:underline}
+.iss-dlg{width:min(1100px,100%);max-height:86vh;padding:16px 18px;gap:10px}
+.iss-hd{display:flex;align-items:center;gap:14px}
+.iss-hd h3{margin:0;font-size:1.02rem}
+.iss-x{margin-left:auto}
+.iss-wrap{overflow:auto;border:1px solid #d6dde5}
+.iss-t{width:100%;border-collapse:collapse;font-size:.8rem}
+.iss-t th{position:sticky;top:0;background:#eef2f6;color:#3b4656;text-align:left;font-size:.72rem;font-weight:700;padding:7px 10px;border-bottom:1px solid #d6dde5;white-space:nowrap}
+.iss-t td{padding:8px 10px;border-bottom:1px solid #eef1f4;vertical-align:top}
+.iss-p{font-weight:700;white-space:nowrap}
+.iss-d{min-width:240px}
+.iss-t .nowrap{white-space:nowrap}
+.btn.iss-ok{background:#e7f6ec;color:#15803d;border-color:#b7e2c6;font-weight:700}
+.btn.iss-ok:hover{background:#d3efdd}
+.iss-t td:last-child{width:1%;padding-right:12px}
+.iss-t td:last-child .btn{white-space:nowrap}
+.iss-t td:nth-child(2) .muted{max-width:240px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
