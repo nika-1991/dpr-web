@@ -588,7 +588,7 @@ const cleanCoFin = (b) => {
       month: M.test(x?.month || "") ? x.month : "", spread: Math.max(1, Math.min(60, parseInt(x?.spread, 10) || 1)), on: x?.on !== false })),
     open: num(b?.open) ?? 0,
     /* loans: an annuity worked out from its terms, or a schedule typed / pasted row by row */
-    loans: (Array.isArray(b?.loans) ? b.loans : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(),
+    loans: (Array.isArray(b?.loans) ? b.loans : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), color: /^#[0-9a-fA-F]{6}$/.test(x?.color || "") ? x.color : "",
       amount: num(x?.amount), rate: num(x?.rate), n: Math.max(0, Math.min(600, parseInt(x?.n, 10) || 0)), grace: Math.max(0, Math.min(120, parseInt(x?.grace, 10) || 0)),
       start: /^\d{4}-\d{2}-\d{2}$/.test(x?.start || "") ? x.start : "", mode: x?.mode === "manual" ? "manual" : "auto", recv: x?.recv !== false,
       ovr: Object.fromEntries(Object.entries(x?.ovr && typeof x.ovr === "object" ? x.ovr : {}).filter(([k, v]) => /^\d{1,3}$/.test(k) && num(v) != null).slice(0, 600).map(([k, v]) => [k, num(v)])),
@@ -600,7 +600,7 @@ const cleanIbl = (b) => {
   const num = (v) => { const n = parseFloat(String(v ?? "").replace(",", ".")); return isFinite(n) ? Math.round(n * 10000) / 10000 : null; };
   const rates = {}; for (const [k, v] of Object.entries(b?.rates && typeof b.rates === "object" ? b.rates : {}).slice(0, 60)) if (/^[A-Z]{3}$/.test(k) && num(v) > 0) rates[k] = num(v);
   return { rates, ratesAt: D.test(b?.ratesAt || "") ? b.ratesAt : "",
-    items: (Array.isArray(b?.items) ? b.items : []).slice(0, 300).map((x) => ({ id: str(x?.id, 20) || newId(6), kind: x?.kind === "lease" ? "lease" : "loan",
+    items: (Array.isArray(b?.items) ? b.items : []).slice(0, 300).map((x) => ({ id: str(x?.id, 20) || newId(6), kind: x?.kind === "lease" ? "lease" : "loan", color: /^#[0-9a-fA-F]{6}$/.test(x?.color || "") ? x.color : "",
       company: str(x?.company, 120).trim(), lender: str(x?.lender, 120).trim(), name: str(x?.name, 160).trim(), no: str(x?.no, 60).trim(), currency: /^[A-Z]{3}$/.test(x?.currency || "") ? x.currency : "GEL",
       amount: num(x?.amount), rate: num(x?.rate), penalty: num(x?.penalty), open: D.test(x?.open || "") ? x.open : "", maturity: D.test(x?.maturity || "") ? x.maturity : "",
       purpose: str(x?.purpose, 200).trim(), vat: !!x?.vat,

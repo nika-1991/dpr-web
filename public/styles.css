@@ -2003,3 +2003,29 @@ body:not(.has-side) .pside-grip{display:none}
 .pside-grip:hover,body.side-drag .pside-grip{background:color-mix(in srgb,var(--accent) 35%,transparent)}
 body.side-drag{user-select:none;cursor:col-resize}
 .tabs.tgroups .tico.est{font-size:1.35rem;font-weight:700;line-height:1}
+/* loan cards: a coloured title bar (colour chosen per bank), the schedule on white below, air between loans */
+.co-set .ln-card,.ibl-reg .ln-card{border:0!important;border-radius:14px!important;background:#fff!important;box-shadow:0 0 0 1px #e1e7ee,0 10px 24px -14px rgba(15,23,42,.35)!important;margin-bottom:22px!important;padding:0!important;overflow:visible}
+.co-set .ln-card .ln-bar,.ibl-reg .ln-card .ln-bar{background:linear-gradient(135deg,var(--ln-c,#0d3b3d),color-mix(in srgb,var(--ln-c,#0d3b3d) 78%,#fff));padding:10px 14px!important;color:#fff;border-radius:14px 14px 0 0;overflow:visible}
+.ln-card:not(:has(.ln-wrap)) .ln-bar{border-radius:14px!important}
+.ln-card .ln-bar .ln-tf>span,.ln-card .ln-bar .ln-kpi span{color:rgba(255,255,255,.72)!important}
+.ln-card .ln-bar .ln-kpi b,.ln-card .ln-bar .ln-tg,.ln-card .ln-bar>.btn.ghost,.ln-card .ln-bar .ln-calc>.btn.ghost{color:#fff!important}
+.ln-card .ln-bar .ln-kpi b.neg{color:#fecaca!important}
+.ln-card .ln-bar .inp{background:#fff!important;color:#0f172a!important;-webkit-text-fill-color:#0f172a}
+.ln-card .ln-bar .ln-sec{border-color:rgba(255,255,255,.18)!important}
+.ln-card .ln-bar .vswitch{background:rgba(255,255,255,.92)}
+.ln-card>.ln-wrap{margin:12px 14px 4px!important}
+.ln-card>.ln-hint{padding:0 14px 12px}
+.ln-swc{position:relative;display:flex;align-items:center;padding-right:10px}
+.ln-sw{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);cursor:pointer;padding:0}
+.ln-sw:disabled{cursor:default}
+.ln-pal{position:absolute;top:30px;left:0;z-index:40;display:grid;grid-template-columns:repeat(6,24px);gap:6px;padding:10px;background:#fff;border-radius:12px;box-shadow:0 12px 28px -10px rgba(15,23,42,.45),0 0 0 1px #e1e7ee}
+.ln-pal[hidden]{display:none}
+.ln-pc{width:24px;height:24px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);cursor:pointer;padding:0}
+.ln-pc.on{box-shadow:0 0 0 2px #0f172a}
+.ln-pc-any{display:inline-flex;align-items:center;justify-content:center;background:conic-gradient(#ef4444,#f59e0b,#22c55e,#06b6d4,#6366f1,#ec4899,#ef4444);color:#fff;font-weight:800;font-size:.8rem;position:relative;overflow:hidden}
+.ln-pc-any input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.as-page.co-set,.as-page.ibl-reg{max-width:none}
+.co-set .ln-card,.ibl-reg .ln-card{width:fit-content;max-width:100%}
+.co-set .ln-card:has(.ln-wrap),.ibl-reg .ln-card:has(.ln-wrap){width:auto;max-width:1240px}
+.ln-sw{box-shadow:0 0 0 1px rgba(0,0,0,.25),inset 0 0 0 3px rgba(255,255,255,.35)}
+.co-set .ln-card,.ibl-reg .ln-card,.co-set .ln-card:has(.ln-wrap),.ibl-reg .ln-card:has(.ln-wrap){width:min(100%,1160px);max-width:100%}

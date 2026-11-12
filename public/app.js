@@ -2752,6 +2752,16 @@ function parseLoanPaste(text){
     if(p!=null) out.push({d,p:Math.round(p*100)/100,i:Math.round((i||0)*100)/100}); }
   return out;
 }
+/* a loan's colour (chosen per bank): a swatch on the card bar opens a small palette */
+const LN_COLORS=["#0d3b3d","#1e3a8a","#0369a1","#c2410c","#b91c1c","#6d28d9","#be185d","#15803d","#a16207","#334155"];
+function lnSwatch(x,redraw,edit){
+  const cur=x.color||LN_COLORS[0];
+  const pop=h("div",{class:"ln-pal",hidden:true},LN_COLORS.map(c=>h("button",{type:"button",class:"ln-pc"+(c===cur?" on":""),style:"background:"+c,"aria-label":c,onclick:e=>{ e.stopPropagation(); x.color=c; redraw(); }})),
+    h("label",{class:"ln-pc ln-pc-any",title:tr("სხვა ფერი")},"+",h("input",{type:"color",value:cur,onchange:e=>{ x.color=e.target.value; redraw(); }})));
+  const btn=h("button",{type:"button",class:"ln-sw",style:"background:"+cur,disabled:!edit,title:tr("ბანკის ფერი"),"aria-label":tr("ბანკის ფერი"),onclick:e=>{ e.stopPropagation(); pop.hidden=!pop.hidden;
+    if(!pop.hidden){ const off=ev=>{ if(!pop.contains(ev.target)){ pop.hidden=true; document.removeEventListener("click",off); } }; setTimeout(()=>document.addEventListener("click",off),0); } }});
+  return h("div",{class:"ln-swc"},btn,pop);
+}
 function renderCoLoans(){
   const F=S.co.fin, edit=S.admin, loans=F.loans||(F.loans=[]);
   const redraw=()=>{ saveCoFin(); render(); };
@@ -2808,7 +2818,7 @@ function renderCoLoans(){
     const sec=(...k)=>h("div",{class:"ln-sec"},k);
     const tgl=h("button",{class:"btn sm ghost ln-tg",type:"button",title:tr(open?"გრაფიკის დამალვა":"გრაფიკის ნახვა"),onclick:()=>{ S.coLoanOpen=open?null:L.id; render(); }},(open?"▾ ":"▸ ")+rows.length+" "+tr("თვე"));
     calc.prepend(tgl);
-    return h("section",{class:"as-grp as-wide ln-card"},h("div",{class:"ln-bar"},sec(name),sec(h("label",{class:"ln-tf"},h("span",null,tr("გრაფიკი")),mode)),sec(terms),calc),
+    return h("section",{class:"as-grp as-wide ln-card",style:"--ln-c:"+(L.color||LN_COLORS[0])},h("div",{class:"ln-bar"},lnSwatch(L,redraw,edit),sec(name),sec(h("label",{class:"ln-tf"},h("span",null,tr("გრაფიკი")),mode)),sec(terms),calc),
       open?[h("div",{class:"pl-wrap ln-wrap"},tbl),addRow]:null);
   });
   return h("div",{class:"as-page co-set"},cards.length?cards:h("div",{class:"empty"},h("p",{class:"muted"},tr("სესხი ჯერ არ არის დამატებული."))),
@@ -2918,7 +2928,8 @@ function iblRegister(B,A,edit){
             const n=Math.max(1,(+x.maturity.slice(0,4)-+x.open.slice(0,4))*12+(+x.maturity.slice(5,7)-+x.open.slice(5,7)));
             x.rows=loanRows({amount:x.amount,rate:x.rate,n,grace:0,start:addMonths(x.open,1),mode:"auto"}).map(q=>({d:q.d,p:Math.round(q.p*100)/100,i:Math.round(q.i*100)/100,pp:null,pi:null})); redraw(); }},tr("ანუიტეტის აწყობა")),
           h("small",null,tr("Excel-იდან: მონიშნეთ თარიღი, ძირი, პროცენტი, გადახდილი ძირი, გადახდილი % → Ctrl+C → აქ თარიღის უჯრაზე Ctrl+V."))):null); }
-    return h("section",{class:"as-grp as-wide ln-card"},bar,grid);
+    bar.prepend(lnSwatch(x,redraw,edit));
+    return h("section",{class:"as-grp as-wide ln-card",style:"--ln-c:"+(x.color||LN_COLORS[0])},bar,grid);
   });
   return h("div",{class:"as-page co-set ibl-reg"},h("datalist",{id:"ibl-co"},comps.map(c=>h("option",{value:c}))),h("datalist",{id:"ibl-ln"},lenders.map(c=>h("option",{value:c}))),
     cards.length?cards:h("div",{class:"empty"},h("p",{class:"muted"},tr("ჯერ არაფერია დამატებული."))),
