@@ -1809,3 +1809,10 @@ body{background:var(--page)}
 .ribbon .tip:hover::after,.ribbon .tip:focus-visible::after{opacity:1}
 .rb-add .ico{width:20px;height:20px;stroke-width:2.2}
 .rb-add:hover{color:var(--accent)}
+/* project tiles: plain rectangles, thin light frame, light header */
+.tiles-grid .ptile,.tiles-grid .ptile:hover{background:#fff;border:1px solid #d6dde5;border-radius:4px;padding:0;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.tiles-grid .ptile:hover{border-color:color-mix(in srgb,var(--accent) 45%,#d6dde5);box-shadow:0 4px 12px -4px rgba(15,23,42,.15)}
+.tiles-grid .ptile.archived{background:#fff;opacity:.75}
+.tiles-grid .ptile-hd{background:#eef2f6;border-bottom:1px solid #dfe5ec;border-radius:3px 3px 0 0;padding:8px 12px}
+.tiles-grid .ptile-name{color:var(--ink)}
+.tiles-grid .ptile-bd{border-radius:0 0 3px 3px}
