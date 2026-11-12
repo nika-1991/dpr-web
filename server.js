@@ -382,7 +382,7 @@ api.post("/projects/:id/issues/resolve", auth, (req, res) => {
   if (!canReview(p, req.user)) return res.status(403).json({ error: "წვდომა არ გაქვთ" });
   const key = String(req.body.key || "").slice(0, 2000); if (!key) return res.status(400).json({ error: "საკითხი არ არის მითითებული" });
   p.issuesDone = p.issuesDone || {};
-  if (req.body.done) p.issuesDone[key] = { at: new Date().toISOString().slice(0, 10), by: req.user.name || req.user.username || "" }; else delete p.issuesDone[key];
+  if (req.body.done) p.issuesDone[key] = { at: new Date().toISOString().slice(0, 10), by: req.user.name || req.user.username || "", note: String(req.body.note || "").trim().slice(0, 1000) }; else delete p.issuesDone[key];
   db.prepare("UPDATE projects SET data=?, updated_at=? WHERE id=?").run(JSON.stringify(p), now(), req.params.id);
   res.json({ ok: true });
 });

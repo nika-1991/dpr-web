@@ -1893,3 +1893,10 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 :is(.rlist-t,.team-t,.users,.an-t,.an-sub),.tw:has(.rlist-t){border-radius:0!important}
 .rlist-t .rep-add{border:0;background:#f3f5f8;color:#1f2a37;box-shadow:0 0 8px rgba(100,118,140,.28),0 3px 8px -3px rgba(100,118,140,.38)}
 .rlist-t .rep-add:hover{background:#fff;color:var(--accent)}
+.iss-act{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.iss-actc{width:240px}
+.iss-note{min-height:46px;font-size:.78rem;padding:6px 8px;resize:vertical;width:100%;box-sizing:border-box}
+.iss-cm{min-width:180px;max-width:280px}
+.iss-dlg{width:min(1240px,100%)}
+.iss-t td.iss-cm{white-space:normal;overflow-wrap:anywhere;min-width:160px;max-width:240px}
+.iss-t td:nth-child(3){min-width:180px}

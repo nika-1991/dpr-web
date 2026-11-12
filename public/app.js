@@ -452,24 +452,29 @@ async function openIssues(mode,projects){
   const draw=()=>{
     const rows=list.filter(x=>ids.has(x.pid)&&(tab==="open"?!x.done:!!x.done)).sort((a,b)=>a.project.localeCompare(b.project,"ka")||String(b.last).localeCompare(String(a.last)));
     const nOpen=list.filter(x=>ids.has(x.pid)&&!x.done).length, nDone=list.filter(x=>ids.has(x.pid)&&x.done).length;
-    const act=x=>x.can?h("button",{type:"button",class:"btn sm "+(x.done?"ghost":"iss-ok"),onclick:async e=>{ e.target.disabled=true;
-        try{ await api("POST","/projects/"+x.pid+"/issues/resolve",{key:x.key,done:!x.done}); x.done=x.done?null:{at:todayISO(),by:S.me.name}; await loadProjects(); render(); draw(); }catch(err){ toast(errMsg(err)); e.target.disabled=false; } }},
-      x.done?tr("ხელახლა გახსნა"):"✓ "+tr("მოგვარებულია")):null;
+    /* resolving takes a short comment (how it was resolved); it shows on the resolved list */
+    const act=x=>{ if(!x.can) return null;
+      const note=x.done?null:h("textarea",{class:"inp iss-note",rows:"2",placeholder:tr("კომენტარი: როგორ მოგვარდა…"),"aria-label":tr("კომენტარი")});
+      const btn=h("button",{type:"button",class:"btn sm "+(x.done?"ghost":"iss-ok"),onclick:async e=>{ e.target.disabled=true; const n=note?note.value.trim():"";
+        try{ await api("POST","/projects/"+x.pid+"/issues/resolve",{key:x.key,done:!x.done,note:n}); x.done=x.done?null:{at:todayISO(),by:S.me.name,note:n}; await loadProjects(); render(); draw(); }catch(err){ toast(errMsg(err)); e.target.disabled=false; } }},
+        x.done?tr("ხელახლა გახსნა"):"✓ "+tr("მოგვარებულია"));
+      return h("div",{class:"iss-act"},note,btn); };
     ov.replaceChildren(h("div",{class:"g-dlg iss-dlg",role:"dialog","aria-modal":"true","aria-label":tr("კრიტიკული საკითხები")},
       h("div",{class:"iss-hd"},h("h3",null,tr("კრიტიკული საკითხები")),
         h("div",{class:"vswitch"},h("button",{type:"button",class:"vbtn vtxt"+(tab==="open"?" on":""),onclick:()=>{ tab="open"; draw(); }},tr("გადასაჭრელი")+" · "+nOpen),
           h("button",{type:"button",class:"vbtn vtxt"+(tab==="done"?" on":""),onclick:()=>{ tab="done"; draw(); }},tr("გადაჭრილი")+" · "+nDone)),
         h("button",{type:"button",class:"btn sm ghost iss-x","aria-label":tr("დახურვა"),onclick:close},"✕")),
       rows.length?h("div",{class:"iss-wrap"},h("table",{class:"iss-t"},
-        h("thead",null,h("tr",null,["პროექტი","BoQ","საკითხი","შენიშვნა","ანგარიშებში",tab==="done"?"მოგვარდა":"",""].map(l=>h("th",null,l)))),
+        h("thead",null,h("tr",null,["პროექტი","BoQ","საკითხი","შენიშვნა","ანგარიშებში",tab==="done"?"მოგვარდა":null,tab==="done"?"კომენტარი":"",tab==="done"?"":null].filter(l=>l!=null).map(l=>h("th",null,l)))),
         h("tbody",null,rows.map(x=>h("tr",null,
           h("td",{class:"iss-p"},x.project),
           h("td",null,x.code?h("b",{class:"mono"},x.code):"—",x.item?h("div",{class:"muted small"},x.item):null),
           h("td",{class:"iss-d"},x.desc||"—"),
           h("td",{class:"muted small"},x.comment||""),
           h("td",{class:"small nowrap"},dpr(x.firstNum)+(x.n>1?" → "+dpr(x.lastNum):""),h("div",{class:"muted"},fmtDate(x.first)+(x.last!==x.first?" – "+fmtDate(x.last):""))),
-          h("td",{class:"small nowrap"},x.done?[fmtDate(x.done.at),h("div",{class:"muted"},x.done.by||"")]:""),
-          h("td",{class:"nowrap"},act(x))))))):
+          tab==="done"?h("td",{class:"small nowrap"},fmtDate(x.done.at),h("div",{class:"muted"},x.done.by||"")):null,
+          tab==="done"?h("td",{class:"small iss-cm"},x.done.note||h("span",{class:"muted"},"—")):null,
+          h("td",{class:tab==="done"?"nowrap":"iss-actc"},act(x))))))):
         h("p",{class:"muted",style:"margin:8px 0"},tr(tab==="open"?"გადასაჭრელი საკითხი არ არის.":"მოგვარებული საკითხი ჯერ არ არის."))));
   };
   draw(); document.body.append(ov);
