@@ -594,6 +594,7 @@ function renderProject(){
   else if(S.tab==="pl"&&canReview(p)) body=renderPL(p);
   else if(S.tab==="assume"&&canReview(p)) body=renderAssume(p);
   else if(S.tab==="cf"&&canReview(p)) body=renderCF(p);
+  else if(S.tab==="othercost"&&canReview(p)) body=renderOtherCost(p);
   else if(TAB_ICONS[S.tab]&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=h("div",{class:"empty"},tabIcon(S.tab),h("p",null,h("b",null,tr(FIN_TABS.find(([k])=>k===S.tab)[1]))),h("p",{class:"muted"},"გვერდი მზადდება."));
   else body=renderInfo(p);
   /* codes and name beside the tabs; the row stays put (and frozen under the top bar) on every tab */
@@ -1342,7 +1343,7 @@ async function loadSchedule(pid){
   if(S.schedLoading===pid) return; S.schedLoading=pid;
   try{ S.sched=await api("GET","/projects/"+encodeURIComponent(pid)+"/schedule"); S.schedPid=pid; S.gsel=null; S.gscroll=null; }
   catch(e){ toast("გეგმა-გრაფიკი ვერ ჩაიტვირთა: "+errMsg(e)); }
-  S.schedLoading=null; if(S.view==="project"&&["schedule","exec","pl","cf","assume"].includes(S.tab)&&!typing()) render();
+  S.schedLoading=null; if(S.view==="project"&&["schedule","exec","pl","cf","assume","othercost"].includes(S.tab)&&!typing()) render();
 }
 function saveSchedule(){
   clearTimeout(S.schedTimer); const pid=S.schedPid; schedStatus("ინახება…");
@@ -2480,6 +2481,14 @@ function renderAssume(p){
     grp("pause","ფულის დაკავება",fld("cover","cash cover გამოთავისუფლება","%","ავანსის გაქვითვიდან"),fld("hold","ფულის დაკავება","%","ჩარიცხვიდან"),fld("holdRel","გამოთავისუფლება თვეში","₾")),
     grp("pdf","დღგ",fld("vat","დღგ-ს განაკვეთი","%"),fld("vatDay","გადახდის რიცხვი","","მომდევნო თვის")),
     grp("calendar","გრაფიკი და ნაშთი",fld("shift","დაწყების გადადება","დღე","მთელი გეგმა გადაიწევს"),fld("open","საწყისი ნაშთი","₾"),fld("ovDay","ზედნადების გადახდის რიცხვი","","მომდევნო თვის")));
+  return h("div",{class:"as-page"},h("div",{class:"row",style:"justify-content:flex-end;margin-bottom:6px"},h("span",{id:"sched-status",class:"muted small"})),groups);
+}
+
+/* other costs: the project's indirect (overhead) costs by month */
+function renderOtherCost(p){
+  if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
+  const sc=S.sched, fin=cfFin(sc), edit=canReview(p)&&!p.archived;
+  const save=()=>saveSchedule();
   const box=h("div",{class:"as-ind"});
   const draw=()=>box.replaceChildren(
     h("div",{class:"as-row as-hd"},["დასახელება","თვეში, ₾","დან","მდე",""].map(t=>h("span",null,t))),
@@ -2494,7 +2503,7 @@ function renderAssume(p){
   draw();
   const ind=h("section",{class:"as-grp as-wide"},h("div",{class:"as-gt"},icon("personnel"),h("span",null,tr("არაპირდაპირი (ზედნადები) ხარჯები")),
     h("b",{class:"as-sum"},gel(fin.ind.reduce((a,x)=>a+num(x.monthly),0))+" / "+tr("თვე"))),box);
-  return h("div",{class:"as-page"},h("div",{class:"row",style:"justify-content:flex-end;margin-bottom:6px"},h("span",{id:"sched-status",class:"muted small"})),groups,ind);
+  return h("div",{class:"as-page"},h("div",{class:"row",style:"justify-content:flex-end;margin-bottom:6px"},h("span",{id:"sched-status",class:"muted small"})),ind);
 }
 
 /* ---------- COMPANY FINANCE: consolidated P&L over all or chosen projects, company-level assumptions ---------- */
