@@ -1884,5 +1884,5 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .rb-g.rb-search .home-search .ico{width:19px;height:19px}
 .rb-g.rb-search .home-search .inp{font-size:.86rem}
 /* ribbon controls lifted off the surface with a deeper soft shadow on every side */
-.rb-g .vswitch,.rb-sq{background:#f3f5f8!important;box-shadow:0 0 0 1px rgba(100,118,140,.10),0 0 10px rgba(100,118,140,.28),0 5px 12px -2px rgba(100,118,140,.40)!important}
+.rb-g .vswitch,.rb-sq{background:#f3f5f8!important;box-shadow:0 0 12px rgba(100,118,140,.30),0 5px 12px -3px rgba(100,118,140,.38)!important}
 .rb-sq:active{box-shadow:inset 3px 3px 6px var(--neu-d),inset -3px -3px 6px var(--neu-l)!important}
