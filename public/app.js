@@ -295,7 +295,7 @@ function appRibbon(){
     return [rbGrp("ანგარიშგება",b("pl","chart","P&L"),b("cf","pulse","CF")),rbGrp("დაშვებები",b("fixed","building","ფიქსირებული ხარჯები"),b("loans","coins","სესხები"),b("set","issues","ერთჯერადი"))]; }
   if(S.view==="reports"){ const t=S.rpTab||"ibl", b=(k,ic,l,tip)=>rbBtn(t===k,ic,l,()=>{ S.rpTab=k; render(); },tip);
     return [rbGrp("რეესტრები",b("ibl","coins","Liabilities","Interest bearing liabilities"),b("ret","pause","Retention"),b("pledge","building","Pledged assets"),b("guar","checkc","Guarantees"))]; }
-  if(S.view==="settings"||S.view==="users") return [rbGrp("პარამეტრები",rbBtn(S.view==="users","personnel","მომხმარებლები",()=>go("users")),rbBtn(S.view==="settings","list","სიები",()=>go("settings")))];
+  if(S.view==="settings"||S.view==="users") return [rbGrp("პარამეტრები",rbBtn(S.view==="users","personnel","მომხმარებლები",()=>{ S.userSel=null; go("users"); }),rbBtn(S.view==="settings","list","სიები",()=>go("settings")))];
   return null;
 }
 function renderRibbon(){
@@ -3011,30 +3011,7 @@ function renderAnalysisDetail(d,money){
 function renderUsers(){
   if(!S.admin) return renderMissing();
   const refresh=async()=>{ try{ S.users=await api("GET","/users"); await loadNames(); }catch(e){ toast(errMsg(e)); } render(); };
-  const ids={u:uid(),n:uid(),r:uid(),p:uid(),t:uid(),e:uid()};
-  const eIn=h("input",{id:ids.e,class:"inp",type:"email",autocomplete:"off",placeholder:"name@tesengroup.ge"});
-  const tIn=h("input",{id:ids.t,class:"inp mono",type:"tel",autocomplete:"off",placeholder:"5XX XX XX XX"});
-  const uIn=h("input",{id:ids.u,class:"inp",autocomplete:"off",autocapitalize:"none",placeholder:"მაგ. g.beridze"});
-  const nIn=h("input",{id:ids.n,class:"inp",placeholder:"სახელი გვარი"});
-  const rIn=h("select",{id:ids.r,class:"inp"},h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"admin"},"ადმინისტრატორი"));
-  const pIn=h("input",{id:ids.p,class:"inp mono",inputmode:"numeric",maxlength:"4",pattern:"[0-9]{4}",value:genPassword()});
-  const created=h("div");
-  const createForm=h("form",{class:"panel-b users-form",style:"display:flex;flex-direction:column;gap:12px",onsubmit:async e=>{
-    e.preventDefault();
-    const body={username:uIn.value.trim(),name:nIn.value.trim(),role:rIn.value,password:pIn.value,phone:tIn.value.trim(),email:eIn.value.trim()};
-    try{ const res=await api("POST","/users",body); await refresh();
-      toast("მომხმარებელი შეიქმნა");
-      const c=document.getElementById("created-box"); if(c) c.replaceChildren(h("div",{class:"notice info"},"გადაეცით თანამშრომელს: მომხმარებელი ",h("span",{class:"pw"},body.username)," · დროებითი პაროლი ",h("span",{class:"pw"},body.password),". პირველი შესვლისას საკუთარ პაროლს დააყენებს.",mailNotice(res,((S.users||[]).find(x=>x.username===body.username)||{}).email,body.name,body.username,body.password)));
-    }catch(ex){ toast(errMsg(ex)); } }},
-    h("div",{class:"fgrid"},
-      h("div",{class:"field"},h("label",{for:ids.u},"მომხმარებლის სახელი (ლათინურად)"),uIn),
-      h("div",{class:"field"},h("label",{for:ids.n},"სახელი და გვარი"),nIn),
-      h("div",{class:"field"},h("label",{for:ids.e},"ელფოსტა"),eIn),
-      h("div",{class:"field"},h("label",{for:ids.t},"ტელეფონი"),tIn),
-      h("div",{class:"field"},h("label",{for:ids.r},"როლი"),rIn),
-      h("div",{class:"field"},h("label",{for:ids.p},"დროებითი პაროლი"),h("div",{class:"row",style:"flex-wrap:nowrap"},pIn,h("button",{class:"btn sm",type:"button",onclick:()=>{pIn.value=genPassword();}},"ახალი")))),
-    h("p",{class:"small muted",style:"margin:0"},"ადმინისტრატორს ყველა პროექტზე სრული უფლება აქვს. თანამშრომლის უფლება (შემსრულებელი, რივიუერი ან მნახველი) ინიშნება თითოეული პროექტის „გუნდის“ ჩანართზე."),
-    h("div",{class:"row"},h("button",{class:"btn primary",type:"submit"},"მომხმარებლის შექმნა")));
+  if(S.userSel){ const u=S.users.find(x=>x.id===S.userSel); if(u) return renderUserAccess(u); S.userSel=null; }
   const rows=S.users.map(u=>{
     const self=u.id===S.me.id;
     const box=h("span",{class:"confirm"});
@@ -3043,15 +3020,15 @@ function renderUsers(){
       h("button",{class:"btn sm ghost",type:"button",onclick:()=>box.replaceChildren()},"გაუქმება")); };
     const roleSel=h("select",{class:"inp",style:"width:auto","aria-label":"როლი",disabled:self,onchange:async e=>{ try{ await api("PATCH","/users/"+u.id,{role:e.target.value}); toast("როლი შეიცვალა"); refresh(); }catch(ex){ toast(errMsg(ex)); } }},
       h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"admin"},"ადმინისტრატორი")); roleSel.value=u.role==="admin"?"admin":"employee";
-    const projs=u.role==="admin"?[]:[...S.projects.values()].filter(p=>(p.memberIds||[]).includes(u.id))
-      .map(p=>pShort(p)+" — "+tr(ACCESS_NAMES[((p.members||{})[u.id]||{}).access]||ACCESS_NAMES.executor));
+    const n=u.role==="admin"?0:[...S.projects.values()].filter(p=>(p.memberIds||[]).includes(u.id)).length;
+    const open=()=>{ S.userSel=u.id; render(); };
     return h("tr",null,
-      h("td",{"data-l":"სახელი"},h("strong",null,u.name),h("div",{class:"small muted mono"},u.username)),
+      h("td",{"data-l":"სახელი"},h("button",{type:"button",class:"u-open",onclick:open},h("strong",null,u.name),h("div",{class:"small muted mono"},u.username))),
       h("td",{"data-l":"კონტაქტი",class:"small contact"},
         h("div",null,h("span",null,u.email||"—"),editBtn(u,"email","ელფოსტა")),
         h("div",null,h("span",{class:"mono"},u.phone||"—"),editBtn(u,"phone","ტელეფონი"))),
       h("td",{"data-l":"როლი"},roleSel),
-      h("td",{"data-l":"პროექტები",class:"small"},u.role==="admin"?h("span",{class:"muted"},"ყველა პროექტი"):projs.length?projs.map(x=>h("div",null,x)):h("span",{class:"muted"},"—")),
+      h("td",{"data-l":"წვდომა",class:"small"},h("button",{type:"button",class:"btn sm ghost u-acc",onclick:open},icon("layers"),u.role==="admin"?tr("ყველა პროექტი"):n?n+" "+tr("პროექტი"):tr("არცერთი"))),
       h("td",{"data-l":"ბოლო შესვლა",class:"small"},u.lastLogin?fmtDateTime(u.lastLogin):"არასდროს",u.mustChange?h("div",{class:"small",style:"color:var(--signal)"},"დროებითი პაროლი"):null),
       h("td",{"data-l":"სტატუსი"},u.active?h("span",{class:"chip st-approved"},"აქტიური"):h("span",{class:"chip st-none"},"გათიშული")),
       h("td",{"data-l":"მოქმედება"},h("div",{class:"row"},
@@ -3059,10 +3036,63 @@ function renderUsers(){
         self?null:h("button",{class:"btn sm ghost",type:"button",onclick:async()=>{ try{ await api("PATCH","/users/"+u.id,{active:!u.active}); toast(u.active?"წვდომა გაითიშა":"წვდომა აღდგა"); refresh(); }catch(e){ toast(errMsg(e)); } }},u.active?"გათიშვა":"ჩართვა"),
         box)));
   });
-  return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"ადმინისტრირება"),h("h1",null,"მომხმარებლები"))),
-    h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ახალი მომხმარებელი")),createForm,h("div",{id:"created-box",class:"panel-b",style:"padding-top:0"},created)),
-    h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ყველა მომხმარებელი",h("span",{class:"en cnt-sub"},S.users.length))),
-      h("div",{class:"tw"},h("table",{class:"rt stack users"},h("thead",null,h("tr",null,["სახელი","კონტაქტი","როლი","პროექტები","ბოლო შესვლა","სტატუსი",""].map(t=>h("th",null,t)))),h("tbody",null,rows))))];
+  const add=h("button",{type:"button",class:"rep-add tip","data-tip":tr("ახალი მომხმარებელი"),"aria-label":tr("ახალი მომხმარებელი"),onclick:()=>newUserDialog(refresh)},"+");
+  return [h("section",{class:"panel"},
+      h("div",{class:"tw"},h("table",{class:"rt stack users"},h("thead",null,h("tr",null,["სახელი","კონტაქტი","როლი","წვდომა","ბოლო შესვლა","სტატუსი"].map(t=>h("th",null,t)),h("th",{class:"rep-add-th"},add))),h("tbody",null,rows))))];
+}
+/* new user: a dialog opened from the "+" at the end of the users table heading */
+function newUserDialog(refresh){
+  const ids={u:uid(),n:uid(),r:uid(),p:uid(),t:uid(),e:uid()};
+  const eIn=h("input",{id:ids.e,class:"inp",type:"email",autocomplete:"off",placeholder:"name@tesengroup.ge"});
+  const tIn=h("input",{id:ids.t,class:"inp mono",type:"tel",autocomplete:"off",placeholder:"5XX XX XX XX"});
+  const uIn=h("input",{id:ids.u,class:"inp",autocomplete:"off",autocapitalize:"none",placeholder:"მაგ. g.beridze"});
+  const nIn=h("input",{id:ids.n,class:"inp",placeholder:"სახელი გვარი"});
+  const rIn=h("select",{id:ids.r,class:"inp"},h("option",{value:"employee"},"თანამშრომელი"),h("option",{value:"admin"},"ადმინისტრატორი"));
+  const pIn=h("input",{id:ids.p,class:"inp mono",inputmode:"numeric",maxlength:"4",pattern:"[0-9]{4}",value:genPassword()});
+  const out=h("div");
+  const ov=h("div",{class:"g-modal",onclick:e=>{ if(e.target===e.currentTarget) close(); }});
+  const close=()=>{ ov.remove(); document.removeEventListener("keydown",esc); }, esc=e=>{ if(e.key==="Escape") close(); };
+  document.addEventListener("keydown",esc);
+  const form=h("form",{class:"g-dlg nu-dlg",role:"dialog","aria-modal":"true","aria-label":tr("ახალი მომხმარებელი"),onsubmit:async e=>{
+    e.preventDefault();
+    const body={username:uIn.value.trim(),name:nIn.value.trim(),role:rIn.value,password:pIn.value,phone:tIn.value.trim(),email:eIn.value.trim()};
+    try{ const res=await api("POST","/users",body); await refresh(); toast("მომხმარებელი შეიქმნა");
+      out.replaceChildren(h("div",{class:"notice info"},"გადაეცით თანამშრომელს: მომხმარებელი ",h("span",{class:"pw"},body.username)," · დროებითი პაროლი ",h("span",{class:"pw"},body.password),". პირველი შესვლისას საკუთარ პაროლს დააყენებს.",mailNotice(res,body.email,body.name,body.username,body.password)));
+      [uIn,nIn,eIn,tIn].forEach(x=>x.value=""); pIn.value=genPassword();
+    }catch(ex){ toast(errMsg(ex)); } }},
+    h("div",{class:"iss-hd"},h("h3",null,tr("ახალი მომხმარებელი")),h("button",{type:"button",class:"btn sm ghost iss-x","aria-label":tr("დახურვა"),onclick:close},"✕")),
+    h("div",{class:"nu-grid"},
+      h("div",{class:"field"},h("label",{for:ids.u},"მომხმარებლის სახელი (ლათინურად)"),uIn),
+      h("div",{class:"field"},h("label",{for:ids.n},"სახელი და გვარი"),nIn),
+      h("div",{class:"field"},h("label",{for:ids.e},"ელფოსტა"),eIn),
+      h("div",{class:"field"},h("label",{for:ids.t},"ტელეფონი"),tIn),
+      h("div",{class:"field"},h("label",{for:ids.r},"როლი"),rIn),
+      h("div",{class:"field"},h("label",{for:ids.p},"დროებითი პაროლი"),h("div",{class:"row",style:"flex-wrap:nowrap"},pIn,h("button",{class:"btn sm",type:"button",onclick:()=>{pIn.value=genPassword();}},"ახალი")))),
+    out,
+    h("div",{class:"row",style:"justify-content:flex-end"},h("button",{class:"btn ghost",type:"button",onclick:close},"დახურვა"),h("button",{class:"btn primary",type:"submit"},"მომხმარებლის შექმნა")));
+  ov.append(form); document.body.append(ov); uIn.focus();
+}
+/* one user's access: projects down the side, rights across the top; ticking a right gives it on that project, unticking takes the user off it */
+function renderUserAccess(u){
+  const back=h("button",{type:"button",class:"btn sm ghost",onclick:()=>{ S.userSel=null; render(); }},"← ",tr("მომხმარებლები"));
+  const head=h("div",{class:"ua-head"},back,h("span",{class:"avatar"},initials(u.name)),h("div",null,h("h2",null,u.name),h("div",{class:"small muted mono"},u.username+" · "+tr(u.role==="admin"?"ადმინისტრატორი":"თანამშრომელი"))));
+  if(u.role==="admin") return [head,h("div",{class:"empty"},h("p",{class:"muted"},tr("ადმინისტრატორს ყველა პროექტზე სრული უფლება აქვს.")))];
+  const list=[...S.projects.values()].sort((a,b)=>(a.archived?1:0)-(b.archived?1:0)||String(pShort(a)).localeCompare(String(pShort(b)),"ka"));
+  const R=Object.entries(ACCESS_NAMES);
+  const set=async(p,acc)=>{ const ids=[...(p.memberIds||[])], m=clone(p.members||{});
+    if(acc){ if(!ids.includes(u.id)) ids.push(u.id); m[u.id]={...(m[u.id]||{}),access:acc}; }
+    else { const k=ids.indexOf(u.id); if(k>=0) ids.splice(k,1); delete m[u.id]; }
+    try{ await saveProject(p.id,{memberIds:ids,members:m},acc?tr("უფლება ჩაირთო"):tr("წვდომა მოიხსნა")); render(); }catch(e){} };
+  const rows=list.map(p=>{ const on=(p.memberIds||[]).includes(u.id), acc=on?(((p.members||{})[u.id]||{}).access||"executor"):null;
+    return h("tr",{class:on?"ua-on":""},
+      h("th",{scope:"row"},h("b",null,pShort(p)),p.archived?h("span",{class:"chip st-none",style:"margin-left:6px"},"დასრულებული"):null,
+        h("div",{class:"small muted"},[p.companyCode,p.projectCode].filter(Boolean).join(" · "))),
+      R.map(([k,l])=>h("td",{class:"ua-c"},h("input",{type:"checkbox",checked:acc===k,"aria-label":pShort(p)+" — "+tr(l),onchange:e=>set(p,e.target.checked?k:null)}))));
+  });
+  return [head,h("section",{class:"panel"},h("div",{class:"tw"},h("table",{class:"rt users ua-t"},
+      h("thead",null,h("tr",null,h("th",null,"პროექტი"),R.map(([k,l])=>h("th",{class:"ua-c",title:tr(ACCESS_HINT[k]||"")},l)))),
+      h("tbody",null,rows)))),
+    h("p",{class:"small muted"},tr("შემსრულებელი ქმნის და ავსებს ანგარიშებს · რივიუერი ასევე ადასტურებს და წერს ფასებს · მნახველი მხოლოდ ათვალიერებს. ერთ პროექტზე ერთი უფლება; მონიშვნის მოხსნა პროექტიდან ხსნის."))];
 }
 
 /* after creating a user or resetting a password: say whether the login details went out by e-mail,
