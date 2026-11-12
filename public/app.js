@@ -424,14 +424,13 @@ function renderHome(){
         h("div",{class:"ptile-meta"},h("span",null,icon("personnel"),(p.memberIds||[]).length),h("span",null,icon("works"),pos(p)," BoQ")),
         prog(p),
         last(p)))));
-  const refresh=async()=>{ try{ await loadProjects(); render(); toast(tr("განახლდა")); }catch(e){ toast(errMsg(e)); } };
   RB.groups=[
     rbGrp("ძებნა და ფილტრი",h("label",{class:"home-search"},icon("search"),search),
       companies.length?h("div",{class:"vswitch"},coChip("","ყველა"),companies.map(c=>coChip(c,c))):null,
       h("div",{class:"vswitch"},stBtn("active","pulse","აქტიური პროექტები"),stBtn("archived","checkc","დასრულებული პროექტები"),stBtn("all","layers","ყველა პროექტი"))),
     rbGrp("ხედი",h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")),
-      S.admin?h("button",{class:"btn primary hb-add tip",type:"button","aria-label":tr("ახალი პროექტის დამატება"),"data-tip":tr("ახალი პროექტის დამატება"),onclick:newProject},"+"):null,
-      h("button",{type:"button",class:"vbtn rb-sq tip","aria-label":tr("განახლება"),"data-tip":tr("განახლება"),onclick:refresh},icon("refresh")))].filter(Boolean);
+    ),
+    S.admin?rbGrp("მოქმედებები",h("button",{type:"button",class:"vbtn rb-sq rb-add tip","aria-label":tr("ახალი პროექტის დამატება"),"data-tip":tr("ახალი პროექტის დამატება"),onclick:newProject},icon("add"))):null].filter(Boolean);
   out.push(h("div",{class:"dash-left"},listEl));
   return out;
 }
@@ -675,6 +674,7 @@ const ICONS={
   folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
   chart:'<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
   chevron:'<path d="m6 15 6-6 6 6"/>',
+  add:'<path d="M12 5v14M5 12h14"/>',
   refresh:'<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/>',
   search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
   grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',

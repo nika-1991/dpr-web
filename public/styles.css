@@ -1807,3 +1807,5 @@ body{background:var(--page)}
 @media (min-width:981px){ .rb-in{overflow:visible} }
 .ribbon .tip::after{z-index:60;font-family:var(--f-body);letter-spacing:0;text-transform:none}
 .ribbon .tip:hover::after,.ribbon .tip:focus-visible::after{opacity:1}
+.rb-add .ico{width:20px;height:20px;stroke-width:2.2}
+.rb-add:hover{color:var(--accent)}
