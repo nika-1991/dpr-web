@@ -235,7 +235,10 @@ function renderBar(){
   const ti=(v,l,ic)=>h("button",{type:"button",class:"tn-i"+(cur===v?" on":"")+(ic?" tn-ic":""),"aria-current":cur===v?"page":null,title:ic?tr(l):null,"aria-label":ic?tr(l):null,
     onclick:()=>{ if(cur===v&&RB.has){ rbFold(!S.rbMin); return; } go(v); }},h("span",{class:"tn-l"},ic?icon(ic):tr(l)));
   tn.replaceChildren(...(S.me&&!S.me.mustChange?[ti("home","პროექტები"),S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,ti("reports","რეპორტები"),
-S.admin||S.reviewer?ti("analysis","ანალიტიკა"):null,S.admin?ti("settings","პარამეტრები","gear"):null].filter(Boolean):[]));
+S.admin||S.reviewer?ti("analysis","ანალიტიკა"):null].filter(Boolean):[]));
+  /* settings sit on the right, by the language and account buttons */
+  if(S.me&&!S.me.mustChange&&S.admin) me.append(h("button",{class:"bar-gear"+(cur==="settings"?" on":""),type:"button",title:tr("პარამეტრები"),"aria-label":tr("პარამეტრები"),"aria-current":cur==="settings"?"page":null,
+    onclick:()=>{ if(cur==="settings"&&RB.has){ rbFold(!S.rbMin); return; } go("settings"); }},icon("gear")));
   me.append(h("button",{class:"lang-btn",type:"button",title:LANG==="en"?"ქართული":"English","aria-label":LANG==="en"?"ქართული":"English",onclick:()=>setLang(LANG==="en"?"ka":"en")},LANG==="en"?"ქა":"EN"));
   if(S.me&&S.rbMin&&RB.has) me.prepend(h("button",{class:"rb-fold up",type:"button",title:tr("ლენტის გაშლა"),"aria-label":tr("ლენტის გაშლა"),onclick:()=>rbFold(false)},icon("chevron")));
   if(S.me){
