@@ -1964,3 +1964,4 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .sec-conditions .cond-f.wide{grid-column:span 2}
 .sec-conditions .cond>.cond-f:nth-child(n+3) label{align-items:flex-start;min-height:2.5em}
 .sec-conditions .cond>.cond-f:nth-child(n+3) .inp{text-align:center}
+@media (min-width:1001px){ .secs{grid-template-columns:minmax(420px,1fr) minmax(0,2.6fr)} }
