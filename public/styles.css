@@ -1975,3 +1975,5 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .sec-hse .rt .ro{padding:5px 8px}
 .sec-hse .rt td.ed>textarea{min-height:30px}
 .sec-hse td.chk.ed .ck-wrap{min-height:30px}
+/* conditions: a bit more air — fields moved down, rows further apart */
+.sec-conditions .cond{row-gap:26px;padding-top:10px}
