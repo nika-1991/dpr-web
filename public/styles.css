@@ -2002,4 +2002,4 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 body:not(.has-side) .pside-grip{display:none}
 .pside-grip:hover,body.side-drag .pside-grip{background:color-mix(in srgb,var(--accent) 35%,transparent)}
 body.side-drag{user-select:none;cursor:col-resize}
-.ptabs .tgrp-b{justify-content:center}
+.tabs.tgroups .tico.est{font-size:1.35rem;font-weight:700;line-height:1}
