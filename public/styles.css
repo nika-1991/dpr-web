@@ -1832,3 +1832,20 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .panel:has(> .tw > .ptable),.panel:has(.ptable){border-radius:0;box-shadow:none;border:1px solid #d6dde5;overflow:hidden}
 .ptable th{background:#eef2f6!important;color:#3b4656!important;border-bottom:1px solid #d6dde5!important;font-weight:700}
 .ptable,.ptable thead tr,.ptable th:first-child,.ptable th:last-child{border-radius:0!important}
+/* open tab cut into the ribbon: same surface, rounded top, inverse-curved feet, a soft shadow up onto the bar */
+:root{--rb-top:#eef1f5}
+.ribbon{box-shadow:0 6px 14px -8px rgba(60,80,100,.35)!important}
+.topnav{align-items:stretch!important;gap:2px}
+.topnav .tn-i{align-self:stretch;display:flex;align-items:flex-end;position:relative}
+.topnav .tn-l{height:calc(100% - 10px);display:flex;align-items:center;padding:0 20px!important;border-radius:12px 12px 0 0!important}
+.topnav .tn-i:hover .tn-l{background:rgba(160,205,255,.10)!important;color:#cfe6ff!important}
+.topnav .tn-i.on .tn-l{background:var(--rb-top)!important;color:#0b4a49!important;box-shadow:0 -3px 10px -2px rgba(0,0,0,.35)!important;position:relative;z-index:2}
+.topnav .tn-i.on::before,.topnav .tn-i.on::after{content:""!important;display:block!important;position:absolute;bottom:0;width:12px;height:12px;z-index:3;pointer-events:none;box-shadow:none;border-radius:0;transform:none;left:auto;right:auto}
+.topnav .tn-i.on::before{left:-12px;background:radial-gradient(circle at 0 0,transparent 11.5px,var(--rb-top) 12px)}
+.topnav .tn-i.on::after{right:-12px;background:radial-gradient(circle at 100% 0,transparent 11.5px,var(--rb-top) 12px)}
+.topnav .tn-i.on:first-child::before{display:block!important}
+.topnav{padding-left:14px!important;overflow-y:hidden}
+.tn-ic .tn-l{padding:0 12px!important}
+/* folded ribbon / project row: the tab still lands on a surface of the same colour */
+@media (min-width:981px){ .ptabs,.ptabs>.tabs.tgroups,.pid,body.wide .pid{background:linear-gradient(180deg,var(--rb-top),#e3e8ee)!important} }
+.ribbon{background:linear-gradient(180deg,var(--rb-top) 0%,#e3e8ee 100%)}
