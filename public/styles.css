@@ -2069,8 +2069,15 @@ body.side-drag{user-select:none;cursor:col-resize}
 .ln-name::placeholder,.ln-bank::placeholder{font-weight:400;color:#94a3b8}
 /* loan schedule grid: narrow date column, inputs sized to their content */
 .ln-card .ln-grid{table-layout:fixed;width:100%}
-.ln-card .ln-grid th:first-child,.ln-card .ln-grid td:first-child{width:36px}
-.ln-card .ln-grid th:nth-child(2),.ln-card .ln-grid td:nth-child(2){width:150px;text-align:left}
-.ln-card .ln-grid th:last-child,.ln-card .ln-grid td:last-child{width:40px}
+.ln-card .ln-grid thead th:first-child{width:36px}
+.ln-card .ln-grid thead th:nth-child(2){width:150px;text-align:left}
+.ln-card .ln-grid thead th:last-child{width:40px}
 .ln-card .ln-grid td:nth-child(2) .ln-in{width:132px}
 .ln-card .ln-grid .ln-in.num{width:110px;margin-left:auto;display:block}
+/* loan card only as wide as its first line: totals right after the schedule switch */
+.co-set .ln-card,.co-set .ln-card:has(.ln-wrap){width:fit-content!important;max-width:100%}
+.ln-l1>.ln-calc{margin-left:10px;padding-left:18px;border-left:1px solid rgba(255,255,255,.22)}
+.ln-l1>.ln-calc .ln-tg{margin-right:4px}
+/* the schedule takes the card's width, it doesn't widen the card */
+.co-set .ln-card>.ln-wrap{width:0;min-width:100%}
+.co-set .ln-card>.ln-hint{width:0;min-width:calc(100% - 28px)}
