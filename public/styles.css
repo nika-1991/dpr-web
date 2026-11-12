@@ -2029,3 +2029,14 @@ body.side-drag{user-select:none;cursor:col-resize}
 .co-set .ln-card:has(.ln-wrap),.ibl-reg .ln-card:has(.ln-wrap){width:auto;max-width:1240px}
 .ln-sw{box-shadow:0 0 0 1px rgba(0,0,0,.25),inset 0 0 0 3px rgba(255,255,255,.35)}
 .co-set .ln-card,.ibl-reg .ln-card,.co-set .ln-card:has(.ln-wrap),.ibl-reg .ln-card:has(.ln-wrap){width:min(100%,1160px);max-width:100%}
+/* loan card: one shape — the schedule is the card's own table (no inner card), thin outline in the bank's colour */
+.co-set .ln-card,.ibl-reg .ln-card{box-shadow:0 0 0 1px var(--ln-c,#0d3b3d),0 10px 24px -14px rgba(15,23,42,.35)!important;overflow:hidden}
+.ln-card>.ln-wrap{margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;max-height:none}
+.ln-card>.ln-wrap>table{border:0!important;border-radius:0!important}
+.ln-card>.ln-wrap thead th{border-radius:0!important}
+.ln-card>.ln-hint{padding:10px 14px 12px;border-top:1px solid #eef1f4}
+.ln-swc{position:static}
+.ln-card .ln-bar{position:relative}
+.ln-pal{top:46px;left:12px}
+.co-set .ln-card:has(.ln-pal:not([hidden])),.ibl-reg .ln-card:has(.ln-pal:not([hidden])){overflow:visible}
+.ln-card .ln-bar .ln-tg:hover,.ln-card .ln-bar .ln-tg:focus,.ln-card .ln-bar .ln-calc>.btn.ghost:hover{background:rgba(255,255,255,.16)!important;color:#fff!important}
