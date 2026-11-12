@@ -1798,3 +1798,8 @@ body{background:var(--page)}
   .ptabs .tgrp.on .tgrp-b{box-shadow:inset 3px 3px 6px var(--neu-d),inset -3px -3px 6px var(--neu-l)!important;background:#e3e8ee!important}
 }
 @media (min-width:981px){ body.has-side .ptabs{margin-right:-26px;padding-right:26px} body.wide .ptabs{margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-right:max(16px,env(safe-area-inset-right,0px))} }
+/* selected buttons on the ribbon and the project section row: warm yellow so the choice stands out */
+:root{--sel:linear-gradient(145deg,#ffe36e,#fcd23a);--sel-ink:#3b2f00;--sel-sh:3px 3px 7px rgba(170,130,0,.35),-2px -2px 6px rgba(255,255,255,.9),inset 0 1px 0 rgba(255,255,255,.6)}
+.rb-g .vswitch .vbtn.on,.rb-b.on,.tabs.tgroups button[aria-selected="true"]{background:var(--sel)!important;color:var(--sel-ink)!important;box-shadow:var(--sel-sh)!important;font-weight:700}
+.rb-g .vswitch .vbtn.on .ico,.rb-b.on .ico,.tabs.tgroups button[aria-selected="true"] .ico{color:var(--sel-ink)}
+.ptabs .tgrp.on .tgrp-l{color:#8a6a00}
