@@ -1674,36 +1674,3 @@ body{background:var(--page)}
 .ln-grid tr.ibl-od td{background:#fff7f7}
 .ibl-fx{max-width:420px}
 .ln-tf select.inp{height:26px;padding:0 6px;font-size:.74rem;min-height:0}
-/* dark teal chrome: the top bar and the left panel share one gradient (fixed, so they read as one L-shaped frame) */
-:root{--chrome:linear-gradient(135deg,#021617 0%,#04211f 45%,#073230 75%,#0b403e 100%);--ch-ink:#e3efee;--ch-mut:#8fb0ae;--ch-line:rgba(255,255,255,.08);--ch-hov:rgba(255,255,255,.06);--ch-on:rgba(45,190,180,.16)}
-.bar,.anav,body.has-nav .anav,body.has-side .pside,.pside{background:var(--chrome) fixed!important;border-color:transparent!important;box-shadow:none!important}
-@media (min-width:981px){ .pid,body.wide .pid{background:transparent!important} }
-.bar .logo-l{display:none!important} .bar .logo-d{display:block!important}
-.bar,.bar .brand-name{color:var(--ch-ink)}
-.bar .lang-btn{background:transparent;border-color:rgba(255,255,255,.22);color:var(--ch-ink)}
-.bar .lang-btn:hover{background:var(--ch-hov)}
-.bar .me-btn .avatar{background:#2a7f7b;color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.12)}
-/* top tabs: dark glass, the open one teal */
-.tn-i,.tn-i:hover,.tn-i:has(+ .tn-i.on){background:transparent}
-.tn-i{color:var(--ch-mut)}
-.tn-i .tn-l{background:rgba(255,255,255,.05);box-shadow:inset -1px 0 0 var(--ch-line)}
-.tn-i:hover .tn-l{background:rgba(255,255,255,.09);color:var(--ch-ink)}
-.tn-i.on{background:transparent;box-shadow:inset 0 -6px 0 var(--accent)}
-.tn-i.on .tn-l{background:var(--accent);color:#fff;box-shadow:none}
-/* left panel */
-.anav .hb-l,.pside .hb-l{color:var(--ch-mut)}
-.anav-i,.anav-i .ico{color:var(--ch-ink)}
-.anav-i:hover{background:var(--ch-hov);color:#fff}
-.anav-i.on{background:var(--ch-on);color:#fff}
-.anav-i.on .ico{color:#5fd4cb}
-.anav hr,.anav-set{border-color:var(--ch-line)!important}
-/* project sidebar on the dark chrome: name and facts light; the white cards stay cards */
-@media (min-width:981px){ .pid,body.wide .pid{background:var(--chrome) fixed!important;border-color:transparent!important} }
-.pid-name{color:#fff}
-.pid .code-tag{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.16);color:#cfe3e1}
-.pside>.pside-facts{border-top-color:var(--ch-line)}
-.pside>.pside-facts>.pside-fact+.pside-fact{border-top-color:rgba(255,255,255,.12)}
-.pside>.pside-facts>.pside-fact>span{color:var(--ch-mut)}
-.pside>.pside-facts>.pside-fact b{color:var(--ch-ink)}
-.pside>.pside-facts .pstat.on{color:#5fd49a}
-.pside>.muted,.pside>p.muted{color:var(--ch-mut)}
