@@ -1818,3 +1818,10 @@ body{background:var(--page)}
 .tiles-grid .ptile-bd{border-radius:0 0 3px 3px}
 /* app pages (projects, consolidation, reports…) start at the left edge, in line with the ribbon */
 body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+/* "mark completed" as a single icon on the section row */
+.tgrp-state .tgrp-b{padding:3px}
+.tabs.tgroups button.st-ic{width:38px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:11px;border:0;cursor:pointer}
+.tabs.tgroups button.st-ic.finish{background:linear-gradient(145deg,#fff3cf,#fde7a6);color:#8a5a00;box-shadow:2px 2px 5px rgba(170,130,0,.25),-2px -2px 5px rgba(255,255,255,.9)}
+.tabs.tgroups button.st-ic.finish:hover{background:linear-gradient(145deg,#ffe9a8,#fbd978)}
+.tabs.tgroups button.st-ic.reopen{background:var(--info-soft);color:var(--info)}
+.tabs.tgroups button.st-ic .ico{width:18px;height:18px;opacity:1}

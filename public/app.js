@@ -248,7 +248,8 @@ function renderBar(){
 function render(){
   RB.groups=null;
   const projView=!!(S.me&&!S.me.mustChange&&S.view==="project"&&P());
-  const wideTab=S.tab==="schedule"||S.tab==="exec";
+  /* the project's left panel is only kept on the finance tabs (their assumptions); every other tab uses the full width */
+  const wideTab=!(projView&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(P()));
   document.body.classList.toggle("has-side",projView&&!wideTab);
   document.body.classList.toggle("wide",projView&&wideTab);
   renderBar();
@@ -519,30 +520,19 @@ function renderProject(){
   const p=P();
   const tabs=[["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?FIN_TABS:[])];
   if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
-  // left sidebar: client/location, status, quick figures, the completed toggle (codes and name sit beside the tabs)
-  const st=p.stats||{};
-  const fact=(l,v)=>h("div",{class:"pside-fact"},h("span",null,l),h("b",null,v));
-  const side=h("aside",{class:"pside"},
-    p.client||p.location?h("div",{class:"pside-card"},
-      p.client?h("div",{class:"pside-li"},icon("building"),h("span",null,p.client)):null,
-      p.location?h("div",{class:"pside-li muted"},icon("pin"),h("span",null,p.location)):null):null,
-    h("div",{class:"pside-facts"},
-      fact("სტატუსი",h("span",{class:"pstat "+(p.archived?"off":"on")},h("span",{class:"dot"}),p.archived?"დასრულებული":"აქტიური")),
-      fact("ანგარიშები",String(sortedReports().length)),
-      fact("პროგრესი",fmtNum(st.progress||0)+"%"),
-      st.lastDate?fact("ბოლო ანგარიში",fmtDate(st.lastDate)):null),
-    S.admin?h("button",{class:"btn state-btn pside-state "+(p.archived?"reopen":"finish"),type:"button",onclick:async()=>{
-        if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
-        try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},
-      icon(p.archived?"plus":"works"),p.archived?"აქტიურად დაბრუნება":"დასრულებულად მონიშვნა"):null);
   /* tabs grouped into sections; inside a section only icons, the name shows on hover */
   const tabName=new Map(tabs);
   const tabBtn=k=>h("button",{type:"button",role:"tab",class:"tip","data-tip":tr(tabName.get(k)),"aria-label":tr(tabName.get(k)),"aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},tabIcon(k));
   /* on the finance tabs the sidebar shows the assumptions that page uses, editable in place */
   const finTab=FIN_TABS.some(([k])=>k===S.tab)&&canReview(p);
   const finSide=finTab?h("aside",{class:"pside"},renderFinSide(p)):null;
+  const stateTip=tr(p.archived?"აქტიურად დაბრუნება":"დასრულებულად მონიშვნა");
+  const stateBtn=S.admin?h("div",{class:"tgrp tgrp-state"},h("span",{class:"tgrp-l"},"სტატუსი"),h("div",{class:"tgrp-b"},
+    h("button",{type:"button",class:"tip st-ic "+(p.archived?"reopen":"finish"),"data-tip":stateTip,"aria-label":stateTip,onclick:async()=>{
+      if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
+      try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},icon(p.archived?"refresh":"checkc")))):null;
   const tabBar=h("div",{class:"tabs tgroups",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
-    return b.length?h("div",{class:"tgrp"+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }));
+    return b.length?h("div",{class:"tgrp"+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }),stateBtn);
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
   else if(S.tab==="progress") body=renderProgress(p);
@@ -560,10 +550,10 @@ function renderProject(){
     h("div",{class:"pid-codes"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c))),
     h("h1",{class:"pid-name",title:p.name},pShort(p)));
   const tabRow=h("div",{class:"ptabs"},pid,tabBar);
-  if(S.tab==="schedule"||S.tab==="exec") return h("div",{class:"proj-main"},tabRow,body);
+  if(!finSide) return h("div",{class:"proj-main"},tabRow,body);
   /* on a phone the sidebar stacks above the tabs, so the codes and name go first */
-  if(window.matchMedia("(max-width:980px)").matches) return h("div",{class:"proj-layout"},pid,finSide||side,h("div",{class:"proj-main"},h("div",{class:"ptabs"},tabBar),body));
-  return h("div",{class:"proj-layout"},finSide||side,h("div",{class:"proj-main"},tabRow,body));
+  if(window.matchMedia("(max-width:980px)").matches) return h("div",{class:"proj-layout"},pid,finSide,h("div",{class:"proj-main"},h("div",{class:"ptabs"},tabBar),body));
+  return h("div",{class:"proj-layout"},finSide,h("div",{class:"proj-main"},tabRow,body));
 }
 
 function canCreateOn(date){ return S.admin || date<=todayISO(); }
