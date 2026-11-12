@@ -3028,12 +3028,12 @@ function renderUsers(){
         h("div",null,h("span",null,u.email||"—"),editBtn(u,"email","ელფოსტა")),
         h("div",null,h("span",{class:"mono"},u.phone||"—"),editBtn(u,"phone","ტელეფონი"))),
       h("td",{"data-l":"როლი"},roleSel),
-      h("td",{"data-l":"წვდომა",class:"small"},h("button",{type:"button",class:"btn sm ghost u-acc",onclick:open},icon("layers"),u.role==="admin"?tr("ყველა პროექტი"):n?n+" "+tr("პროექტი"):tr("არცერთი"))),
+      h("td",{"data-l":"წვდომა",class:"small u-accc"},h("button",{type:"button",class:"btn sm ghost u-acc",onclick:open},icon("layers"),u.role==="admin"?tr("ყველა პროექტი"):n?n+" "+tr("პროექტი"):tr("არცერთი"))),
       h("td",{"data-l":"ბოლო შესვლა",class:"small"},u.lastLogin?fmtDateTime(u.lastLogin):"არასდროს",u.mustChange?h("div",{class:"small",style:"color:var(--signal)"},"დროებითი პაროლი"):null),
       h("td",{"data-l":"სტატუსი"},u.active?h("span",{class:"chip st-approved"},"აქტიური"):h("span",{class:"chip st-none"},"გათიშული")),
-      h("td",{"data-l":"მოქმედება"},h("div",{class:"row"},
-        h("button",{class:"btn sm",type:"button",onclick:reset},"პაროლის განახლება"),
-        self?null:h("button",{class:"btn sm ghost",type:"button",onclick:async()=>{ try{ await api("PATCH","/users/"+u.id,{active:!u.active}); toast(u.active?"წვდომა გაითიშა":"წვდომა აღდგა"); refresh(); }catch(e){ toast(errMsg(e)); } }},u.active?"გათიშვა":"ჩართვა"),
+      h("td",{"data-l":"მოქმედება",class:"u-actc"},h("div",{class:"u-act"},
+        h("button",{class:"u-pw",type:"button",onclick:reset},"პაროლის განახლება"),
+        self?null:h("button",{class:"btn sm ghost u-off",type:"button",onclick:async()=>{ try{ await api("PATCH","/users/"+u.id,{active:!u.active}); toast(u.active?"წვდომა გაითიშა":"წვდომა აღდგა"); refresh(); }catch(e){ toast(errMsg(e)); } }},u.active?"გათიშვა":"ჩართვა"),
         box)));
   });
   const add=h("button",{type:"button",class:"rep-add tip","data-tip":tr("ახალი მომხმარებელი"),"aria-label":tr("ახალი მომხმარებელი"),onclick:()=>newUserDialog(refresh)},"+");

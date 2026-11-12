@@ -1935,3 +1935,11 @@ body:not(.has-side):not(.wide) main{max-width:none;margin:0;padding-left:max(18p
 .ua-t tbody th{background:#fff!important;color:var(--ink)!important;border-bottom:1px solid #eef1f4}
 .ua-t tbody th .muted{color:var(--muted)!important}
 .ua-t tr.ua-on th,.ua-t tr.ua-on td{background:#f3faf8!important}
+/* users table: compact access column; password reset as a small blue two-line link with "disable" beside it */
+.users td.u-accc{width:1%;white-space:nowrap}
+.users td.u-actc{width:1%;white-space:nowrap}
+.u-act{display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
+.u-act .confirm{white-space:normal}
+.u-pw{background:none;border:0;padding:0;cursor:pointer;font:inherit;font-size:.7rem;line-height:1.15;color:#2563a8;width:64px;white-space:normal;text-align:left}
+.u-pw:hover{text-decoration:underline}
+.u-off{padding:4px 8px}
