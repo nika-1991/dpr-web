@@ -2499,14 +2499,20 @@ function renderFinSide(p){
   const indM=f.ind.reduce((a,x)=>a+num(x.monthly),0);
   const pl=box("P&L დაშვებები",inp("cont","გაუთვალისწინებელი","%"),inp("mob","მობილიზაცია / დემობ.","%"),
     fact("არაპირდაპირი, თვეში",indM?gel(indM):"—"),fact("არაპირდაპირი სტრიქონი",String(f.ind.length)));
-  const cf=box("CF დაშვებები",inp("f2","ფორმა 2, ყოველ","დღე"),inp("lag","ანაზღაურების ლოდინი","დღე"),inp("open","საწყისი ნაშთი","₾"),inp("shift","დაწყების გადადება","დღე"),fact("ავანსი",p.advancePct?fmtNum(p.advancePct)+"%":"—"),fact("გაქვითვა",p.advancePct&&(p.advFrom!=null||p.advTo!=null)?fmtNum(p.advFrom||0)+"–"+fmtNum(p.advTo??100)+"%":p.advancePct?tr("თანაბრად"):"—"),fact("დაკავება",p.retShort!=null||p.retLong!=null?fmtNum(num(p.retShort))+"% + "+fmtNum(num(p.retLong))+"%":"—"),inp("vat","დღგ","%"),
-    fact("cash cover",p.cashCover!=null?fmtNum(p.cashCover)+"%":"—"),...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%")),inp("ovDay","ზედნადების რიცხვი",""),inp("vatDay","დღგ-ს რიცხვი",""));
-  const proj=box("პროექტი",fact("ღირებულება",p.contractValue!=null?gel(p.contractValue):"—"),fact("ხელშ. დადება",p.contractDate?fmtDate(p.contractDate):"—"),
-    fact("სამუშაოს დაწყება",p.startDate?fmtDate(p.startDate):"—"),fact("სამუშაოს დასრულება",p.endDate?fmtDate(p.endDate):"—"));
+  /* CF: the assumptions that drive the cash flow, plus the project's advance recovery, cash cover and retention release terms */
+  const advDed=p.advancePct?(p.advFrom!=null||p.advTo!=null?fmtNum(p.advFrom||0)+"–"+fmtNum(p.advTo??100)+"%":tr("თანაბრად")):"—";
+  const pct=v=>v!=null&&v!==""?fmtNum(num(v))+"%":"—";
+  const relS=p.retShort?pct(p.retShort)+" · "+(p.retShortMode==="days"?"+"+num(p.retShortDays)+" "+tr("დღე"):tr("ბოლოსთან ერთად")):"—";
+  const relL=p.retLong?pct(p.retLong)+" · "+(p.retLongMode==="guar"?tr("მოკლესთან ერთად"):"+"+(p.retLongMonths??24)+" "+tr("თვე")):"—";
+  const cf=box("CF დაშვებები",inp("f2","ფორმა 2, ყოველ","დღე"),inp("lag","ანაზღაურების ლოდინი","დღე"),inp("open","საწყისი ნაშთი","₾"),
+    fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover)),
+    fact("დაკავება, მოკლ.",relS),fact("დაკავება, გრძელ.",relL),
+    ...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%")),
+    inp("vat","დღგ","%"),inp("ovDay","ზედნადების რიცხვი",""),inp("vatDay","დღგ-ს რიცხვი",""));
   const all=h("button",{class:"btn sm ghost fs-all",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ ყველა დაშვება");
-  if(S.tab==="cf") return [cf,proj,all];
-  if(S.tab==="assume") return [proj];
-  return [pl,proj,all];
+  if(S.tab==="cf") return [cf,all];
+  if(S.tab==="assume") return [];
+  return [pl,all];
 }
 /* assumptions behind the plan: contingency and mobilisation as % of revenue, indirect costs per month */
 function renderAssume(p){

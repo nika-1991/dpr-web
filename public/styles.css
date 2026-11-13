@@ -2238,3 +2238,4 @@ body.side-drag{user-select:none;cursor:col-resize}
 .rl-sel{width:auto;min-width:150px}
 .rl-p{width:60px}.rl-n{width:100px}
 .rl-x{margin-left:auto;margin-bottom:2px}
+.pside .fs-box .pside-fact>b{white-space:nowrap;padding-right:26px}
