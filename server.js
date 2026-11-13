@@ -691,7 +691,11 @@ function cleanSchedule(b) {
     hold: pctv(fb.hold, 0), holdRel: nn(fb.holdRel, 0, 1e12), vat: pctv(fb.vat, 18), ovDay: nn(fb.ovDay, 5, 31), vatDay: nn(fb.vatDay, 15, 31),
     f2: nn(fb.f2, 0, 180), shift: Math.max(-730, Math.min(730, Math.round(cleanNum(fb.shift) ?? 0))), open: cleanNum(fb.open) ?? 0,
     ind: (Array.isArray(fb.ind) ? fb.ind : []).slice(0, 100).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), monthly: cleanNum(x?.monthly),
-      from: ISO_RE.test(x?.from || "") ? x.from : "", to: ISO_RE.test(x?.to || "") ? x.to : "" })) };
+      from: ISO_RE.test(x?.from || "") ? x.from : "", to: ISO_RE.test(x?.to || "") ? x.to : "" })),
+    /* special conditions: a % held from a chosen CF line (or a fixed amount) for a period, released monthly / on a date / at the end / never */
+    rules: (Array.isArray(fb.rules) ? fb.rules : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 120).trim(), on: x?.on !== false,
+      base: str(x?.base, 200), pct: pctv(x?.pct, 0), amount: cleanNum(x?.amount), from: ISO_RE.test(x?.from || "") ? x.from : "", to: ISO_RE.test(x?.to || "") ? x.to : "",
+      rel: ["monthly", "date", "end", "none"].includes(x?.rel) ? x.rel : "end", relAmt: cleanNum(x?.relAmt), relDate: ISO_RE.test(x?.relDate || "") ? x.relDate : "" })) };
   return { start: ISO_RE.test(b?.start || "") ? b.start : "", end: ISO_RE.test(b?.end || "") ? b.end : "", rows, exec: { dates, vals }, terms, fin };
 }
 api.get("/projects/:id/schedule", auth, (req, res) => {
