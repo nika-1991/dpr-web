@@ -2217,3 +2217,11 @@ body.side-drag{user-select:none;cursor:col-resize}
 .cd-col .cd-sel{flex:1 1 auto;min-width:0;width:0!important}
 .cd-col .cd-retw{display:none}
 .cd-col .cd-after{flex:none;white-space:nowrap}
+/* value / advance / recovery / cash cover row: advance wide enough for % and amount on one line */
+.cd-g2>.cd-contractValue{grid-column:span 4}
+.cd-g2>.cd-advancePct{grid-column:span 6}
+.cd-g2>.cd-advDed{grid-column:span 5}
+.cd-g2>.cd-cover{grid-column:span 5}
+.cd-g2 .cd-advancePct .cd-pct,.cd-g2 .cd-cover .cd-pct{flex-wrap:nowrap}
+.cd-g2 .cd-advancePct .cd-v.cd-2l,.cd-g2 .cd-cover .cd-v.cd-2l{display:flex;flex-direction:row;align-items:baseline;gap:8px}
+.cd-g2 .cd-cover .cd-pct .cd-amt,.cd-g2 .cd-advancePct .cd-pct .cd-amt{white-space:nowrap}
