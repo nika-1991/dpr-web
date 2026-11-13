@@ -645,7 +645,7 @@ function renderReportsTab(p){
       onclick:()=>{ try{ din.showPicker(); }catch(e){ din.focus(); din.click(); } }},"+"),din); };
   const bar=h("div",{class:"rep-toolbar"},
     h("span"),
-    list.length?h("button",{class:"btn",type:"button",onclick:()=>exportProject(p)},icon("list"),"რეესტრის ექსპორტი (.xlsx)"):null);
+    list.length?h("button",{class:"rep-exp",type:"button",onclick:()=>exportProject(p)},icon("list"),"რეესტრის ექსპორტი (.xlsx)"):null);
   const table=list.length?h("section",{class:"panel"},h("div",{class:"tw"},h("table",{class:"rt rlist-t stack"},
       h("thead",null,h("tr",null,["DPR #","თარიღი","REV","სამუშაო","ფოტო","შექმნა / Created by","დაადასტურა / Approved by","სტატუსი"].map(l=>h("th",null,l)),h("th",{class:"rep-add-th"},canAdd?addBtn():null))),
       h("tbody",null,list.map(([id,r])=>h("tr",{tabindex:"0",role:"link",onclick:()=>openReport(id),onkeydown:e=>{ if(e.key==="Enter") openReport(id); }},

@@ -2150,3 +2150,8 @@ body.side-drag{user-select:none;cursor:col-resize}
 /* the save status no longer pushes the page up and down */
 .co-st{position:relative;height:0;margin:0!important;overflow:visible}
 .co-st>#co-status{position:absolute;right:0;top:-14px;white-space:nowrap;pointer-events:none}
+/* reports tab: export as a small blue link above the table */
+.rep-exp{display:inline-flex;align-items:center;gap:5px;background:none;border:0;padding:2px 0;font:inherit;font-size:.74rem;font-weight:600;color:#2563a8;cursor:pointer}
+.rep-exp .ico{width:14px;height:14px}
+.rep-exp:hover{text-decoration:underline}
+.rep-tab .rep-toolbar{margin-bottom:4px;min-height:0}
