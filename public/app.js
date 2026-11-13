@@ -438,7 +438,7 @@ function renderHome(){
     rbGrp("პრობლემები",h("div",{class:"rb-iss"},
       h("button",{type:"button",class:"ok",title:tr("მოგვარებული საკითხების სია"),onclick:()=>openIssues("done",shown)},h("span",null,tr("გადაჭრილი")),h("b",null,String(shown.reduce((a,p)=>a+(st(p).issuesResolved||0),0)))),
       h("button",{type:"button",class:"bad",title:tr("გადასაჭრელი საკითხების სია"),onclick:()=>openIssues("open",shown)},h("span",null,tr("გადასაჭრელი")),h("b",null,String(shown.reduce((a,p)=>a+(st(p).issuesOpen||0),0)))))),
-    S.admin?rbGrp("მოქმედებები",h("button",{type:"button",class:"vbtn rb-sq rb-add tip","aria-label":tr("ახალი პროექტის დამატება"),"data-tip":tr("ახალი პროექტის დამატება"),onclick:newProject},icon("add"))):null].filter(Boolean);
+    S.admin?rbGrp("ახალი",h("button",{type:"button",class:"vbtn rb-sq rb-add tip","aria-label":tr("ახალი პროექტის დამატება"),"data-tip":tr("ახალი პროექტის დამატება"),onclick:newProject},icon("add"))):null].filter(Boolean);
   out.push(h("div",{class:"dash-left"},listEl));
   return out;
 }
@@ -2774,7 +2774,7 @@ function renderCoLoans(){
   const bankStrip=h("section",{class:"ln-banks"},h("span",{class:"ln-banks-t"},tr("ბანკები")),
     banks.map((b,bi)=>h("div",{class:"ln-bk"},lnSwatch(b,redraw,edit),h("span",null,b.name),
       edit&&!loans.some(L=>(L.bank||"").toLowerCase()===b.name.toLowerCase())?h("button",{type:"button",class:"ln-bk-x","aria-label":tr("წაშლა"),onclick:()=>{ banks.splice(bi,1); redraw(); }},"✕"):null)),
-    edit?h("input",{class:"inp ln-bk-new",placeholder:"+ "+tr("ახალი"),"aria-label":tr("ახალი ბანკი"),onchange:e=>{ addBank(e.target.value); redraw(); }}):null,
+    edit?h("input",{class:"inp ln-bk-new",placeholder:"+ "+tr("ბანკი"),"aria-label":tr("ახალი ბანკი"),onchange:e=>{ addBank(e.target.value); redraw(); }}):null,
     h("datalist",{id:"co-banks"},banks.map(b=>h("option",{value:b.name}))));
   const cards=loans.map((L,li)=>{
     const rows=loanRows(L), T=k=>rows.reduce((a,r)=>a+r[k],0), open=S.coLoanOpen===L.id;
