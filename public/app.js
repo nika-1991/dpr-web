@@ -2831,14 +2831,21 @@ function renderCoLoans(){
     /* one line: name · automatic / manual · terms · schedule · totals */
     const sec=(...k)=>h("div",{class:"ln-sec"},k);
     const tgl=h("button",{class:"btn sm ghost ln-tg",type:"button",title:tr(open?"გრაფიკის დამალვა":"გრაფიკის ნახვა"),onclick:()=>{ S.coLoanOpen=open?null:L.id; render(); }},(open?"▾ ":"▸ ")+rows.length+" "+tr("თვე"));
-    calc.prepend(tgl);
-    return h("section",{class:"as-grp as-wide ln-card",style:"--ln-c:"+bankColor(L.bank)},h("div",{class:"ln-bar ln-bar2"},
-        h("div",{class:"ln-l1"},bank,name,h("label",{class:"ln-tf"},h("span",null,tr("გრაფიკი")),mode),calc),
-        h("div",{class:"ln-l2"},terms)),
+    /* compact card: the form on white at the left, a dark summary panel (in the bank's colour) at the right */
+    const del=edit?h("button",{class:"lc-x",type:"button",title:tr("სესხის წაშლა"),"aria-label":tr("სესხის წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო სესხი?"))){ loans.splice(li,1); redraw(); } }},"✕"):null;
+    const pill=h("button",{class:"lc-pill",type:"button",title:tr(open?"გრაფიკის დამალვა":"გრაფიკის ნახვა"),"aria-expanded":String(open),onclick:()=>{ S.coLoanOpen=open?null:L.id; render(); }},h("span",{class:"lc-ar"+(open?" on":"")},"▸"),rows.length+" "+tr("თვე"));
+    const kv=(l,v,c)=>h("div",{class:"lc-kv"+(c?" "+c:"")},h("span",null,tr(l)),h("b",null,gel0(v)));
+    const sum=h("div",{class:"lc-sum"},h("div",{class:"lc-top"},pill,del),kv("ძირი",T("p")),kv("პროცენტი",T("i")),h("div",{class:"lc-hr"}),kv("სულ",T("pay"),"tot"));
+    return h("section",{class:"ln-card lc",style:"--ln-c:"+bankColor(L.bank)},
+      h("div",{class:"lc-main"},
+        h("div",{class:"lc-form"},h("div",{class:"lc-r1"},bank,name,h("label",{class:"ln-tf"},h("span",null,tr("გრაფიკი")),mode)),h("div",{class:"lc-div"}),h("div",{class:"lc-r2"},terms)),
+        sum),
       open?[h("div",{class:"pl-wrap ln-wrap"},tbl),addRow]:null);
   });
+  const all=loans.map(L=>loanRows(L)), gp=all.reduce((a,r)=>a+r.reduce((x,y)=>x+y.p,0),0), gt=all.reduce((a,r)=>a+r.reduce((x,y)=>x+y.pay,0),0);
+  const grand=loans.length>1?h("div",{class:"lc-grand"},h("span",{class:"muted"},tr("ჯამი")+" ("+loans.length+"):"),h("span",null,tr("ძირი")+" ",h("b",null,gel0(gp))),h("span",{class:"lc-sep"},"|"),h("span",null,tr("სულ")+" ",h("b",null,gel0(gt)))):null;
   return h("div",{class:"as-page co-set ln-page"},bankStrip,cards.length?cards:h("div",{class:"empty"},h("p",{class:"muted"},tr("სესხი ჯერ არ არის დამატებული."))),
-    edit?h("div",null,h("button",{class:"btn",type:"button",onclick:()=>{ const id=Math.random().toString(36).slice(2,8); loans.push({id,bank:"",name:"",amount:null,rate:null,n:null,grace:0,start:"",mode:"auto",recv:true,rows:[]}); S.coLoanOpen=id; redraw(); }},"+ სესხი")):null);
+    edit||grand?h("div",{class:"lc-foot"},edit?h("button",{class:"lc-add",type:"button",onclick:()=>{ const id=Math.random().toString(36).slice(2,8); loans.push({id,bank:"",name:"",amount:null,rate:null,n:null,grace:0,start:"",mode:"auto",recv:true,rows:[]}); S.coLoanOpen=id; redraw(); }},"+ ",tr("სესხის დამატება")):h("span"),grand):null);
 }
 /* ---------- REPORTS: interest-bearing liabilities (loans, leases) ----------
    each item has a payment schedule (date, principal, interest) and what was actually paid; as of a chosen date:
