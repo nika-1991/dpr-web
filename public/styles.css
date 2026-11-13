@@ -2177,3 +2177,11 @@ body.side-drag{user-select:none;cursor:col-resize}
 .pside .fs-box .pside-fact>b{color:#64748b;font-weight:600}
 .pside .fs-v{grid-template-columns:56px 22px}
 .pside .fs-v input{width:56px!important}
+/* cash cover on the same row as value / advance / recovery / retention */
+.cd-g2>.cd-contractValue{grid-column:span 4}
+.cd-g2>.cd-advancePct{grid-column:span 3}
+.cd-g2>.cd-advDed{grid-column:span 5}
+.cd-g2>.cd-ret{grid-column:span 5}
+.cd-g2>.cd-cover{grid-column:span 3}
+.cd-g2 .cd-cover .cd-pct .cd-v{width:40px}
+.cd-g2 .cd-cover .cd-pct{flex-wrap:wrap;row-gap:2px}
