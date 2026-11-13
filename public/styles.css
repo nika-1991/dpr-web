@@ -2155,3 +2155,14 @@ body.side-drag{user-select:none;cursor:col-resize}
 .rep-exp .ico{width:14px;height:14px}
 .rep-exp:hover{text-decoration:underline}
 .rep-tab .rep-toolbar{margin-bottom:4px;min-height:0}
+/* reports tab: export link sits right above the table */
+.rep-tab .rep-toolbar{margin-bottom:2px!important;padding:0!important}
+.rep-tab .rep-exp{padding:0 0 2px}
+/* finance side panel: every input the same width, units in their own column, so the boxes line up */
+.pside .fs-v{display:grid;grid-template-columns:60px 22px;align-items:center;gap:4px;justify-items:start}
+.pside .fs-v input{width:60px!important;text-align:right;box-sizing:border-box}
+.pside .fs-v em{font-style:normal;color:var(--muted);text-align:left;width:22px}
+.pside .pside-fact>b{min-width:86px;text-align:right;padding-right:26px}
+.rep-tab{display:flex;flex-direction:column;gap:4px!important}
+.rep-tab>.rep-toolbar{margin:0!important}
+.rep-tab>.panel{margin-top:0!important}
