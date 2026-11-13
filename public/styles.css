@@ -2166,3 +2166,14 @@ body.side-drag{user-select:none;cursor:col-resize}
 .rep-tab{display:flex;flex-direction:column;gap:4px!important}
 .rep-tab>.rep-toolbar{margin:0!important}
 .rep-tab>.panel{margin-top:0!important}
+/* finance side panel in the soft (neumorphic) style of the reference: grey card, recessed inputs in one column */
+.pside .fs-box{background:#eef1f5;border:0;border-radius:14px;box-shadow:4px 4px 10px rgba(100,118,140,.25),-4px -4px 10px rgba(255,255,255,.9);padding:10px 12px 6px}
+.pside .fs-t{font-size:.72rem;font-weight:800;color:#1f2a37;padding-bottom:6px}
+.pside .fs-box .pside-fact{padding:5px 0;border-top:1px dashed #d3dae2}
+.pside .fs-box .pside-fact:first-child{border-top:0}
+.pside .fs-box .pside-fact>span:first-child{color:#334155}
+.pside .fs-v input{height:24px;border:0!important;border-radius:8px;background:#e6eaef!important;box-shadow:inset 2px 2px 4px rgba(100,118,140,.35),inset -2px -2px 4px rgba(255,255,255,.95)!important;color:#1e293b;padding:0 8px}
+.pside .fs-v input:focus{box-shadow:inset 2px 2px 4px rgba(100,118,140,.35),inset -2px -2px 4px #fff,0 0 0 2px rgba(0,105,109,.35)!important;outline:none}
+.pside .fs-box .pside-fact>b{color:#64748b;font-weight:600}
+.pside .fs-v{grid-template-columns:56px 22px}
+.pside .fs-v input{width:56px!important}
