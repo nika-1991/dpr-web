@@ -2327,7 +2327,7 @@ function cfData(p,sc=S.sched){
   if(A&&p.contractDate) put("advIn",p.contractDate,A);
   /* cash cover: that % of the advance is blocked in the bank (against the advance guarantee) when the advance comes in,
      and released bit by bit as the advance is recovered from the payments */
-  const covPct=p.cashCover!=null?num(p.cashCover):num(f.cover);
+  const covPct=num(p.cashCover);
   if(A&&p.contractDate&&covPct) put("cover",p.contractDate,-A*covPct/100);
   let cumInv=0;
   /* retention: short-term and long-term % (project data) held from every payment; short-term returned after the works
