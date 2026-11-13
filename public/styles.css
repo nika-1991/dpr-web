@@ -2136,3 +2136,10 @@ body.side-drag{user-select:none;cursor:col-resize}
 .co-set .ln-card.lc>.ln-wrap{width:auto!important;min-width:0!important}
 .lc .ln-grid .ln-in.num{width:92px}
 .lc .ln-grid td{padding-left:6px;padding-right:6px}
+.lc-sum{position:relative;justify-content:flex-start;padding-top:12px}
+.lc-top{position:absolute;top:6px;right:8px;margin:0}
+.lc-sum>.lc-kv:first-of-type{padding-right:16px}
+.lc-bot{margin-top:auto;padding-top:8px;display:flex;justify-content:center}
+.lc-bot .lc-pill{width:100%;justify-content:center}
+.lc-sum{padding-top:24px}
+.lc-top{top:5px;right:6px}

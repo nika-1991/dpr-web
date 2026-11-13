@@ -2835,7 +2835,7 @@ function renderCoLoans(){
     const del=edit?h("button",{class:"lc-x",type:"button",title:tr("სესხის წაშლა"),"aria-label":tr("სესხის წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო სესხი?"))){ loans.splice(li,1); redraw(); } }},"✕"):null;
     const pill=h("button",{class:"lc-pill",type:"button",title:tr(open?"გრაფიკის დამალვა":"გრაფიკის ნახვა"),"aria-expanded":String(open),onclick:()=>{ S.coLoanOpen=open?null:L.id; render(); }},h("span",{class:"lc-ar"+(open?" on":"")},"▸"),rows.length+" "+tr("თვე"));
     const kv=(l,v,c)=>h("div",{class:"lc-kv"+(c?" "+c:"")},h("span",null,tr(l)),h("b",null,gel0(v)));
-    const sum=h("div",{class:"lc-sum"},h("div",{class:"lc-top"},pill,del),kv("ძირი",T("p")),kv("პროცენტი",T("i")),h("div",{class:"lc-hr"}),kv("სულ",T("pay"),"tot"));
+    const sum=h("div",{class:"lc-sum"},del?h("div",{class:"lc-top"},del):null,kv("ძირი",T("p")),kv("პროცენტი",T("i")),h("div",{class:"lc-hr"}),kv("სულ",T("pay"),"tot"),h("div",{class:"lc-bot"},pill));
     return h("section",{class:"ln-card lc",style:"--ln-c:"+bankColor(L.bank)},
       h("div",{class:"lc-main"},
         h("div",{class:"lc-form"},h("div",{class:"lc-r1"},bank,name,h("label",{class:"ln-tf"},h("span",null,tr("გრაფიკი")),mode)),h("div",{class:"lc-div"}),h("div",{class:"lc-r2"},terms)),
