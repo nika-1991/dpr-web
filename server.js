@@ -390,7 +390,7 @@ api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
   res.json(rows.filter((p) => canSee(p, req.user)).map((p) => ({ ...p, stats: projectStats(p, p.id) })));
 });
-const PROJECT_FIELDS = ["name", "shortName", "contractDate", "contractEnd", "startDate", "endDate", "contractValue", "advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover", "acceptDate", "warrantyMonths", "retGuarantee", "subs", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
+const PROJECT_FIELDS = ["name", "shortName", "contractDate", "contractEnd", "startDate", "endDate", "contractValue", "advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover", "retShortMode", "retShortDays", "retLongMode", "retLongMonths", "subs", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
 /* HSE items every new report starts with; each project can edit its own copy */
 const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
 function cleanProject(body, base) {
@@ -407,9 +407,11 @@ function cleanProject(body, base) {
   p.dprStart = Math.max(1, parseInt(p.dprStart, 10) || 1);
   for (const k of ["advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover"]) { const n = parseFloat(String(p[k] ?? "").replace(",", ".")); p[k] = isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * 100) / 100)) : null; }
   p.subs = (Array.isArray(p.subs) ? p.subs : []).slice(0, 100).map((x) => ({ id: String(x?.id ?? "").slice(0, 20) || newId(6), name: String(x?.name ?? "").trim().slice(0, 300), contact: String(x?.contact ?? "").trim().slice(0, 300) })).filter((x) => x.name);
-  { const n = parseInt(p.warrantyMonths, 10); p.warrantyMonths = isFinite(n) ? Math.max(0, Math.min(120, n)) : null; }
-  p.retGuarantee = !!p.retGuarantee;
-  for (const k of ["contractDate", "contractEnd", "startDate", "endDate", "acceptDate"]) p[k] = /^\d{4}-\d{2}-\d{2}$/.test(String(p[k] ?? "")) ? p[k] : "";
+  p.retShortMode = p.retShortMode === "days" ? "days" : "with";
+  p.retLongMode = p.retLongMode === "guar" ? "guar" : "months";
+  { const n = parseInt(p.retShortDays, 10); p.retShortDays = isFinite(n) ? Math.max(0, Math.min(1000, n)) : null; }
+  { const n = parseInt(p.retLongMonths, 10); p.retLongMonths = isFinite(n) ? Math.max(0, Math.min(120, n)) : null; }
+  for (const k of ["contractDate", "contractEnd", "startDate", "endDate"]) p[k] = /^\d{4}-\d{2}-\d{2}$/.test(String(p[k] ?? "")) ? p[k] : "";
   { const n = parseFloat(String(p.contractValue ?? "").replace(/\s/g, "").replace(",", ".")); p.contractValue = isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null; }
   p.hse = (Array.isArray(p.hse) ? p.hse : DEFAULT_HSE).slice(0, 50)
     .map((x) => ({ desc: String(x?.desc ?? "").slice(0, 2000), descEn: String(x?.descEn ?? "").slice(0, 2000) }))

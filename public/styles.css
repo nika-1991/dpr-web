@@ -2192,3 +2192,18 @@ body.side-drag{user-select:none;cursor:col-resize}
 .cd-g2 .cd-warranty .cd-pct .cd-v{width:48px}
 .cd-chk{display:flex;align-items:center;gap:7px;font-size:.74rem;color:var(--ink);padding:4px 2px;cursor:pointer}
 .cd-chk input{width:16px;height:16px;accent-color:var(--accent);flex:none}
+/* quality retention card: one line per retention — % · release option · days/months */
+.cd-page>.cd-card.cd-orange:has(.cd-rets2){margin-top:14px}
+.cd-rets2{display:flex;flex-direction:column;gap:8px}
+.cd-retl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--sunk);border-radius:8px;padding:8px 12px}
+.cd-retk{width:110px;font-weight:700;font-size:.8rem}
+.cd-retl .cd-pct .cd-v{width:52px}
+.cd-retp{min-width:52px;font-family:var(--f-mono)}
+.cd-retw{font-size:.74rem;color:var(--muted)}
+.cd-sel{width:auto!important;min-width:280px;height:30px;font-size:.78rem}
+.cd-after{display:inline-flex;align-items:center;gap:6px;font-size:.78rem}
+.cd-after[hidden]{display:none}
+.cd-n{width:56px!important}
+.cd-rett{font-size:.8rem}
+.cd-g2>.cd-cover{grid-column:span 6}
+.cd-g2>.cd-advDed{grid-column:span 5}
