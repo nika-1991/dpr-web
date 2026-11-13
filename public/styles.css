@@ -2185,3 +2185,10 @@ body.side-drag{user-select:none;cursor:col-resize}
 .cd-g2>.cd-cover{grid-column:span 3}
 .cd-g2 .cd-cover .cd-pct .cd-v{width:40px}
 .cd-g2 .cd-cover .cd-pct{flex-wrap:wrap;row-gap:2px}
+/* retention release row: acceptance date, warranty months, guarantee option */
+.cd-g2>.cd-acceptDate{grid-column:span 4}
+.cd-g2>.cd-warranty{grid-column:span 4}
+.cd-g2>.cd-retGar{grid-column:span 12}
+.cd-g2 .cd-warranty .cd-pct .cd-v{width:48px}
+.cd-chk{display:flex;align-items:center;gap:7px;font-size:.74rem;color:var(--ink);padding:4px 2px;cursor:pointer}
+.cd-chk input{width:16px;height:16px;accent-color:var(--accent);flex:none}

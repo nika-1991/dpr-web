@@ -523,7 +523,10 @@ function renderProjectForm(pid){
     ["advDed","ავანსის გაქვითვა",h("div",{class:"cd-pct"},pctIn("advFrom","გაქვითვა იწყება, %"),h("span",null,"% –"),pctIn("advTo","გაქვითვა მთავრდება, %"),h("span",null,"%"))],
     ["ret","ხარისხის დაკავება",h("div",{class:"cd-rets"},h("div",{class:"cd-pct"},h("span",{class:"cd-pl",title:tr("მოკლევადიანი")},"მოკლ."),pctIn("retShort","მოკლევადიანი დაკავება, %"),h("span",null,"%")),
       h("div",{class:"cd-pct"},h("span",{class:"cd-pl",title:tr("გრძელვადიანი")},"გრძელ."),pctIn("retLong","გრძელვადიანი დაკავება, %"),h("span",null,"%")))],
-    ["cover","cash cover",h("div",{class:"cd-pct",title:tr("ავანსის % — ბანკში იბლოკება ავანსის მიღებისას, თავისუფლდება გაქვითვასთან ერთად")},pctIn("cashCover","cash cover, ავანსის %"),h("span",null,"%"),coverAmt)]]);
+    ["cover","cash cover",h("div",{class:"cd-pct",title:tr("ავანსის % — ბანკში იბლოკება ავანსის მიღებისას, თავისუფლდება გაქვითვასთან ერთად")},pctIn("cashCover","cash cover, ავანსის %"),h("span",null,"%"),coverAmt)],
+    dIn("acceptDate","საბოლოო მიღება-ჩაბარება"),
+    ["warranty","საგარანტიო პერიოდი",h("div",{class:"cd-pct"},(()=>{ const el=inp(f,"warrantyMonths",p.warrantyMonths??24,tr("საგარანტიო პერიოდი, თვე")); el.classList.add("cd-v","num"); el.inputMode="numeric"; return el; })(),h("span",null,tr("თვე")))],
+    ["retGar","გრძელვადიანი დაკავება",h("label",{class:"cd-chk"},(()=>{ const el=h("input",{type:"checkbox",checked:!!p.retGuarantee,"aria-label":tr("საბანკო გარანტიით — მოკლევადიანთან ერთად")}); f.retGuarantee={get value(){ return el.checked?"1":""; }}; return el; })(),h("span",null,tr("საბანკო გარანტიით — მოკლევადიანთან ერთად")))]]);
   /* the advance in lari, next to its % */
   const upAdv=()=>{ const v=num(valIn.value)*num(advIn.value)/100; advAmt.textContent=v?"= "+gel0(v):""; const c=v*num(f.cashCover.value)/100; coverAmt.textContent=c?"= "+gel0(c):""; };
   advIn.addEventListener("input",upAdv); valIn.addEventListener("input",upAdv); f.cashCover.addEventListener("input",upAdv); upAdv();
@@ -1024,7 +1027,11 @@ function renderProjectSheet(p){
     ["advancePct","ავანსი",h("div",{class:"cd-v cd-2l"},p.advancePct?[h("span",null,fmtNum(p.advancePct)+"%"),p.contractValue?h("span",{class:"cd-amt"},gel0(p.contractValue*p.advancePct/100)):null]:"—")],
     ["advDed","ავანსის გაქვითვა",h("div",{class:"cd-v"},p.advancePct?(p.advFrom!=null||p.advTo!=null?fmtNum(p.advFrom||0)+"% – "+fmtNum(p.advTo??100)+"%":tr("ყოველი ჩარიცხვიდან თანაბრად")):"—")],
     ["ret","ხარისხის დაკავება",h("div",{class:"cd-v cd-2l"},p.retShort!=null||p.retLong!=null?[h("span",null,tr("მოკლ.")+" "+fmtNum(num(p.retShort))+"%"),h("span",null,tr("გრძელ.")+" "+fmtNum(num(p.retLong))+"%")]:"—")],
-    ["cover","cash cover",h("div",{class:"cd-v cd-2l"},p.cashCover?[h("span",null,fmtNum(p.cashCover)+"%"),p.contractValue&&p.advancePct?h("span",{class:"cd-amt"},gel0(p.contractValue*p.advancePct/100*p.cashCover/100)):null]:"—")]]);
+    ["cover","cash cover",h("div",{class:"cd-v cd-2l"},p.cashCover?[h("span",null,fmtNum(p.cashCover)+"%"),p.contractValue&&p.advancePct?h("span",{class:"cd-amt"},gel0(p.contractValue*p.advancePct/100*p.cashCover/100)):null]:"—")],
+    ["acceptDate","საბოლოო მიღება-ჩაბარება",dv("acceptDate")],
+    ["warranty","საგარანტიო პერიოდი",h("div",{class:"cd-v"},(p.warrantyMonths??24)+" "+tr("თვე"))],
+    ["retGar","დაკავების ჩარიცხვა",h("div",{class:"cd-v cd-2l"},(()=>{ const a=p.acceptDate||p.endDate; if(!a) return "—"; const l=p.retGuarantee?a:addMonths(a,p.warrantyMonths??24);
+      return [h("span",null,tr("მოკლ.")+" "+fmtDate(a)),h("span",null,tr("გრძელ.")+" "+fmtDate(l)+(p.retGuarantee?" ("+tr("გარანტიით")+")":""))]; })())]]);
   const codes=codesCard([["accountingCode",h("div",{class:"cd-v"},p.accountingCode||"—")],["companyCode",h("div",{class:"cd-v"},p.companyCode||"—")],
     ["projectCode",h("div",{class:"cd-v"},p.projectCode||"—")],["dprStart",h("div",{class:"cd-v"},"DPR-"+String(p.dprStart||1).padStart(3,"0"))]]);
   const hse=pcard("hse","orange","უსაფრთხოების (HSE) პუნქტები","ყოველი ახალი ანგარიში ამ პუნქტებით იწყება.",
@@ -2345,8 +2352,12 @@ function cfData(p,sc=S.sched){
     put("cont",pay,-v*num(f.cont)/100); put("mob",pay,-v*num(f.mob)/100); });
   if(hasRet){ const last=invs.length?invs[invs.length-1][0]:null;
     const at=(d,fb)=>addDays(d||fb,num(f.lag));
-    if(retHeld.s&&last) put("retRel",at(p.endDate&&p.endDate>last?p.endDate:last),retHeld.s);
-    if(retHeld.l&&last) put("retRel",at(p.contractEnd&&p.contractEnd>last?p.contractEnd:last),retHeld.l); }
+    /* short-term: paid on the final acceptance; long-term: after the warranty period from it (2 years unless set),
+       or together with the short-term one when a bank guarantee is given instead */
+    const acc0=p.acceptDate||p.endDate||last, acc=acc0>last?acc0:last;
+    const wm=p.warrantyMonths!=null&&p.warrantyMonths!==""?num(p.warrantyMonths):24;
+    if(retHeld.s&&last) put("retRel",at(acc),retHeld.s);
+    if(retHeld.l&&last) put("retRel",at(p.retGuarantee?acc:addMonths(acc,wm)),retHeld.l); }
   /* resources by their payment terms */
   const chOf=new Map(); let cur=null;
   for(const it of p.boq||[]){ if(it.type==="თავი") cur=it.name||it.code||""; else if(it.type==="პოზიცია") chOf.set(normCode(it.code),cur||tr("კოდის გარეშე")); }
