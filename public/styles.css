@@ -2143,3 +2143,10 @@ body.side-drag{user-select:none;cursor:col-resize}
 .lc-bot .lc-pill{width:100%;justify-content:center}
 .lc-sum{padding-top:24px}
 .lc-top{top:5px;right:6px}
+/* loan card: no gap between the card and its schedule; dark grey outline round the whole loan */
+.ln-card.lc{gap:0!important;border:1px solid #475569!important}
+.ln-card.lc:hover{border-color:#334155!important}
+.ln-card.lc>.ln-wrap{border-top:1px solid #cbd5e1!important}
+/* the save status no longer pushes the page up and down */
+.co-st{position:relative;height:0;margin:0!important;overflow:visible}
+.co-st>#co-status{position:absolute;right:0;top:-14px;white-space:nowrap;pointer-events:none}
