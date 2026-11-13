@@ -556,13 +556,13 @@ function renderProjectForm(pid){
   const nIn=(k,v,l)=>{ const el=inp(f,k,v??"",tr(l)); el.classList.add("cd-v","num","cd-n"); el.inputMode="numeric"; return el; };
   const sMode=sel("retShortMode",p.retShortMode||"with",[["with","ბოლო შესრულების ჩარიცხვასთან ერთად"],["days","ბოლო შესრულების ჩარიცხვიდან"]],"მოკლევადიანის ჩარიცხვა");
   const sDays=h("span",{class:"cd-after"},nIn("retShortDays",p.retShortDays,"დღე"),h("span",null,tr("დღეში")));
-  const lMode=sel("retLongMode",p.retLongMode||"months",[["guar","საბანკო გარანტიით — მოკლევადიანთან ერთად"],["months","საგარანტიო პერიოდის ბოლოს — ბოლო შესრულებიდან"]],"გრძელვადიანის ჩარიცხვა");
-  const lMon=h("span",{class:"cd-after"},nIn("retLongMonths",p.retLongMonths??24,"თვე"),h("span",null,tr("თვეში")));
+  const lMode=sel("retLongMode",p.retLongMode||"months",[["guar","მოკლევადიანთან ერთად (გარანტიით)"],["months","საგარანტიო პერიოდის ბოლოს"]],"გრძელვადიანის ჩარიცხვა");
+  const lMon=h("span",{class:"cd-after"},nIn("retLongMonths",p.retLongMonths??24,"თვე"),h("span",null,tr("თვე ბოლო შესრულებიდან")));
   const syncRet=()=>{ sDays.hidden=sMode.value!=="days"; lMon.hidden=lMode.value!=="months"; }; sMode.onchange=syncRet; lMode.onchange=syncRet; syncRet();
   const retLine=(lab,k,l,modeEl,extra)=>h("div",{class:"cd-retl"},h("span",{class:"cd-retk"},tr(lab)),h("span",{class:"cd-pct"},pctIn(k,l),h("span",null,"%")),h("span",{class:"cd-retw"},tr("ჩარიცხვა")+":"),modeEl,extra);
   const retCard=pcard("pause","orange","ხარისხის დაკავება","შესრულებული სამუშაოდან (დღგ-ს ჩათვლით) და როდის ველოდებით ჩარიცხვას",
     h("div",{class:"cd-rets2"},retLine("მოკლევადიანი","retShort","მოკლევადიანი დაკავება, %",sMode,sDays),retLine("გრძელვადიანი","retLong","გრძელვადიანი დაკავება, %",lMode,lMon)));
-  return h("div",{class:"sheet-head sheet-form cd-page"},bar,h("div",{class:"cd-two"},h("div",{class:"cd-col"},band,parts),h("div",{class:"cd-col"},when,codes)),retCard,hseSec);
+  return h("div",{class:"sheet-head sheet-form cd-page"},bar,h("div",{class:"cd-two"},h("div",{class:"cd-col"},band,parts),h("div",{class:"cd-col"},when,retCard,codes)),hseSec);
 }
 
 /* ---------- PROJECT ---------- */
@@ -1039,10 +1039,10 @@ function renderProjectSheet(p){
     (p.hse||[]).length?h("ol",{class:"hse-list cd-hse"},(p.hse||[]).map(x=>h("li",null,(LANG==="en"?x.descEn:x.desc)||x.desc||x.descEn))):h("div",{class:"muted small"},"პუნქტები არ არის."));
   const rl=(lab,pct,txt)=>h("div",{class:"cd-retl"},h("span",{class:"cd-retk"},tr(lab)),h("b",{class:"cd-retp"},pct!=null?fmtNum(num(pct))+"%":"—"),h("span",{class:"cd-retw"},tr("ჩარიცხვა")+":"),h("span",{class:"cd-rett"},txt));
   const sTxt=p.retShortMode==="days"?tr("ბოლო შესრულების ჩარიცხვიდან")+" "+num(p.retShortDays)+" "+tr("დღეში"):tr("ბოლო შესრულების ჩარიცხვასთან ერთად");
-  const lTxt=p.retLongMode==="guar"?tr("საბანკო გარანტიით — მოკლევადიანთან ერთად"):tr("საგარანტიო პერიოდის ბოლოს — ბოლო შესრულებიდან")+" "+(p.retLongMonths??24)+" "+tr("თვეში");
+  const lTxt=p.retLongMode==="guar"?tr("მოკლევადიანთან ერთად (გარანტიით)"):tr("საგარანტიო პერიოდის ბოლოს")+" — "+(p.retLongMonths??24)+" "+tr("თვე ბოლო შესრულებიდან");
   const retCard=pcard("pause","orange","ხარისხის დაკავება","შესრულებული სამუშაოდან (დღგ-ს ჩათვლით) და როდის ველოდებით ჩარიცხვას",
     h("div",{class:"cd-rets2"},rl("მოკლევადიანი",p.retShort,sTxt),rl("გრძელვადიანი",p.retLong,lTxt)));
-  return h("div",{class:"sheet-head cd-page"},h("div",{class:"cd-two"},h("div",{class:"cd-col"},band,parts_),h("div",{class:"cd-col"},when,codes)),retCard,hse);
+  return h("div",{class:"sheet-head cd-page"},h("div",{class:"cd-two"},h("div",{class:"cd-col"},band,parts_),h("div",{class:"cd-col"},when,retCard,codes)),hse);
 }
 
 function renderSection(key){

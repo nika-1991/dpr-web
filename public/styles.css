@@ -2207,3 +2207,13 @@ body.side-drag{user-select:none;cursor:col-resize}
 .cd-rett{font-size:.8rem}
 .cd-g2>.cd-cover{grid-column:span 6}
 .cd-g2>.cd-advDed{grid-column:span 5}
+.cd-col>.cd-card:has(.cd-rets2){margin-top:0}
+.cd-col .cd-retl{gap:8px;padding:7px 10px}
+.cd-col .cd-retk{width:auto;min-width:96px}
+.cd-col .cd-sel{min-width:0;max-width:100%;flex:1 1 220px}
+.cd-col .cd-rett{flex:1 1 200px}
+.cd-g2>.cd-cover{grid-column:span 8}
+.cd-col .cd-retl{flex-wrap:nowrap}
+.cd-col .cd-sel{flex:1 1 auto;min-width:0;width:0!important}
+.cd-col .cd-retw{display:none}
+.cd-col .cd-after{flex:none;white-space:nowrap}
