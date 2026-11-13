@@ -2774,7 +2774,7 @@ function renderCoLoans(){
   const bankStrip=h("section",{class:"ln-banks"},h("span",{class:"ln-banks-t"},tr("ბანკები")),
     banks.map((b,bi)=>h("div",{class:"ln-bk"},lnSwatch(b,redraw,edit),h("span",null,b.name),
       edit&&!loans.some(L=>(L.bank||"").toLowerCase()===b.name.toLowerCase())?h("button",{type:"button",class:"ln-bk-x","aria-label":tr("წაშლა"),onclick:()=>{ banks.splice(bi,1); redraw(); }},"✕"):null)),
-    edit?h("input",{class:"inp ln-bk-new",placeholder:"+ "+tr("ბანკი"),"aria-label":tr("ახალი ბანკი"),onchange:e=>{ addBank(e.target.value); redraw(); }}):null,
+    edit?h("input",{class:"inp ln-bk-new",placeholder:"+ "+tr("ახალი"),"aria-label":tr("ახალი ბანკი"),onchange:e=>{ addBank(e.target.value); redraw(); }}):null,
     h("datalist",{id:"co-banks"},banks.map(b=>h("option",{value:b.name}))));
   const cards=loans.map((L,li)=>{
     const rows=loanRows(L), T=k=>rows.reduce((a,r)=>a+r[k],0), open=S.coLoanOpen===L.id;
