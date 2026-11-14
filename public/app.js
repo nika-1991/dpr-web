@@ -2467,7 +2467,7 @@ function renderCF(p){
     sec("ფულადი გადახდა — ხარჯები"),
     ...costKeys.flatMap(k=>fold(k,k.slice(5))),
     row("სულ გადახდა — ხარჯები",payCost,"pl-sum"),
-    rows.ov?fold("ov","ზედნადები ხარჯები (მომდევნო თვეში)"):null,
+    rows.ov?fold("ov","არაპირდაპირი ხარჯები (მომდევნო თვეში)"):row("არაპირდაპირი ხარჯები",z()),
     opt("vat","დღგ-ს გადახდა / დაბრუნება"),opt("cont","გაუთვალისწინებელი ხარჯი"),opt("mob","მობილიზაცია / დემობილიზაცია"),
     row("საწყისი ნაშთი",opening,"pl-sum cf-cum",null,true),
     row("წმინდა ნაკადი",net,"pl-net"),
@@ -2536,7 +2536,7 @@ function renderFinSide(p){
     grp("adv","ავანსი",fact("ავანსის თანხა",p.advancePct&&p.contractValue?gel0(p.contractValue*p.advancePct/100):"—"),fact("ავანსის ჩარიცხვა",(p.advanceDate||p.contractDate)?fmtDate(p.advanceDate||p.contractDate):"—"),fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover))),
     grp("ret","დაკავებები",fact("მოკლ.",relS),fact("გრძელ.",relL),
       ...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%"))),
-    grp("oth","არაპირდაპირი ხარჯი",(()=>{ const t=indGroups(p,{...f,ind:f.ind.map(x=>({...x,group:"*"}))})[0]; return t?fact("სულ, თვეში",t[1]):null; })(),indGroups(p,f).map(([n,amt,day])=>h("div",{class:"pside-fact fs-ind"},h("span",null,n),h("span",{class:"fs-rv"},h("b",null,amt),h("span",{class:"fs-rt"},day))))));
+    grp("oth","არაპირდაპირი ხარჯი",(()=>{ const t=indGroups(p,{...f,ind:f.ind.map(x=>({...x,group:"*"}))})[0]; return fact("სულ, თვეში",t?t[1]:"—"); })(),indGroups(p,f).map(([n,amt,day])=>h("div",{class:"pside-fact fs-ind"},h("span",null,n),h("span",{class:"fs-rv"},h("b",null,amt),h("span",{class:"fs-rt"},day))))));
   cf.insertBefore(h("label",{class:"fs-open"},h("span",null,tr("საწყისი ნაშთი")),h("span",{class:"fs-v"},(()=>{ const fit=el=>{ el.style.setProperty("--w",Math.max(56,el.value.length*7.2+16)+"px"); };
     const el=h("input",{class:"inp num",inputmode:"decimal",value:f.open!=null&&f.open!==""?fmtNum(num(f.open)):"",disabled:!edit,"aria-label":tr("საწყისი ნაშთი"),
       oninput:e=>fit(e.target),onfocus:e=>{ e.target.value=f.open!=null&&f.open!==""?String(f.open):""; fit(e.target); },

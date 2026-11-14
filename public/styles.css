@@ -2317,3 +2317,4 @@ body.side-drag{user-select:none;cursor:col-resize}
 .fs-open .fs-v input{width:56px;min-width:56px;max-width:150px;height:21px;font-size:.68rem;padding:0 6px;box-sizing:border-box}
 .fs-open .fs-v em{width:22px}
 .fs-open .fs-v input{width:var(--w,56px)!important;min-width:56px!important}
+.fs-open{margin:12px 0 6px}
