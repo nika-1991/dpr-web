@@ -2397,3 +2397,11 @@ body.side-drag{user-select:none;cursor:col-resize}
 .rb-ro{padding:3px 10px!important;gap:6px}
 .rb-ro.on{background:var(--sel)!important;color:var(--sel-ink)!important;font-weight:700;box-shadow:0 1px 3px rgba(170,130,0,.3)}
 .rb-ro.on .ico{color:var(--sel-ink)!important}
+/* chosen item: same text width as the others (bold look via a hairline shadow), so groups don't shift */
+.rb-ro.on,.tabs.tgroups.trad button.rb-ro.on{font-weight:inherit!important;text-shadow:0 0 .55px currentColor,0 0 .55px currentColor}
+.rb-ro,.tabs.tgroups.trad button.rb-ro{font-weight:400}
+/* project name block keeps one width whether or not the side panel is open, so the section row never moves */
+@media (min-width:981px){ body.has-side .pid{width:250px!important;min-width:250px!important;max-width:250px!important} body.wide .pid{width:250px!important;min-width:250px!important;max-width:250px!important} }
+@media (min-width:981px) and (max-width:1180px){ body.has-side .pid,body.wide .pid{width:232px!important;min-width:232px!important;max-width:232px!important} }
+.tabs.tgroups.trad .tgrp .tgrp-l,.tabs.tgroups.trad .tgrp.on .tgrp-l{font-weight:800!important;letter-spacing:0!important;font-size:.68rem!important}
+.tabs.tgroups.trad button.rb-ro,.tabs.tgroups.trad button.rb-ro.on,.tabs.tgroups.trad button.rb-ro:not([aria-selected="true"]):not(.st-ic){padding:3px 10px!important}
