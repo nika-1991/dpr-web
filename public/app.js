@@ -2542,7 +2542,7 @@ function renderFinSide(p){
     const el=h("input",{class:"inp num",inputmode:"decimal",value:f.open!=null&&f.open!==""?fmtNum(num(f.open)):"",disabled:!edit,"aria-label":tr("საწყისი ნაშთი"),
       oninput:e=>fit(e.target),onfocus:e=>{ e.target.value=f.open!=null&&f.open!==""?String(f.open):""; fit(e.target); },
       onchange:e=>{ f.open=num(String(e.target.value).replace(/[\s,]/g,"")); saveSchedule(); setTimeout(render,0); }}); fit(el); return el; })(),h("em",null,"₾"))),cf.children[1]);
-  const all=h("button",{class:"fs-pill",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},icon("pen"),tr("ყველა დაშვება"));
+  const all=h("button",{class:"fs-pill",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},h("span",{class:"fs-pi"},"≈"),tr("ყველა დაშვება"));
   if(S.tab==="cf") return [cf,all];
   if(S.tab==="assume") return [];
   return [pl,all];

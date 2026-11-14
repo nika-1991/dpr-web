@@ -2323,3 +2323,4 @@ body.side-drag{user-select:none;cursor:col-resize}
 .fs-pill:hover{background:#c9d9fb}
 .fs-pill .ico{width:15px;height:15px;color:#1f3a8a}
 .fs-pill{align-self:flex-start;width:auto}
+.fs-pi{font-size:1.05rem;font-weight:800;line-height:1;color:#1f3a8a}
