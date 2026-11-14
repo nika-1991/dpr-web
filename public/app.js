@@ -2536,7 +2536,7 @@ function renderFinSide(p){
     grp("adv","ავანსი",fact("ავანსის თანხა",p.advancePct&&p.contractValue?gel0(p.contractValue*p.advancePct/100):"—"),fact("ავანსის ჩარიცხვა",(p.advanceDate||p.contractDate)?fmtDate(p.advanceDate||p.contractDate):"—"),fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover))),
     grp("ret","დაკავებები",fact("მოკლ.",relS),fact("გრძელ.",relL),
       ...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%"))),
-    grp("oth","არაპირდაპირი ხარჯი",indGroups(p,f).map(([n,amt,day])=>h("div",{class:"pside-fact fs-ind"},h("span",null,n),h("span",{class:"fs-rv"},h("b",null,amt),h("span",{class:"fs-rt"},day))))));
+    grp("oth","არაპირდაპირი ხარჯი",(()=>{ const t=indGroups(p,{...f,ind:f.ind.map(x=>({...x,group:"*"}))})[0]; return t?fact("სულ, თვეში",t[1]):null; })(),indGroups(p,f).map(([n,amt,day])=>h("div",{class:"pside-fact fs-ind"},h("span",null,n),h("span",{class:"fs-rv"},h("b",null,amt),h("span",{class:"fs-rt"},day))))));
   cf.insertBefore(h("label",{class:"fs-open"},h("span",null,tr("საწყისი ნაშთი")),h("span",{class:"fs-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(f.open??""),disabled:!edit,"aria-label":tr("საწყისი ნაშთი"),
     onchange:e=>{ f.open=num(e.target.value); saveSchedule(); setTimeout(render,0); }}),h("em",null,"₾"))),cf.children[1]);
   const all=h("button",{class:"btn sm ghost fs-all",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ ყველა დაშვება");
