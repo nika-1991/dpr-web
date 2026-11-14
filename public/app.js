@@ -2581,14 +2581,15 @@ function renderAssume(p){
   /* row: [label, value node, on: "pl"|"cf"|"both"|"param", toggle key] */
   const tags=on=>h("span",{class:"at-tags"},on!=="cf"&&on!=="paramCF"?h("span",{class:"at-tag pl"},"P&L"):null,on!=="pl"?h("span",{class:"at-tag cf"},"CF"):null);
   const row=(label,v,on,key,hint)=>h("tr",{class:key&&(((show[key]||{}).pl===false&&on!=="cf")||((show[key]||{}).cf===false&&on!=="pl"))?"at-off":""},
-    h("th",{scope:"row",title:hint?tr(hint):null,class:hint?"at-h":null},tr(label)),h("td",null,v),h("td",null,tags(on)),
+    h("th",{scope:"row",title:hint?tr(hint):null,class:hint?"at-h":null},tr(label)),h("td",null,v),h("td",{class:"at-c"},on!=="cf"&&on!=="paramCF"?h("span",{class:"at-tag pl"},"P&L"):null),h("td",{class:"at-c"},on!=="pl"?h("span",{class:"at-tag cf"},"CF"):null),
     h("td",{class:"at-c"},key&&(on==="pl"||on==="both")?chk(key,"pl"):h("span",{class:"at-na"},"·")),
     h("td",{class:"at-c"},key&&(on==="cf"||on==="both")?chk(key,"cf"):h("span",{class:"at-na"},"·")));
-  const G=(t)=>h("tr",{class:"at-g"},h("th",{colspan:"5"},tr(t)));
+  const G=(t)=>h("tr",{class:"at-g"},h("th",{colspan:"6"},tr(t)));
   const indM=fin.ind.reduce((a,x)=>a+num(x.monthly),0);
   const A=num(p.contractValue)*num(p.advancePct)/100;
   const table=h("table",{class:"at-t"},
-    h("thead",null,h("tr",null,h("th",null,tr("დაშვება")),h("th",null,tr("მნიშვნელობა")),h("th",null,tr("მოქმედებს")),h("th",{class:"at-c"},"P&L"),h("th",{class:"at-c"},"CF"))),
+    h("thead",null,h("tr",null,h("th",{rowspan:"2"},tr("დაშვება")),h("th",{rowspan:"2"},tr("მნიშვნელობა")),h("th",{colspan:"2",class:"at-c at-gh"},tr("მოქმედებს")),h("th",{colspan:"2",class:"at-c at-gh"},tr("ჩვენება"))),
+      h("tr",null,h("th",{class:"at-c"},"P&L"),h("th",{class:"at-c"},"CF"),h("th",{class:"at-c"},"P&L"),h("th",{class:"at-c"},"CF"))),
     h("tbody",null,
       G("შესრულება და ჩარიცხვა"),
       row("ფორმა 2-ის პერიოდულობა",inp("f2","დღე"),"paramCF",null,"0 — შესრულების გეგმის თარიღებით"),
