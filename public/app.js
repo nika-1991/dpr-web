@@ -288,6 +288,9 @@ function renderPlaceholder([en,title,ic]){
 const RB={groups:null,has:false};
 try{ S.rbMin=localStorage.getItem("dpr.rbMin")==="1"; }catch(e){}
 function rbFold(v){ S.rbMin=v; try{ localStorage.setItem("dpr.rbMin",v?"1":"0"); }catch(e){} render(); }
+/* a compact radio list for the ribbon: [value, label, icon?] per line */
+const rbRadio=(items,cur,on)=>h("div",{class:"rb-rl",role:"radiogroup"},items.map(([v,l,ic])=>h("button",{type:"button",role:"radio","aria-checked":String(cur===v),class:"rb-ro"+(cur===v?" on":""),onclick:()=>on(v)},
+  h("span",{class:"rb-dot"}),ic?icon(ic):null,h("span",null,tr(l)))));
 const rbGrp=(label,...kids)=>h("div",{class:"rb-g"},h("div",{class:"rb-gl"},label),h("div",{class:"rb-gb"},kids));
 /* a page switch: icon over a short label */
 const rbBtn=(on,ic,label,fn,tip)=>h("button",{type:"button",class:"rb-b"+(on?" on":""),"aria-pressed":String(!!on),title:tip?tr(tip):null,onclick:fn},icon(ic),h("span",null,label));
@@ -431,13 +434,13 @@ function renderHome(){
         last(p)))));
   RB.groups=[
     rbGrp("ძებნა",h("label",{class:"home-search"},icon("search"),search)),
-    companies.length?rbGrp("კომპანია",h("div",{class:"vswitch"},coChip("","ყველა"),companies.map(c=>coChip(c,c)))):null,
-    rbGrp("პროექტი",h("div",{class:"vswitch"},stBtn("active","pulse","აქტიური პროექტები"),stBtn("archived","checkc","დასრულებული პროექტები"),stBtn("all","layers","ყველა პროექტი"))),
-    rbGrp("ხედი",h("div",{class:"vswitch"},viewBtn("cards","grid","ბარათები"),viewBtn("table","table","ცხრილი")),
-    ),
-    rbGrp("პრობლემები",h("div",{class:"rb-iss"},
-      h("button",{type:"button",class:"ok",title:tr("მოგვარებული საკითხების სია"),onclick:()=>openIssues("done",shown)},h("span",null,tr("გადაჭრილი")),h("b",null,String(shown.reduce((a,p)=>a+(st(p).issuesResolved||0),0)))),
-      h("button",{type:"button",class:"bad",title:tr("გადასაჭრელი საკითხების სია"),onclick:()=>openIssues("open",shown)},h("span",null,tr("გადასაჭრელი")),h("b",null,String(shown.reduce((a,p)=>a+(st(p).issuesOpen||0),0)))))),
+    /* compact radio lists, one option per line */
+    companies.length?rbGrp("კომპანია",rbRadio([["","ყველა"],...companies.map(c=>[c,c])],F.co,k=>{ F.co=k; render(); })):null,
+    rbGrp("პროექტი",rbRadio([["all","ყველა"],["active","მიმდინარე"],["archived","დასრულებული"]],F.f,k=>{ F.f=k; render(); })),
+    rbGrp("ხედი",rbRadio([["cards","ბარათები","grid"],["table","სია","table"]],F.view,k=>{ F.view=k; try{ localStorage.setItem("dpr.homeView",k); }catch(e){} render(); })),
+    rbGrp("პრობლემები",h("div",{class:"rb-rl"},
+      h("button",{type:"button",class:"rb-ro",title:tr("მოგვარებული საკითხების სია"),onclick:()=>openIssues("done",shown)},h("span",{class:"rb-dot"}),h("span",null,tr("გადაჭრილი")),h("b",{class:"ok"},String(shown.reduce((a,p)=>a+(st(p).issuesResolved||0),0)))),
+      h("button",{type:"button",class:"rb-ro",title:tr("გადასაჭრელი საკითხების სია"),onclick:()=>openIssues("open",shown)},h("span",{class:"rb-dot"}),h("span",null,tr("გადასაჭრელი")),h("b",{class:"bad"},String(shown.reduce((a,p)=>a+(st(p).issuesOpen||0),0)))))),
     S.admin?rbGrp("ახალი",h("button",{type:"button",class:"vbtn rb-sq rb-add tip","aria-label":tr("ახალი პროექტის დამატება"),"data-tip":tr("ახალი პროექტის დამატება"),onclick:newProject},icon("add"))):null].filter(Boolean);
   out.push(h("div",{class:"dash-left"},listEl));
   return out;
