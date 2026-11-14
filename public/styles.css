@@ -2239,3 +2239,13 @@ body.side-drag{user-select:none;cursor:col-resize}
 .rl-p{width:60px}.rl-n{width:100px}
 .rl-x{margin-left:auto;margin-bottom:2px}
 .pside .fs-box .pside-fact>b{white-space:nowrap;padding-right:26px}
+/* unselected buttons stand out as their own white tiles (project section row, ribbon page switches, view switches) */
+.ptabs .tgrp-b{gap:6px!important;padding:5px!important}
+.tabs.tgroups button:not([aria-selected="true"]):not(.st-ic){background:#fff!important;border:1px solid #d5dce4!important;border-radius:10px!important;box-shadow:0 1px 2px rgba(15,23,42,.08),0 2px 6px -2px rgba(15,23,42,.12)!important;color:#1f2a37}
+.tabs.tgroups button:not([aria-selected="true"]):not(.st-ic):hover{border-color:var(--accent)!important;color:var(--accent)}
+.tabs.tgroups button:not([aria-selected="true"]) .ico,.tabs.tgroups button:not([aria-selected="true"]) .tico{opacity:1;color:#1f2a37}
+.rb-b:not(.on){background:#fff;border:1px solid #d5dce4!important;box-shadow:0 1px 2px rgba(15,23,42,.08),0 2px 6px -2px rgba(15,23,42,.12)}
+.rb-b:not(.on):hover{border-color:var(--accent)!important;color:var(--accent)}
+.rb-g .vswitch{gap:4px}
+.rb-g .vswitch .vbtn:not(.on){background:#fff;border:1px solid #d5dce4;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+.rb-g .vswitch .vbtn:not(.on):hover{border-color:var(--accent);color:var(--accent)}
