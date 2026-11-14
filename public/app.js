@@ -520,6 +520,7 @@ function renderProjectForm(pid){
   const advIn=pctIn("advancePct","ავანსი, %"), advAmt=h("b",{class:"cd-amt"}); const coverAmt=h("b",{class:"cd-amt"});
   const when=termsCard([dIn("contractDate","ხელშ. დადება"),dIn("contractEnd","ხელშ. დასრულება"),dIn("startDate","სამუშაოს დაწყება"),dIn("endDate","სამუშაოს დასრულება"),["duration","სამუშაო დღეები",dur],
     ["contractValue","ღირებულება, ₾",valIn],["advancePct","ავანსი",h("div",{class:"cd-pct"},advIn,h("span",null,"%"),advAmt)],
+    dIn("advanceDate","ავანსის ჩარიცხვა"),
     ["advDed","ავანსის გაქვითვა",h("div",{class:"cd-pct"},pctIn("advFrom","გაქვითვა იწყება, %"),h("span",null,"% –"),pctIn("advTo","გაქვითვა მთავრდება, %"),h("span",null,"%"))],
     ["cover","cash cover — ავანსი",h("div",{class:"cd-pct",title:tr("ავანსის % — ბანკში იბლოკება ავანსის მიღებისას, თავისუფლდება გაქვითვასთან ერთად")},pctIn("cashCover","cash cover, ავანსის %"),h("span",null,"%"),coverAmt)]]);
   /* the advance in lari, next to its % */
@@ -1031,6 +1032,7 @@ function renderProjectSheet(p){
   const when=termsCard([["contractDate","ხელშ. დადება",dv("contractDate")],["contractEnd","ხელშ. დასრულება",dv("contractEnd")],["startDate","სამუშაოს დაწყება",dv("startDate")],["endDate","სამუშაოს დასრულება",dv("endDate")],
     ["duration","სამუშაო დღეები",h("div",{class:"cd-v"},dd?String(dd):"—")],["contractValue","ღირებულება",h("div",{class:"cd-v"},p.contractValue!=null?gel0(p.contractValue):"—")],
     ["advancePct","ავანსი",h("div",{class:"cd-v cd-2l"},p.advancePct?[h("span",null,fmtNum(p.advancePct)+"%"),p.contractValue?h("span",{class:"cd-amt"},gel0(p.contractValue*p.advancePct/100)):null]:"—")],
+    ["advanceDate","ავანსის ჩარიცხვა",dv("advanceDate")],
     ["advDed","ავანსის გაქვითვა",h("div",{class:"cd-v"},p.advancePct?(p.advFrom!=null||p.advTo!=null?fmtNum(p.advFrom||0)+"% – "+fmtNum(p.advTo??100)+"%":tr("ყოველი ჩარიცხვიდან თანაბრად")):"—")],
     ["cover","cash cover — ავანსი",h("div",{class:"cd-v cd-2l"},p.cashCover?[h("span",null,fmtNum(p.cashCover)+"%"),p.contractValue&&p.advancePct?h("span",{class:"cd-amt"},gel0(p.contractValue*p.advancePct/100*p.cashCover/100)):null]:"—")]]);
   const codes=codesCard([["accountingCode",h("div",{class:"cd-v"},p.accountingCode||"—")],["companyCode",h("div",{class:"cd-v"},p.companyCode||"—")],
@@ -2337,11 +2339,12 @@ function cfData(p,sc=S.sched){
      or, when a window is set, between those percentages of cumulative progress (invoiced ÷ contract value) */
   const CV=num(p.contractValue), advPct=p.advancePct!=null?num(p.advancePct):num(f.adv), A=CV*advPct/100;
   const win=CV&&(p.advFrom!=null||p.advTo!=null)?{a:num(p.advFrom)/100*CV,b:(p.advTo!=null?num(p.advTo):100)/100*CV}:null;
-  if(A&&p.contractDate) put("advIn",p.contractDate,A);
+  const advDay=p.advanceDate||p.contractDate;
+  if(A&&advDay) put("advIn",advDay,A);
   /* cash cover: that % of the advance is blocked in the bank (against the advance guarantee) when the advance comes in,
      and released bit by bit as the advance is recovered from the payments */
   const covPct=num(p.cashCover);
-  if(A&&p.contractDate&&covPct) put("cover",p.contractDate,-A*covPct/100);
+  if(A&&advDay&&covPct) put("cover",advDay,-A*covPct/100);
   let cumInv=0;
   /* retention: short-term and long-term % (project data) held from every payment; short-term returned after the works
      finish, long-term after the contract ends (each + the payment lag); without them the assumptions' single % */
@@ -2514,7 +2517,7 @@ function renderFinSide(p){
   const lv=h("span",{class:"fs-lv",title:tr("დონეები")},icon("layers"),[1,2].map(n=>h("button",{type:"button",class:"fs-lb"+((n===1&&allShut)||(n===2&&noneShut)?" on":""),"aria-label":tr("დონე")+" "+n,onclick:()=>lvl(n)},String(n))));
   const cf=h("div",{class:"fs-box"},h("div",{class:"fs-t fs-th"},h("span",null,tr("CF დაშვებები")),lv),
     grp("work","შესრულება და ჩარიცხვა",inp("f2","ფორმა 2, ყოველ","დღე"),inp("lag","ანაზღაურების ლოდინი","დღე")),
-    grp("adv","ავანსი",fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover))),
+    grp("adv","ავანსი",fact("ავანსის თანხა",p.advancePct&&p.contractValue?gel0(p.contractValue*p.advancePct/100):"—"),fact("ავანსის ჩარიცხვა",(p.advanceDate||p.contractDate)?fmtDate(p.advanceDate||p.contractDate):"—"),fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover))),
     grp("ret","დაკავებები",fact("მოკლ.",relS),fact("გრძელ.",relL),
       ...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%"))),
     grp("oth","სხვა",inp("open","საწყისი ნაშთი","₾"),inp("ovDay","ზედნადების რიცხვი","")));

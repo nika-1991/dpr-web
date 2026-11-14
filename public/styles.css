@@ -2277,3 +2277,11 @@ body.side-drag{user-select:none;cursor:col-resize}
 .pside .fs-g .pside-fact,.pside .fs-g .pside-fact>span:first-child{font-size:.66rem;color:#64748b}
 .pside .fs-g .pside-fact>b{font-size:.68rem;color:#64748b}
 .pside .fs-g .fs-v input{font-size:.68rem;height:21px}
+/* terms row 2: value · advance · advance date · recovery · cash cover */
+.cd-g2>.cd-contractValue{grid-column:span 4}
+.cd-g2>.cd-advancePct{grid-column:span 4}
+.cd-g2>.cd-advanceDate{grid-column:span 3}
+.cd-g2>.cd-advDed{grid-column:span 4}
+.cd-g2>.cd-cover{grid-column:span 5}
+.cd-g2>.cd-contractValue,.cd-g2>.cd-advancePct,.cd-g2>.cd-advanceDate,.cd-g2>.cd-advDed,.cd-g2>.cd-cover{grid-column:span 4}
+.cd-g2 .cd-advanceDate div.cd-v{overflow:visible;text-overflow:clip}
