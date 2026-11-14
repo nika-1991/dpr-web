@@ -2457,3 +2457,8 @@ body.side-drag{user-select:none;cursor:col-resize}
   background-size:100% 100%!important;background-repeat:no-repeat!important}
 .topnav .tn-proj .tn-l{border-radius:0 6px 0 0!important}
 .topnav .tn-proj .tn-l{margin-top:22px!important;height:calc(100% - 22px)!important;font-size:.78rem}
+/* child tab only as wide as its name */
+.topnav .tn-proj .tn-l{padding:0 16px 0 6px!important;min-width:0!important;width:auto!important}
+.topnav .tn-proj{flex:none!important;min-width:0!important;width:auto!important}
+.topnav .tn-proj{margin-left:34px!important}
+.topnav .tn-proj.on .tn-l::before{left:-34px!important;width:35px!important}
