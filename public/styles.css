@@ -2422,3 +2422,11 @@ body.side-drag{user-select:none;cursor:col-resize}
 }
 .rb-ptabs .pid-codes{flex-direction:column;align-items:flex-start;gap:3px}
 @media (min-width:981px){ body.has-side .pside{top:var(--barh,54px)!important;padding-top:16px!important} }
+/* separators all the same height: every group stretches to the tallest one */
+.ptabs>.tabs.tgroups.trad,.rb-ptabs>.tabs.tgroups.trad{align-items:stretch!important}
+.trad .tgrp,.trad .tgrp-state,.rb-in>.rb-g{align-self:stretch!important}
+.rb-in{align-items:stretch!important}
+.rb-g+.rb-g::before{top:0!important;bottom:0!important}
+.tabs.tgroups.trad .tgrp+.tgrp::before,.rb-ptabs>.tabs.tgroups.trad .tgrp:first-child::before{top:0!important;bottom:0!important}
+.trad .tgrp,.trad .tgrp-state,.trad .tgrp-r{justify-content:flex-start!important}
+.rb-ptabs .pid{justify-content:flex-start!important;padding-top:2px!important}
