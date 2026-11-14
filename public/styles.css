@@ -2257,3 +2257,9 @@ body.side-drag{user-select:none;cursor:col-resize}
 .fs-g.off .fs-ar{transform:rotate(-90deg)}
 .fs-g .pside-facts{padding-top:2px}
 .fs-g .pside-fact:first-child{border-top:0!important}
+/* side panel groups: no lines between rows, only between groups; rows packed closer */
+.pside .fs-g .pside-fact,.pside .fs-g .pside-fact+.pside-fact{border-top:0!important;padding:2px 0!important}
+.pside .fs-g .fs-v input{height:22px}
+.fs-gh{border-bottom:0;padding:6px 0 2px}
+.fs-g+.fs-g{border-top:1px solid #d3dae2;margin-top:6px;padding-top:2px}
+.fs-g{margin-top:4px}
