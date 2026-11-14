@@ -2430,3 +2430,7 @@ body.side-drag{user-select:none;cursor:col-resize}
 .tabs.tgroups.trad .tgrp+.tgrp::before,.rb-ptabs>.tabs.tgroups.trad .tgrp:first-child::before{top:0!important;bottom:0!important}
 .trad .tgrp,.trad .tgrp-state,.trad .tgrp-r{justify-content:flex-start!important}
 .rb-ptabs .pid{justify-content:flex-start!important;padding-top:2px!important}
+/* chosen item: light green instead of yellow */
+:root{--sel:linear-gradient(145deg,#d9f5e3,#bfeccf)!important;--sel-ink:#14532d!important}
+.rb-ro.on,.tabs.tgroups.trad button.rb-ro.on{box-shadow:0 1px 3px rgba(21,128,61,.22)!important}
+.rb-g .vswitch .vbtn.on,.rb-b.on,.tabs.tgroups button[aria-selected="true"]{box-shadow:0 1px 3px rgba(21,128,61,.22)!important}
