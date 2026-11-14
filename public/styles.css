@@ -2405,3 +2405,20 @@ body.side-drag{user-select:none;cursor:col-resize}
 @media (min-width:981px) and (max-width:1180px){ body.has-side .pid,body.wide .pid{width:232px!important;min-width:232px!important;max-width:232px!important} }
 .tabs.tgroups.trad .tgrp .tgrp-l,.tabs.tgroups.trad .tgrp.on .tgrp-l{font-weight:800!important;letter-spacing:0!important;font-size:.68rem!important}
 .tabs.tgroups.trad button.rb-ro,.tabs.tgroups.trad button.rb-ro.on,.tabs.tgroups.trad button.rb-ro:not([aria-selected="true"]):not(.st-ic){padding:3px 10px!important}
+/* "projects ▸ <project>" in the top bar */
+.tn-crumb .tn-l::after{content:"";display:inline-block;margin-left:10px;border:5px solid transparent;border-left:6px solid currentColor;border-right:0;opacity:.75}
+.tn-proj .tn-l{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* the project's section row inside the ribbon */
+.rb-in:has(.rb-ptabs){padding-top:6px;padding-bottom:8px}
+.ptabs.rb-ptabs{position:static!important;margin:0!important;padding:0!important;background:none!important;box-shadow:none!important;border:0!important;display:flex;align-items:stretch;flex:1;min-width:0;top:auto}
+.rb-ptabs .pid{width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;padding:0 18px 0 4px!important;background:none!important;border:0!important;box-shadow:none!important;min-height:0!important;justify-content:center}
+.rb-ptabs .pid-name{display:none}
+.rb-ptabs>.tabs.tgroups{background:none!important;padding:0!important;margin:0!important;border:0!important}
+.rb-ptabs>.tabs.tgroups.trad .tgrp:first-child{padding-left:18px!important}
+.rb-ptabs>.tabs.tgroups.trad .tgrp:first-child::before{content:""!important;display:block!important;position:absolute!important;left:0!important;top:2px!important;bottom:2px!important;width:1px!important;background:#aab5c3!important}
+@media (min-width:0px){
+  body .ribbon .rb-ptabs .pid,body.has-side .ribbon .rb-ptabs .pid,body.wide .ribbon .rb-ptabs .pid{width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;padding:0 18px 0 4px!important;border:0!important;border-bottom:0!important;background:none!important;box-shadow:none!important;flex:none}
+  body .ribbon .rb-ptabs,body.has-side .ribbon .rb-ptabs,body.wide .ribbon .rb-ptabs{margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:none!important}
+}
+.rb-ptabs .pid-codes{flex-direction:column;align-items:flex-start;gap:3px}
+@media (min-width:981px){ body.has-side .pside{top:var(--barh,54px)!important;padding-top:16px!important} }

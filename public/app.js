@@ -230,11 +230,16 @@ function renderBar(){
   /* top menu next to the logo: projects · consolidation · reports */
   let tn=document.getElementById("topnav");
   if(!tn){ tn=h("nav",{id:"topnav",class:"topnav","aria-label":"მთავარი მენიუ"}); document.getElementById("brand").after(tn); }
-  const cur=["home","project","report"].includes(S.view)?"home":S.view==="users"?"settings":S.view;
+  const inProj=(S.view==="project"||S.view==="report")&&!!P();
+  const cur=inProj?"proj":S.view==="home"?"home":S.view==="users"?"settings":S.view;
   /* clicking the open tab again folds the ribbon away (or brings it back) */
   const ti=(v,l,ic)=>h("button",{type:"button",class:"tn-i"+(cur===v?" on":"")+(ic?" tn-ic":""),"aria-current":cur===v?"page":null,title:ic?tr(l):null,"aria-label":ic?tr(l):null,
     onclick:()=>{ if(cur===v&&RB.has){ rbFold(!S.rbMin); return; } go(v); }},h("span",{class:"tn-l"},ic?icon(ic):tr(l)));
-  tn.replaceChildren(...(S.me&&!S.me.mustChange?[ti("home","პროექტები"),S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,ti("reports","რეპორტები"),
+  /* inside a project: "projects ▸" then a tab of its own for the open project */
+  const projTab=inProj?h("button",{type:"button",class:"tn-i tn-proj"+(cur==="proj"?" on":""),"aria-current":"page",title:P().name||"",
+    onclick:()=>{ if(S.view==="report"){ go("project",{pid:S.pid,tab:S.tab||"reports"}); return; } if(RB.has) rbFold(!S.rbMin); }},h("span",{class:"tn-l"},pShort(P()))):null;
+  const homeTab=ti("home","პროექტები"); if(inProj) homeTab.classList.add("tn-crumb");
+  tn.replaceChildren(...(S.me&&!S.me.mustChange?[homeTab,projTab,S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,ti("reports","რეპორტები"),
 S.admin||S.reviewer?ti("analysis","ანალიტიკა"):null].filter(Boolean):[]));
   /* settings sit on the right, by the language and account buttons */
   if(S.me&&!S.me.mustChange&&S.admin) me.append(h("button",{class:"bar-gear"+(cur==="settings"?" on":""),type:"button",title:tr("პარამეტრები"),"aria-label":tr("პარამეტრები"),"aria-current":cur==="settings"?"page":null,
@@ -310,6 +315,8 @@ function renderRibbon(){
   el.hidden=!RB.has||!!S.rbMin; document.body.classList.toggle("has-rb",RB.has&&!S.rbMin);
   el.replaceChildren(...(RB.has?[h("div",{class:"rb-in"},g,h("button",{class:"rb-fold",type:"button",title:tr("ლენტის დაკეცვა"),"aria-label":tr("ლენტის დაკეცვა"),onclick:()=>rbFold(true)},icon("chevron")))]:[]));
   renderBar();
+  /* side panels start right under the top bar + ribbon */
+  requestAnimationFrame(()=>{ const b=document.querySelector(".bar"); if(b) document.body.style.setProperty("--barh",b.offsetHeight+"px"); });
 }
 function renderMissing(){ return h("div",{class:"empty"},h("h2",null,"პროექტი ვერ მოიძებნა"),h("p",{class:"muted"},"შესაძლოა წვდომა შეგეზღუდათ."),h("button",{class:"btn",type:"button",onclick:()=>go("home")},"პროექტების სია")); }
 
@@ -621,11 +628,11 @@ function renderProject(){
   const pid=h("div",{class:"pid"},
     h("div",{class:"pid-codes"},[p.companyCode,p.projectCode,p.accountingCode].filter(Boolean).map(c=>h("span",{class:"code-tag"},c))),
     h("h1",{class:"pid-name",title:p.name},pShort(p)));
-  const tabRow=h("div",{class:"ptabs"},pid,tabBar);
-  if(!finSide) return h("div",{class:"proj-main"},tabRow,body);
+  /* the project's sections live in the ribbon under its own top tab */
+  RB.groups=[h("div",{class:"ptabs rb-ptabs"},pid,tabBar)];
+  if(!finSide) return h("div",{class:"proj-main"},body);
   /* on a phone the sidebar stacks above the tabs, so the codes and name go first */
-  if(window.matchMedia("(max-width:980px)").matches) return h("div",{class:"proj-layout"},pid,finSide,h("div",{class:"proj-main"},h("div",{class:"ptabs"},tabBar),body));
-  return h("div",{class:"proj-layout"},finSide,h("div",{class:"proj-main"},tabRow,body));
+  return h("div",{class:"proj-layout"},finSide,h("div",{class:"proj-main"},body));
 }
 
 function canCreateOn(date){ return S.admin || date<=todayISO(); }
