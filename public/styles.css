@@ -2295,3 +2295,16 @@ body.side-drag{user-select:none;cursor:col-resize}
 @media (min-width:981px) and (max-width:1180px){ body.has-side{--side-w:300px} }
 .fs-gh{color:#475569;font-weight:700}
 .fs-gh:hover{color:var(--ink)}
+/* other costs: group and payment day columns */
+.as-row.as-row2{grid-template-columns:minmax(0,1fr) 150px 110px 100px 128px 128px 30px}
+@media (max-width:700px){.as-row.as-row2{grid-template-columns:1fr 1fr}}
+/* side panel: opening balance on top, set apart; indirect cost lines */
+.fs-open{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 4px;padding:7px 10px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.08);font-size:.72rem;font-weight:700;color:#1f2a37}
+.fs-open .fs-v input{background:#fff!important;box-shadow:none!important;border:1px solid #d5dce4!important;width:96px!important}
+.fs-open .fs-v{grid-template-columns:96px 14px}
+.fs-ind .fs-rv{gap:10px}
+.pside .fs-g .pside-fact.fs-ind{display:grid;grid-template-columns:1fr auto;column-gap:10px;align-items:baseline}
+.pside .fs-ind .fs-rv{display:contents}
+.pside .fs-ind>span:first-child{grid-column:1/-1}
+.pside .fs-ind .fs-rv b{justify-self:start;padding:0!important;white-space:nowrap}
+.pside .fs-ind .fs-rt{justify-self:end;white-space:nowrap;padding-right:26px}

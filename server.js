@@ -690,7 +690,8 @@ function cleanSchedule(b) {
   const fin = { cont: pctv(fb.cont, 3), mob: pctv(fb.mob, 2.5), lag: nn(fb.lag, 20, 365), adv: pctv(fb.adv, 0), ret: pctv(fb.ret, 5), cover: pctv(fb.cover, 0),
     hold: pctv(fb.hold, 0), holdRel: nn(fb.holdRel, 0, 1e12), vat: pctv(fb.vat, 18), ovDay: nn(fb.ovDay, 5, 31), vatDay: nn(fb.vatDay, 15, 31),
     f2: nn(fb.f2, 0, 180), shift: Math.max(-730, Math.min(730, Math.round(cleanNum(fb.shift) ?? 0))), open: cleanNum(fb.open) ?? 0,
-    ind: (Array.isArray(fb.ind) ? fb.ind : []).slice(0, 100).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), monthly: cleanNum(x?.monthly),
+    ind: (Array.isArray(fb.ind) ? fb.ind : []).slice(0, 100).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 200).trim(), group: str(x?.group, 80).trim(),
+      day: (() => { const n = parseInt(x?.day, 10); return n >= 1 && n <= 31 ? n : null; })(), monthly: cleanNum(x?.monthly),
       from: ISO_RE.test(x?.from || "") ? x.from : "", to: ISO_RE.test(x?.to || "") ? x.to : "" })),
     /* special conditions: a % held from a chosen CF line (or a fixed amount) for a period, released monthly / on a date / at the end / never */
     rules: (Array.isArray(fb.rules) ? fb.rules : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 120).trim(), on: x?.on !== false,

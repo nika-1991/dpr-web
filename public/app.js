@@ -2382,7 +2382,7 @@ function cfData(p,sc=S.sched){
   const hi0=[p.endDate,...flows.map(x=>x.date)].filter(Boolean).sort().pop();
   for(const x of f.ind) if(num(x.monthly)&&lo0){ const a=x.from||p.startDate||lo0, b=x.to||p.endDate||hi0; if(!a||!b) continue;
     const acc={}; for(let d=a; d<=b; d=addDays(d,1)){ const dt=new Date(d+"T00:00"); acc[mk(d)]=(acc[mk(d)]||0)+num(x.monthly)/new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate(); }
-    for(const [m,v] of Object.entries(acc)) put("ov",nextMonthDay(m+"-01",num(f.ovDay)||5),-v,x.name||"—"); }
+    for(const [m,v] of Object.entries(acc)) put("ov",nextMonthDay(m+"-01",num(x.day)||num(f.ovDay)||5),-v,x.name||"—"); }
   /* VAT: output on invoiced works − input on costs, settled on a day of the next month (positive = refund) */
   for(const m of new Set([...Object.keys(vatIn),...Object.keys(vatOut)])) put("vat",nextMonthDay(m+"-01",num(f.vatDay)||15),(vatIn[m]||0)-(vatOut[m]||0));
   /* release of the held money: a fixed amount at each month end while anything is held */
@@ -2491,6 +2491,20 @@ function renderForm2(rows){
       h("tr",{class:"pl-net"},h("th",{colspan:"2"},"სულ"),td(T("v")),td(T("ex")),td(T("vat")),h("td"),h("td"),td(T("ret")),td(T("adv")),td(T("pay"),"f2-pay"),h("td"),h("td")))),"f2"));
 }
 /* sidebar on the finance tabs: the assumptions behind the open page, editable in place */
+/* indirect costs grouped (by group, else by name): monthly total — one figure or a min–max range over the project's months —
+   and the payment day(s): one day, a range, or "different" when there are many */
+function indGroups(p,f){
+  const G=new Map(); for(const x of f.ind) if(num(x.monthly)){ const k=x.group||x.name||"—"; (G.get(k)||G.set(k,[]).get(k)).push(x); }
+  const a0=p.startDate, b0=p.endDate;
+  return [...G.entries()].map(([k,xs])=>{
+    const ms=new Set(); xs.forEach(x=>{ const a=x.from||a0, b=x.to||b0; if(a&&b) for(let m=a.slice(0,7); m<=b.slice(0,7); ){ ms.add(m); const [y,mo]=m.split("-").map(Number); m=mo===12?(y+1)+"-01":y+"-"+pad(mo+1); } });
+    const tot=[...ms].map(m=>xs.filter(x=>{ const a=(x.from||a0||"").slice(0,7), b=(x.to||b0||"9999").slice(0,7); return m>=a&&m<=b; }).reduce((s,x)=>s+num(x.monthly),0));
+    const lo=tot.length?Math.min(...tot):xs.reduce((s,x)=>s+num(x.monthly),0), hi=tot.length?Math.max(...tot):lo;
+    const amt=Math.abs(hi-lo)<0.5?gel0(hi):gel0(lo).replace(/\s*₾/,"")+"–"+gel0(hi);
+    const days=[...new Set(xs.map(x=>num(x.day)||num(f.ovDay)||5))].sort((a,b)=>a-b);
+    const day=days.length===1?days[0]+" "+tr("რიცხვი"):days.length<=3?days[0]+"–"+days[days.length-1]+" "+tr("რიცხვი"):tr("სხვადასხვა რიცხვი");
+    return [k,amt,day]; });
+}
 function renderFinSide(p){
   if(S.schedPid!==S.pid) return h("p",{class:"muted small"},"იტვირთება…");
   const sc=S.sched, f=cfFin(sc), edit=canReview(p)&&!p.archived;
@@ -2522,7 +2536,9 @@ function renderFinSide(p){
     grp("adv","ავანსი",fact("ავანსის თანხა",p.advancePct&&p.contractValue?gel0(p.contractValue*p.advancePct/100):"—"),fact("ავანსის ჩარიცხვა",(p.advanceDate||p.contractDate)?fmtDate(p.advanceDate||p.contractDate):"—"),fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover))),
     grp("ret","დაკავებები",fact("მოკლ.",relS),fact("გრძელ.",relL),
       ...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%"))),
-    grp("oth","სხვა",inp("open","საწყისი ნაშთი","₾"),inp("ovDay","ზედნადების რიცხვი","")));
+    grp("oth","არაპირდაპირი ხარჯი",indGroups(p,f).map(([n,amt,day])=>h("div",{class:"pside-fact fs-ind"},h("span",null,n),h("span",{class:"fs-rv"},h("b",null,amt),h("span",{class:"fs-rt"},day))))));
+  cf.insertBefore(h("label",{class:"fs-open"},h("span",null,tr("საწყისი ნაშთი")),h("span",{class:"fs-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(f.open??""),disabled:!edit,"aria-label":tr("საწყისი ნაშთი"),
+    onchange:e=>{ f.open=num(e.target.value); saveSchedule(); setTimeout(render,0); }}),h("em",null,"₾"))),cf.children[1]);
   const all=h("button",{class:"btn sm ghost fs-all",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ ყველა დაშვება");
   if(S.tab==="cf") return [cf,all];
   if(S.tab==="assume") return [];
@@ -2580,14 +2596,17 @@ function renderOtherCost(p){
   const save=()=>saveSchedule();
   const box=h("div",{class:"as-ind"});
   const draw=()=>box.replaceChildren(
-    h("div",{class:"as-row as-hd"},["დასახელება","თვეში, ₾","დან","მდე",""].map(t=>h("span",null,t))),
-    ...fin.ind.map((x,i)=>h("div",{class:"as-row"},
+    h("datalist",{id:"ind-groups"},[...new Set(["ხელფასები","იჯარა","კომუნალური",...fin.ind.map(x=>x.group).filter(Boolean)])].map(g=>h("option",{value:g}))),
+    h("div",{class:"as-row as-row2 as-hd"},["დასახელება","ჯგუფი","თვეში, ₾","გადახდის რიცხვი","დან","მდე",""].map(t=>h("span",null,tr(t)))),
+    ...fin.ind.map((x,i)=>h("div",{class:"as-row as-row2"},
       h("input",{class:"inp",value:x.name||"",disabled:!edit,"aria-label":tr("დასახელება")+" "+(i+1),placeholder:tr("მაგ. საიტის მენეჯერი"),onchange:e=>{x.name=e.target.value.trim();save();}}),
+      h("input",{class:"inp",list:"ind-groups",value:x.group||"",disabled:!edit,"aria-label":tr("ჯგუფი")+" "+(i+1),placeholder:tr("მაგ. ხელფასები"),onchange:e=>{x.group=e.target.value.trim();save();}}),
       h("input",{class:"inp num",value:x.monthly??"",inputmode:"decimal",disabled:!edit,"aria-label":tr("თვეში, ₾")+" "+(i+1),onchange:e=>{x.monthly=num(e.target.value)||null;save();}}),
+      h("input",{class:"inp num",value:x.day??"",inputmode:"numeric",disabled:!edit,"aria-label":tr("გადახდის რიცხვი")+" "+(i+1),placeholder:String(num(fin.ovDay)||5),title:tr("მომდევნო თვის რიცხვი; ცარიელი — საერთო"),onchange:e=>{ const n=parseInt(e.target.value,10); x.day=n>=1&&n<=31?n:null; save(); }}),
       h("input",{class:"inp",type:"date",value:x.from||"",disabled:!edit,"aria-label":tr("დან")+" "+(i+1),onchange:e=>{x.from=e.target.value;save();}}),
       h("input",{class:"inp",type:"date",value:x.to||"",disabled:!edit,"aria-label":tr("მდე")+" "+(i+1),onchange:e=>{x.to=e.target.value;save();}}),
       edit?h("button",{class:"btn sm ghost",type:"button","aria-label":"წაშლა",onclick:()=>{fin.ind.splice(i,1);save();draw();}},"✕"):h("span"))),
-    h("div",{class:"as-foot"},edit?h("button",{class:"btn sm",type:"button",onclick:()=>{ fin.ind.push({id:Math.random().toString(36).slice(2,8),name:"",monthly:null,from:"",to:""}); draw(); box.querySelectorAll(".as-row:not(.as-hd)")[fin.ind.length-1].querySelector("input").focus(); }},"+ ხარჯი"):null,
+    h("div",{class:"as-foot"},edit?h("button",{class:"btn sm",type:"button",onclick:()=>{ fin.ind.push({id:Math.random().toString(36).slice(2,8),name:"",group:"",day:null,monthly:null,from:"",to:""}); draw(); box.querySelectorAll(".as-row:not(.as-hd)")[fin.ind.length-1].querySelector("input").focus(); }},"+ ხარჯი"):null,
       h("small",null,tr("თვიური თანხა დღეების მიხედვით ნაწილდება; თარიღები ცარიელი — სამუშაოს დაწყებიდან დასრულებამდე."))));
   draw();
   const ind=h("section",{class:"as-grp as-wide"},h("div",{class:"as-gt"},icon("personnel"),h("span",null,tr("არაპირდაპირი (ზედნადები) ხარჯები")),
