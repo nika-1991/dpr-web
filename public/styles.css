@@ -2263,3 +2263,17 @@ body.side-drag{user-select:none;cursor:col-resize}
 .fs-gh{border-bottom:0;padding:6px 0 2px}
 .fs-g+.fs-g{border-top:1px solid #d3dae2;margin-top:6px;padding-top:2px}
 .fs-g{margin-top:4px}
+/* panel title with level buttons; group titles bolder in teal; rows indented under the title text, small and pale */
+.fs-th{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fs-lv{display:inline-flex;align-items:center;gap:3px;color:#94a3b8}
+.fs-lv .ico{width:14px;height:14px;margin-right:2px}
+.fs-lb{width:20px;height:20px;border:1px solid #d5dce4;border-radius:5px;background:#fff;font:inherit;font-size:.66rem;font-weight:700;color:#475569;cursor:pointer;padding:0;line-height:1}
+.fs-lb:hover{border-color:var(--accent);color:var(--accent)}
+.fs-lb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.fs-gh{font-weight:700;color:var(--accent);font-size:.7rem}
+.fs-gh:hover{color:#00585b}
+.fs-ar{width:10px}
+.pside .fs-g .pside-facts{padding-left:16px}
+.pside .fs-g .pside-fact,.pside .fs-g .pside-fact>span:first-child{font-size:.66rem;color:#64748b}
+.pside .fs-g .pside-fact>b{font-size:.68rem;color:#64748b}
+.pside .fs-g .fs-v input{font-size:.68rem;height:21px}

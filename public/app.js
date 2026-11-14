@@ -2509,7 +2509,10 @@ function renderFinSide(p){
   const grp=(k,t,...kids)=>{ const off=shut.has(k); kids=kids.flat().filter(Boolean); if(!kids.length) return null;
     return h("div",{class:"fs-g"+(off?" off":"")},h("button",{type:"button",class:"fs-gh","aria-expanded":String(!off),onclick:()=>{ off?shut.delete(k):shut.add(k); try{ localStorage.setItem("dpr.fsShut",JSON.stringify([...shut])); }catch(e){} render(); }},
       h("span",{class:"fs-ar"},"▾"),tr(t)),off?null:h("div",{class:"pside-facts"},kids)); };
-  const cf=h("div",{class:"fs-box"},h("div",{class:"fs-t"},tr("CF დაშვებები")),
+  const KS=["work","adv","ret","oth"], lvl=k=>{ KS.forEach(x=>k===1?shut.add(x):shut.delete(x)); try{ localStorage.setItem("dpr.fsShut",JSON.stringify([...shut])); }catch(e){} render(); };
+  const allShut=KS.every(x=>shut.has(x)), noneShut=KS.every(x=>!shut.has(x));
+  const lv=h("span",{class:"fs-lv",title:tr("დონეები")},icon("layers"),[1,2].map(n=>h("button",{type:"button",class:"fs-lb"+((n===1&&allShut)||(n===2&&noneShut)?" on":""),"aria-label":tr("დონე")+" "+n,onclick:()=>lvl(n)},String(n))));
+  const cf=h("div",{class:"fs-box"},h("div",{class:"fs-t fs-th"},h("span",null,tr("CF დაშვებები")),lv),
     grp("work","შესრულება და ჩარიცხვა",inp("f2","ფორმა 2, ყოველ","დღე"),inp("lag","ანაზღაურების ლოდინი","დღე")),
     grp("adv","ავანსი",fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover))),
     grp("ret","დაკავებები",fact("მოკლ.",relS),fact("გრძელ.",relL),
