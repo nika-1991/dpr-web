@@ -2385,3 +2385,10 @@ body.side-drag{user-select:none;cursor:col-resize}
 .tabs.tgroups.trad .tgrp{padding:0 18px!important}
 .tabs.tgroups.trad .tgrp:first-child{padding-left:0!important}
 .tabs.tgroups.trad .tgrp-l{color:#334155!important;font-weight:800}
+/* project section row: no radio dots — the chosen one turns yellow */
+.trad .rb-dot{display:none}
+.tabs.tgroups.trad button.rb-ro{padding:3px 10px!important;gap:6px}
+.tabs.tgroups.trad button.rb-ro.on{background:var(--sel)!important;color:var(--sel-ink)!important;box-shadow:0 1px 3px rgba(170,130,0,.3)!important}
+.tabs.tgroups.trad .rb-ro.on .ico{color:var(--sel-ink)!important}
+.trad .rb-ro .tico.est{display:inline-flex!important;border:0!important;font-size:.95rem!important;font-weight:800;width:14px!important;justify-content:center;padding:0!important;color:#64748b}
+.trad .rb-ro.on .tico.est{color:var(--sel-ink)}
