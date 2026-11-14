@@ -2488,3 +2488,5 @@ body.side-drag{user-select:none;cursor:col-resize}
 .at-two .rl-box{max-width:none}
 .at-two .rl-row{gap:8px}
 .at-two .rl-name{width:160px}
+.at-t th.at-h{cursor:help;text-decoration:underline dotted #b6c0cc;text-underline-offset:3px}
+.at-t tbody td,.at-t tbody th{padding-top:2px;padding-bottom:2px}
