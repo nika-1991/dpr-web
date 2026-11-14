@@ -2504,11 +2504,17 @@ function renderFinSide(p){
   const pct=v=>v!=null&&v!==""?fmtNum(num(v))+"%":"—";
   const relS=p.retShort?pct(p.retShort)+" · "+(p.retShortMode==="days"?"+"+num(p.retShortDays)+" "+tr("დღე"):tr("ბოლოსთან ერთად")):"—";
   const relL=p.retLong?pct(p.retLong)+" · "+(p.retLongMode==="guar"?tr("მოკლესთან ერთად"):"+"+(p.retLongMonths??24)+" "+tr("თვე")):"—";
-  const cf=box("CF დაშვებები",inp("f2","ფორმა 2, ყოველ","დღე"),inp("lag","ანაზღაურების ლოდინი","დღე"),inp("open","საწყისი ნაშთი","₾"),
-    fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover)),
-    fact("დაკავება, მოკლ.",relS),fact("დაკავება, გრძელ.",relL),
-    ...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%")),
-    inp("vat","დღგ","%"),inp("ovDay","ზედნადების რიცხვი",""),inp("vatDay","დღგ-ს რიცხვი",""));
+  /* small collapsible groups: works & payment, advance, retention, other */
+  const shut=S.fsShut||(S.fsShut=(()=>{ try{ return new Set(JSON.parse(localStorage.getItem("dpr.fsShut")||"[]")); }catch(e){ return new Set(); } })());
+  const grp=(k,t,...kids)=>{ const off=shut.has(k); kids=kids.flat().filter(Boolean); if(!kids.length) return null;
+    return h("div",{class:"fs-g"+(off?" off":"")},h("button",{type:"button",class:"fs-gh","aria-expanded":String(!off),onclick:()=>{ off?shut.delete(k):shut.add(k); try{ localStorage.setItem("dpr.fsShut",JSON.stringify([...shut])); }catch(e){} render(); }},
+      h("span",{class:"fs-ar"},"▾"),tr(t)),off?null:h("div",{class:"pside-facts"},kids)); };
+  const cf=h("div",{class:"fs-box"},h("div",{class:"fs-t"},tr("CF დაშვებები")),
+    grp("work","შესრულება და ჩარიცხვა",inp("f2","ფორმა 2, ყოველ","დღე"),inp("lag","ანაზღაურების ლოდინი","დღე")),
+    grp("adv","ავანსი",fact("ავანსის გაქვითვა",advDed),fact("cash cover — ავანსი",pct(p.cashCover))),
+    grp("ret","დაკავებები",fact("მოკლ.",relS),fact("გრძელ.",relL),
+      ...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%"))),
+    grp("oth","სხვა",inp("open","საწყისი ნაშთი","₾"),inp("ovDay","ზედნადების რიცხვი","")));
   const all=h("button",{class:"btn sm ghost fs-all",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ ყველა დაშვება");
   if(S.tab==="cf") return [cf,all];
   if(S.tab==="assume") return [];

@@ -2249,3 +2249,11 @@ body.side-drag{user-select:none;cursor:col-resize}
 .rb-g .vswitch{gap:4px}
 .rb-g .vswitch .vbtn:not(.on){background:#fff;border:1px solid #d5dce4;box-shadow:0 1px 2px rgba(15,23,42,.08)}
 .rb-g .vswitch .vbtn:not(.on):hover{border-color:var(--accent);color:var(--accent)}
+/* side panel groups with a thin heading and a fold arrow */
+.fs-g{margin-top:8px}
+.fs-gh{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;padding:4px 0;font:inherit;font-size:.68rem;font-weight:400;color:#64748b;letter-spacing:.02em;cursor:pointer;text-align:left;border-bottom:1px solid #d3dae2}
+.fs-gh:hover{color:var(--ink)}
+.fs-ar{display:inline-block;font-size:.6rem;transition:transform .15s}
+.fs-g.off .fs-ar{transform:rotate(-90deg)}
+.fs-g .pside-facts{padding-top:2px}
+.fs-g .pside-fact:first-child{border-top:0!important}
