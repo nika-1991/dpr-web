@@ -728,6 +728,7 @@ const ICONS={
   chart:'<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
   chevron:'<path d="m6 15 6-6 6 6"/>',
   add:'<path d="M12 5v14M5 12h14"/>',
+  pen:'<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/>',
   receipt:'<path d="M5 3h14v18l-2.3-1.5L14.3 21 12 19.5 9.7 21l-2.4-1.5L5 21z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
   check:'<path d="M20 6 9 17l-5-5"/>',
   refresh:'<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/>',
@@ -2541,7 +2542,7 @@ function renderFinSide(p){
     const el=h("input",{class:"inp num",inputmode:"decimal",value:f.open!=null&&f.open!==""?fmtNum(num(f.open)):"",disabled:!edit,"aria-label":tr("საწყისი ნაშთი"),
       oninput:e=>fit(e.target),onfocus:e=>{ e.target.value=f.open!=null&&f.open!==""?String(f.open):""; fit(e.target); },
       onchange:e=>{ f.open=num(String(e.target.value).replace(/[\s,]/g,"")); saveSchedule(); setTimeout(render,0); }}); fit(el); return el; })(),h("em",null,"₾"))),cf.children[1]);
-  const all=h("button",{class:"btn sm ghost fs-all",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ ყველა დაშვება");
+  const all=h("button",{class:"fs-pill",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},icon("pen"),tr("ყველა დაშვება"));
   if(S.tab==="cf") return [cf,all];
   if(S.tab==="assume") return [];
   return [pl,all];

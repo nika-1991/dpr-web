@@ -2318,3 +2318,8 @@ body.side-drag{user-select:none;cursor:col-resize}
 .fs-open .fs-v em{width:22px}
 .fs-open .fs-v input{width:var(--w,56px)!important;min-width:56px!important}
 .fs-open{margin:12px 0 6px}
+/* "all assumptions" as a soft blue pill */
+.fs-pill{display:inline-flex;align-items:center;gap:8px;margin:14px 0 0 2px;padding:8px 18px;border:0;border-radius:999px;background:#d8e4fd;color:#1f2a44;font:inherit;font-size:.78rem;font-weight:500;cursor:pointer;box-shadow:0 1px 3px rgba(31,42,68,.15)}
+.fs-pill:hover{background:#c9d9fb}
+.fs-pill .ico{width:15px;height:15px;color:#1f3a8a}
+.fs-pill{align-self:flex-start;width:auto}
