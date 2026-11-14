@@ -2308,3 +2308,6 @@ body.side-drag{user-select:none;cursor:col-resize}
 .pside .fs-ind>span:first-child{grid-column:1/-1}
 .pside .fs-ind .fs-rv b{justify-self:start;padding:0!important;white-space:nowrap}
 .pside .fs-ind .fs-rt{justify-self:end;white-space:nowrap;padding-right:26px}
+/* opening balance: a plain row, white rectangular box on the right with the amount in blue */
+.fs-open{background:none;box-shadow:none;padding:4px 0;margin:4px 0 2px;font-weight:400;font-size:.7rem;color:#334155;border-radius:0}
+.fs-open .fs-v input{border-radius:3px!important;border:1px solid #cbd5e1!important;background:#fff!important;color:#2563a8!important;font-weight:700;height:24px}
