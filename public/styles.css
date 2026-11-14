@@ -2434,3 +2434,12 @@ body.side-drag{user-select:none;cursor:col-resize}
 :root{--sel:linear-gradient(145deg,#d9f5e3,#bfeccf)!important;--sel-ink:#14532d!important}
 .rb-ro.on,.tabs.tgroups.trad button.rb-ro.on{box-shadow:0 1px 3px rgba(21,128,61,.22)!important}
 .rb-g .vswitch .vbtn.on,.rb-b.on,.tabs.tgroups button[aria-selected="true"]{box-shadow:0 1px 3px rgba(21,128,61,.22)!important}
+/* the open project's tab: a child of "projects" — lower than the main tabs, a long rounded slope on the left, straight right side,
+   a thin teal line along the top, plain text */
+.topnav .tn-proj{margin-left:-6px}
+.topnav .tn-proj .tn-l{margin-top:14px!important;height:calc(100% - 14px)!important;padding:0 30px 0 44px!important;
+  border-radius:46px 3px 0 0 / 100% 3px 0 0!important;font-family:var(--f-body)!important;text-transform:none;letter-spacing:0;font-size:.82rem;font-weight:600}
+.topnav .tn-proj.on .tn-l{background:var(--rb-top)!important;color:#0f2a2b!important;font-weight:700;
+  box-shadow:inset 0 2px 0 #2bc4a8,0 -2px 10px -3px rgba(0,0,0,.4)!important}
+.topnav .tn-crumb .tn-l{padding-right:12px!important}
+.topnav .tn-crumb .tn-l::after{opacity:.55}
