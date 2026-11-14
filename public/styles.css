@@ -2290,3 +2290,6 @@ body.side-drag{user-select:none;cursor:col-resize}
 .pside .fs-g .pside-fact>b:has(.fs-rv){padding-right:0}
 .pside .pside-fact:has(.fs-rv)>span:first-child{white-space:nowrap;overflow-wrap:normal}
 .fs-rv{gap:10px}
+/* finance side panel wide enough by default that its labels stay on one line */
+@media (min-width:981px){ body.has-side{--side-w:320px} }
+@media (min-width:981px) and (max-width:1180px){ body.has-side{--side-w:300px} }
