@@ -289,17 +289,19 @@ const RB={groups:null,has:false};
 try{ S.rbMin=localStorage.getItem("dpr.rbMin")==="1"; }catch(e){}
 function rbFold(v){ S.rbMin=v; try{ localStorage.setItem("dpr.rbMin",v?"1":"0"); }catch(e){} render(); }
 /* a compact radio list for the ribbon: [value, label, icon?] per line */
-const rbRadio=(items,cur,on)=>h("div",{class:"rb-rl",role:"radiogroup"},items.map(([v,l,ic])=>h("button",{type:"button",role:"radio","aria-checked":String(cur===v),class:"rb-ro"+(cur===v?" on":""),onclick:()=>on(v)},
+const rbRadio=(items,cur,on,two)=>h("div",{class:"rb-rl"+(two?" two":""),role:"radiogroup"},items.map(([v,l,ic])=>h("button",{type:"button",role:"radio","aria-checked":String(cur===v),class:"rb-ro"+(cur===v?" on":""),onclick:()=>on(v)},
   h("span",{class:"rb-dot"}),ic?icon(ic):null,h("span",null,tr(l)))));
 const rbGrp=(label,...kids)=>h("div",{class:"rb-g"},h("div",{class:"rb-gl"},label),h("div",{class:"rb-gb"},kids));
 /* a page switch: icon over a short label */
 const rbBtn=(on,ic,label,fn,tip)=>h("button",{type:"button",class:"rb-b"+(on?" on":""),"aria-pressed":String(!!on),title:tip?tr(tip):null,onclick:fn},icon(ic),h("span",null,label));
 function appRibbon(){
-  if(S.view==="company"){ const t=S.coTab||"pl", b=(k,ic,l)=>rbBtn(t===k,ic,l,()=>{ S.coTab=k; render(); });
-    return [rbGrp("ანგარიშგება",b("pl","chart","P&L"),b("cf","pulse","CF")),rbGrp("დაშვებები",b("fixed","building","ფიქსირებული ხარჯები"),b("loans","coins","სესხები"),b("set","issues","ერთჯერადი"))]; }
-  if(S.view==="reports"){ const t=S.rpTab||"ibl", b=(k,ic,l,tip)=>rbBtn(t===k,ic,l,()=>{ S.rpTab=k; render(); },tip);
-    return [rbGrp("რეესტრები",b("ibl","coins","Liabilities","Interest bearing liabilities"),b("ret","pause","Retention"),b("pledge","building","Pledged assets"),b("guar","checkc","Guarantees"))]; }
-  if(S.view==="settings"||S.view==="users") return [rbGrp("პარამეტრები",rbBtn(S.view==="users","personnel","მომხმარებლები",()=>{ S.userSel=null; go("users"); }),rbBtn(S.view==="settings","list","სიები",()=>go("settings")))];
+  /* radio lists like the projects ribbon; four or more options go into two columns */
+  const R=(label,items,cur,on)=>rbGrp(label,rbRadio(items,cur,on,items.length>=4));
+  if(S.view==="company"){ const t=S.coTab||"pl", go_=k=>{ S.coTab=k; render(); };
+    return [R("ანგარიშგება",[["pl","P&L","chart"],["cf","CF","pulse"]],t,go_),R("დაშვებები",[["fixed","ფიქსირებული ხარჯები","building"],["loans","სესხები","coins"],["set","ერთჯერადი","issues"]],t,go_)]; }
+  if(S.view==="reports"){ const t=S.rpTab||"ibl";
+    return [R("რეესტრები",[["ibl","Liabilities","coins"],["ret","Retention","pause"],["pledge","Pledged assets","building"],["guar","Guarantees","checkc"]],t,k=>{ S.rpTab=k; render(); })]; }
+  if(S.view==="settings"||S.view==="users") return [R("პარამეტრები",[["users","მომხმარებლები","personnel"],["settings","სიები","list"]],S.view,k=>{ if(k==="users") S.userSel=null; go(k); })];
   return null;
 }
 function renderRibbon(){
@@ -596,8 +598,12 @@ function renderProject(){
     h("button",{type:"button",class:"tip st-ic "+(p.archived?"reopen":"finish"),"data-tip":stateTip,"aria-label":stateTip,onclick:async()=>{
       if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
       try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},icon(p.archived?"refresh":"checkc")))):null;
-  const tabBar=h("div",{class:"tabs tgroups",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
-    return b.length?h("div",{class:"tgrp"+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"tgrp-b"},b.map(tabBtn))):null; }),stateBtn);
+  /* section row as compact radio lists (icon + short name); four or more go into two columns */
+  const SHORT={schedule:"გეგმა-გრაფიკი",exec:"შესრულების გეგმა",reports:"ანგარიშები",progress:"პროგრესი",pl:"P&L",cf:"CF",othercost:"სხვა ხარჯები",assume:"დაშვებები",info:"მონაცემები",boq:"BoQ",team:"გუნდი"};
+  const tabRo=k=>h("button",{type:"button",role:"tab",class:"rb-ro tro"+(S.tab===k?" on":""),"aria-selected":String(S.tab===k),title:tr(tabName.get(k)),
+    onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},h("span",{class:"rb-dot"}),tabIcon(k),h("span",null,tr(SHORT[k]||tabName.get(k))));
+  const tabBar=h("div",{class:"tabs tgroups trad",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
+    return b.length?h("div",{class:"tgrp tgrp-r"+(b.includes(S.tab)?" on":"")},h("span",{class:"tgrp-l"},l),h("div",{class:"rb-rl"+(b.length>=4?" two":"")},b.map(tabRo))):null; }),stateBtn);
   let body;
   if(S.tab==="reports") body=renderReportsTab(p);
   else if(S.tab==="progress") body=renderProgress(p);

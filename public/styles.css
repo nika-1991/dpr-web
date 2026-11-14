@@ -2351,3 +2351,37 @@ body.side-drag{user-select:none;cursor:col-resize}
 .rb-g .rb-add{width:34px;height:34px}
 .rb-g .rb-gb>label.home-search{align-self:flex-start;margin-top:0!important;height:30px!important;min-height:30px!important}
 .rb-g:first-child .rb-gb{flex:0 0 auto}
+/* clearer separation between ribbon groups */
+.rb-g+.rb-g::before{width:1px!important;background:#b9c3cf!important;top:2px!important;bottom:2px!important}
+.rb-g{padding:0 18px}
+.rb-gl{color:#334155;font-weight:800}
+/* radio lists with 4+ options in two columns */
+.rb-rl.two{display:grid;grid-template-columns:auto auto;grid-auto-flow:column;grid-template-rows:repeat(2,auto);column-gap:14px}
+/* project section row as radio lists */
+.ptabs>.tabs.tgroups.trad{align-items:flex-start!important;padding:8px 14px 10px!important;gap:0!important}
+.trad .tgrp-r{display:flex;flex-direction:column;gap:4px;padding:0 18px;position:relative;background:none!important;box-shadow:none!important;border:0!important}
+.trad .tgrp-r+.tgrp-r::before,.trad .tgrp-state::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:1px;background:#b9c3cf}
+.trad .tgrp-state{position:relative;padding:0 18px;display:flex;flex-direction:column;gap:4px}
+.trad .tgrp-l{font-size:.68rem;font-weight:800;color:#334155;text-transform:none;letter-spacing:0}
+.trad .tgrp-r.on .tgrp-l{color:#334155}
+.tabs.tgroups.trad button.rb-ro{all:unset;display:flex;align-items:center;gap:7px;padding:2px 8px 2px 2px;border-radius:6px;font-size:.74rem;color:#334155;cursor:pointer;white-space:nowrap;line-height:1.35;box-sizing:border-box}
+.tabs.tgroups.trad button.rb-ro:hover{background:rgba(255,255,255,.7)}
+.tabs.tgroups.trad button.rb-ro.on{font-weight:700;color:#0f172a;background:none!important;box-shadow:none!important}
+.trad .rb-ro .ico,.trad .rb-ro .tico{width:14px!important;height:14px!important;min-width:0!important;color:#64748b;opacity:1}
+.trad .rb-ro .tico{display:none}
+.trad .rb-ro.on .ico{color:var(--accent)}
+.trad .tgrp-state .tgrp-b{padding:0!important;background:none!important;box-shadow:none!important}
+.tabs.tgroups.trad button.rb-ro,.tabs.tgroups.trad button.rb-ro:not([aria-selected="true"]):not(.st-ic){background:none!important;border:0!important;box-shadow:none!important;border-radius:6px!important;white-space:nowrap!important;width:auto!important;height:auto!important;padding:2px 8px 2px 2px!important;color:#334155}
+.tabs.tgroups.trad button.rb-ro:hover{background:rgba(255,255,255,.75)!important;color:var(--accent)}
+.tabs.tgroups.trad button.rb-ro.on{color:#0f172a!important;font-weight:700}
+.tabs.tgroups.trad .rb-ro .ico{color:#64748b!important}
+.tabs.tgroups.trad .rb-ro.on .ico{color:var(--accent)!important}
+.trad .tgrp-r::after,.trad .tgrp::after,.trad .tgrp-state::after{display:none!important;content:none!important}
+.trad .tgrp-r,.trad .tgrp-state{margin:0!important;border:0!important}
+.trad .rb-ro>span{white-space:nowrap}
+.trad .tgrp+.tgrp::before,.trad .tgrp+.tgrp-state::before{content:""!important;display:block!important;position:absolute!important;left:0!important;top:2px!important;bottom:2px!important;height:auto!important;width:1px!important;background:#aab5c3!important;transform:none!important;margin:0!important}
+.trad .tgrp,.trad .tgrp-state{position:relative}
+.tabs.tgroups.trad .tgrp+.tgrp::before{top:2px!important;bottom:2px!important;left:0!important;width:1px!important;background:#aab5c3!important;box-shadow:none!important}
+.tabs.tgroups.trad .tgrp{padding:0 18px!important}
+.tabs.tgroups.trad .tgrp:first-child{padding-left:0!important}
+.tabs.tgroups.trad .tgrp-l{color:#334155!important;font-weight:800}
