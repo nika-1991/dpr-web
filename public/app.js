@@ -2505,8 +2505,10 @@ function renderFinSide(p){
   /* CF: the assumptions that drive the cash flow, plus the project's advance recovery, cash cover and retention release terms */
   const advDed=p.advancePct?(p.advFrom!=null||p.advTo!=null?fmtNum(p.advFrom||0)+"–"+fmtNum(p.advTo??100)+"%":tr("თანაბრად")):"—";
   const pct=v=>v!=null&&v!==""?fmtNum(num(v))+"%":"—";
-  const relS=p.retShort?pct(p.retShort)+" · "+(p.retShortMode==="days"?"+"+num(p.retShortDays)+" "+tr("დღე"):tr("ბოლოსთან ერთად")):"—";
-  const relL=p.retLong?pct(p.retLong)+" · "+(p.retLongMode==="guar"?tr("მოკლესთან ერთად"):"+"+(p.retLongMonths??24)+" "+tr("თვე")):"—";
+  /* "2.5%   დასრ. + 30 დღე": the % and, apart from it, when it comes back (counted from the last works payment) */
+  const rv=(v,t)=>v?h("span",{class:"fs-rv"},h("span",null,pct(v)),h("span",{class:"fs-rt"},t)):"—";
+  const relS=rv(p.retShort,p.retShortMode==="days"?tr("დასრ.")+" + "+num(p.retShortDays)+" "+tr("დღე"):tr("დასრ.")+" + 0 "+tr("დღე"));
+  const relL=rv(p.retLong,p.retLongMode==="guar"?tr("მოკლ.-თან ერთად"):tr("დასრ.")+" + "+(p.retLongMonths??24)+" "+tr("თვე"));
   /* small collapsible groups: works & payment, advance, retention, other */
   const shut=S.fsShut||(S.fsShut=(()=>{ try{ return new Set(JSON.parse(localStorage.getItem("dpr.fsShut")||"[]")); }catch(e){ return new Set(); } })());
   const grp=(k,t,...kids)=>{ const off=shut.has(k); kids=kids.flat().filter(Boolean); if(!kids.length) return null;

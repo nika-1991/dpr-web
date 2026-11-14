@@ -2285,3 +2285,8 @@ body.side-drag{user-select:none;cursor:col-resize}
 .cd-g2>.cd-cover{grid-column:span 5}
 .cd-g2>.cd-contractValue,.cd-g2>.cd-advancePct,.cd-g2>.cd-advanceDate,.cd-g2>.cd-advDed,.cd-g2>.cd-cover{grid-column:span 4}
 .cd-g2 .cd-advanceDate div.cd-v{overflow:visible;text-overflow:clip}
+.fs-rv{display:inline-flex;gap:14px;align-items:baseline}
+.fs-rt{font-family:var(--f-body);font-weight:500}
+.pside .fs-g .pside-fact>b:has(.fs-rv){padding-right:0}
+.pside .pside-fact:has(.fs-rv)>span:first-child{white-space:nowrap;overflow-wrap:normal}
+.fs-rv{gap:10px}
