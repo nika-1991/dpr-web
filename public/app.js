@@ -2537,8 +2537,10 @@ function renderFinSide(p){
     grp("ret","დაკავებები",fact("მოკლ.",relS),fact("გრძელ.",relL),
       ...(f.rules||[]).filter(x=>x.on!==false&&x.name).map(x=>fact(x.name,x.base==="fixed"?gel0(num(x.amount)):fmtNum(num(x.pct))+"%"))),
     grp("oth","არაპირდაპირი ხარჯი",(()=>{ const t=indGroups(p,{...f,ind:f.ind.map(x=>({...x,group:"*"}))})[0]; return t?fact("სულ, თვეში",t[1]):null; })(),indGroups(p,f).map(([n,amt,day])=>h("div",{class:"pside-fact fs-ind"},h("span",null,n),h("span",{class:"fs-rv"},h("b",null,amt),h("span",{class:"fs-rt"},day))))));
-  cf.insertBefore(h("label",{class:"fs-open"},h("span",null,tr("საწყისი ნაშთი")),h("span",{class:"fs-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(f.open??""),disabled:!edit,"aria-label":tr("საწყისი ნაშთი"),
-    onchange:e=>{ f.open=num(e.target.value); saveSchedule(); setTimeout(render,0); }}),h("em",null,"₾"))),cf.children[1]);
+  cf.insertBefore(h("label",{class:"fs-open"},h("span",null,tr("საწყისი ნაშთი")),h("span",{class:"fs-v"},(()=>{ const fit=el=>{ el.style.setProperty("--w",Math.max(56,el.value.length*7.2+16)+"px"); };
+    const el=h("input",{class:"inp num",inputmode:"decimal",value:f.open!=null&&f.open!==""?fmtNum(num(f.open)):"",disabled:!edit,"aria-label":tr("საწყისი ნაშთი"),
+      oninput:e=>fit(e.target),onfocus:e=>{ e.target.value=f.open!=null&&f.open!==""?String(f.open):""; fit(e.target); },
+      onchange:e=>{ f.open=num(String(e.target.value).replace(/[\s,]/g,"")); saveSchedule(); setTimeout(render,0); }}); fit(el); return el; })(),h("em",null,"₾"))),cf.children[1]);
   const all=h("button",{class:"btn sm ghost fs-all",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ ყველა დაშვება");
   if(S.tab==="cf") return [cf,all];
   if(S.tab==="assume") return [];
