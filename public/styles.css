@@ -2392,3 +2392,8 @@ body.side-drag{user-select:none;cursor:col-resize}
 .tabs.tgroups.trad .rb-ro.on .ico{color:var(--sel-ink)!important}
 .trad .rb-ro .tico.est{display:inline-flex!important;border:0!important;font-size:.95rem!important;font-weight:800;width:14px!important;justify-content:center;padding:0!important;color:#64748b}
 .trad .rb-ro.on .tico.est{color:var(--sel-ink)}
+/* all ribbon lists: icon + text, the chosen one yellow (no radio dots; the problems lines keep their coloured dots) */
+.rb-ro:not(:has(b)) .rb-dot{display:none}
+.rb-ro{padding:3px 10px!important;gap:6px}
+.rb-ro.on{background:var(--sel)!important;color:var(--sel-ink)!important;font-weight:700;box-shadow:0 1px 3px rgba(170,130,0,.3)}
+.rb-ro.on .ico{color:var(--sel-ink)!important}

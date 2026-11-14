@@ -437,8 +437,8 @@ function renderHome(){
   RB.groups=[
     rbGrp("ძებნა",h("label",{class:"home-search"},icon("search"),search)),
     /* compact radio lists, one option per line */
-    companies.length?rbGrp("კომპანია",rbRadio([["","ყველა"],...companies.map(c=>[c,c])],F.co,k=>{ F.co=k; render(); })):null,
-    rbGrp("პროექტი",rbRadio([["all","ყველა"],["active","მიმდინარე"],["archived","დასრულებული"]],F.f,k=>{ F.f=k; render(); })),
+    companies.length?rbGrp("კომპანია",rbRadio([["","ყველა","layers"],...companies.map(c=>[c,c,"building"])],F.co,k=>{ F.co=k; render(); })):null,
+    rbGrp("პროექტი",rbRadio([["all","ყველა","layers"],["active","მიმდინარე","pulse"],["archived","დასრულებული","checkc"]],F.f,k=>{ F.f=k; render(); })),
     rbGrp("ხედი",rbRadio([["cards","ბარათები","grid"],["table","სია","table"]],F.view,k=>{ F.view=k; try{ localStorage.setItem("dpr.homeView",k); }catch(e){} render(); })),
     rbGrp("პრობლემები",h("div",{class:"rb-rl"},
       h("button",{type:"button",class:"rb-ro",title:tr("მოგვარებული საკითხების სია"),onclick:()=>openIssues("done",shown)},h("span",{class:"rb-dot"}),h("span",null,tr("გადაჭრილი")),h("b",{class:"ok"},String(shown.reduce((a,p)=>a+(st(p).issuesResolved||0),0)))),
