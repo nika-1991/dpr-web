@@ -2293,3 +2293,5 @@ body.side-drag{user-select:none;cursor:col-resize}
 /* finance side panel wide enough by default that its labels stay on one line */
 @media (min-width:981px){ body.has-side{--side-w:320px} }
 @media (min-width:981px) and (max-width:1180px){ body.has-side{--side-w:300px} }
+.fs-gh{color:#475569;font-weight:700}
+.fs-gh:hover{color:var(--ink)}
