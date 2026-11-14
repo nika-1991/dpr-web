@@ -2324,3 +2324,7 @@ body.side-drag{user-select:none;cursor:col-resize}
 .fs-pill .ico{width:15px;height:15px;color:#1f3a8a}
 .fs-pill{align-self:flex-start;width:auto}
 .fs-pi{font-size:1.05rem;font-weight:800;line-height:1;color:#1f3a8a}
+/* pill in the app's own teal tint */
+.fs-pill{background:#dcefee;color:#0b4a49;box-shadow:0 1px 3px rgba(0,80,84,.18)}
+.fs-pill:hover{background:#cbe7e5}
+.fs-pi{color:#00696d}
