@@ -2586,10 +2586,12 @@ function renderAssume(p){
     return h("button",{type:"button",class:"at-tag at-tg "+kind+(on?"":" off"),disabled:!edit,"aria-pressed":String(on),title:tr(on?"ჩანს ანგარიშგებაში — დააჭირეთ გამოსართავად":"არ ჩანს — დააჭირეთ ჩასართავად"),
       onclick:()=>{ show[key]={...(show[key]||{pl:true,cf:true}),[kind]:!on}; save(); setTimeout(render,0); }},lbl); };
   /* row: [short label, full label, value node, applies: "pl"|"cf"|"both"|"param"|"paramCF", toggle key, hint] */
-  const row=(label,full,v,on,key,hint)=>h("tr",null,
+  const shut=S.atShut||(S.atShut=new Set()); let curG="";
+  const row=(label,full,v,on,key,hint)=>shut.has(curG)?null:h("tr",null,
     h("th",{scope:"row",title:tr(full)+(hint?" — "+tr(hint):""),class:"at-h"},tr(label)),h("td",null,v),
     h("td",{class:"at-c"},tag(key,"pl",on!=="cf"&&on!=="paramCF")),h("td",{class:"at-c"},tag(key,"cf",on!=="pl")));
-  const G=(t)=>h("tr",{class:"at-g"},h("th",{colspan:"4"},tr(t)));
+  const G=(t)=>{ curG=t; const off=shut.has(t);
+    return h("tr",{class:"at-g"+(off?" off":"")},h("th",{colspan:"4"},h("button",{type:"button",class:"fs-gh","aria-expanded":String(!off),onclick:()=>{ off?shut.delete(t):shut.add(t); render(); }},h("span",{class:"fs-ar"},"▾"),tr(t)))); };
   const indM=fin.ind.reduce((a,x)=>a+num(x.monthly),0);
   const A=num(p.contractValue)*num(p.advancePct)/100;
   const table=h("table",{class:"at-t"},

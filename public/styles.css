@@ -2511,3 +2511,19 @@ body.side-drag{user-select:none;cursor:col-resize}
 .at-v input{width:var(--aw,40px)!important;min-width:0;height:20px!important;min-height:0!important;padding:0 4px!important;font-size:.72rem!important;line-height:20px}
 .at-v b{min-width:0}
 .at-two{grid-template-columns:auto minmax(0,1fr)}
+/* assumptions table in the side-panel look: soft grey card, bold group titles with a fold arrow, small pale indented rows, recessed inputs */
+.at-left{background:#eef1f5!important;border:0!important;border-radius:14px!important;box-shadow:4px 4px 10px rgba(100,118,140,.25),-4px -4px 10px rgba(255,255,255,.9)!important;padding:10px 14px 10px!important}
+.at-left>.as-gt{border:0;padding-bottom:2px;color:#1f2a37;font-size:.74rem;font-weight:800}
+.at-left>.as-gt .fs-pi{color:#1f2a37}
+.at-t thead th{border-bottom:0;color:#94a3b8;font-weight:600;font-size:.6rem;padding:0 6px 2px}
+.at-t tr.at-g th{padding:6px 0 1px!important;border-top:1px solid #d3dae2!important}
+.at-t tr.at-g:nth-child(1) th{border-top:0!important}
+.at-t tr.at-g .fs-gh{font-size:.7rem;padding:2px 0}
+.at-t tr.at-g.off .fs-ar{transform:rotate(-90deg)}
+.at-t tbody th{padding:2px 18px 2px 16px!important;font-size:.66rem!important;color:#64748b!important;font-weight:400}
+.at-t tbody td{padding:2px 6px}
+.at-v b{font-size:.68rem!important;color:#64748b!important}
+.at-v em{font-size:.66rem;color:#94a3b8}
+.at-v input{background:#e6eaef!important;border:0!important;border-radius:8px!important;box-shadow:inset 2px 2px 4px rgba(100,118,140,.35),inset -2px -2px 4px rgba(255,255,255,.95)!important;color:#1e293b;height:21px!important;font-size:.68rem!important}
+.at-left .as-link{font-size:.66rem}
+.at-t th.at-h{text-decoration:none}
