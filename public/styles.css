@@ -2577,3 +2577,10 @@ body.side-drag{user-select:none;cursor:col-resize}
 .sp-x{border:0;background:none;color:#94a3b8;cursor:pointer;font-size:.8rem}
 .sp-x:hover{color:#c0262d}
 .at-two{grid-template-columns:auto minmax(0,1fr)}
+/* special conditions in the same soft grey card as the assumptions; white fields stand out on it */
+.sp-box{background:#eef1f5!important;border:0!important;border-radius:14px!important;box-shadow:4px 4px 10px rgba(100,118,140,.25),-4px -4px 10px rgba(255,255,255,.9)!important}
+.sp-wrap{border-top:1px solid #d3dae2}
+.sp-t td{border-top:1px solid #dde3ea}
+.sp-t th{color:#475569}
+.sp-t .inp,.sp-sb:not(.on),.sp-cnt{background:#fff;border-color:#cfd7e0}
+.sp-ic{background:#dcefee}
