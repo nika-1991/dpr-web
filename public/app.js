@@ -2575,43 +2575,44 @@ function renderAssume(p){
   const pv=v=>v!=null&&v!==""?fmtNum(num(v))+"%":"—";
   /* one table: assumption · value · unit · where it applies · shown in P&L · shown in CF */
   const inp=(k,u)=>h("span",{class:"at-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(fin[k]??""),disabled:!edit,"aria-label":k,onchange:e=>{ fin[k]=num(e.target.value); save(); setTimeout(render,0); }}),h("em",null,u||""));
-  const val=(v)=>h("span",{class:"at-v"},h("b",null,v));
-  const chk=(key,kind)=>{ const cur=(show[key]||{})[kind]!==false;
-    return h("input",{type:"checkbox",checked:cur,disabled:!edit,"aria-label":key+" "+kind,onchange:e=>{ show[key]={...(show[key]||{pl:true,cf:true}),[kind]:e.target.checked}; save(); setTimeout(render,0); }}); };
-  /* row: [label, value node, on: "pl"|"cf"|"both"|"param", toggle key] */
-  const tags=on=>h("span",{class:"at-tags"},on!=="cf"&&on!=="paramCF"?h("span",{class:"at-tag pl"},"P&L"):null,on!=="pl"?h("span",{class:"at-tag cf"},"CF"):null);
-  const row=(label,v,on,key,hint)=>h("tr",{class:key&&(((show[key]||{}).pl===false&&on!=="cf")||((show[key]||{}).cf===false&&on!=="pl"))?"at-off":""},
-    h("th",{scope:"row",title:hint?tr(hint):null,class:hint?"at-h":null},tr(label)),h("td",null,v),h("td",{class:"at-c"},on!=="cf"&&on!=="paramCF"?h("span",{class:"at-tag pl"},"P&L"):null),h("td",{class:"at-c"},on!=="pl"?h("span",{class:"at-tag cf"},"CF"):null),
-    h("td",{class:"at-c"},key&&(on==="pl"||on==="both")?chk(key,"pl"):h("span",{class:"at-na"},"·")),
-    h("td",{class:"at-c"},key&&(on==="cf"||on==="both")?chk(key,"cf"):h("span",{class:"at-na"},"·")));
-  const G=(t)=>h("tr",{class:"at-g"},h("th",{colspan:"6"},tr(t)));
+  const val=(v)=>h("span",{class:"at-v"},h("b",null,v),h("em",null,""));
+  /* P&L / CF tag: coloured when the line goes into that statement, grey when it doesn't — click to switch */
+  const tag=(key,kind,applies)=>{ if(!applies) return null; const lbl=kind==="pl"?"P&L":"CF";
+    if(!key) return h("span",{class:"at-tag "+kind,title:tr("პარამეტრი — ყოველთვის მოქმედებს")},lbl);
+    const on=(show[key]||{})[kind]!==false;
+    return h("button",{type:"button",class:"at-tag at-tg "+kind+(on?"":" off"),disabled:!edit,"aria-pressed":String(on),title:tr(on?"ჩანს ანგარიშგებაში — დააჭირეთ გამოსართავად":"არ ჩანს — დააჭირეთ ჩასართავად"),
+      onclick:()=>{ show[key]={...(show[key]||{pl:true,cf:true}),[kind]:!on}; save(); setTimeout(render,0); }},lbl); };
+  /* row: [short label, full label, value node, applies: "pl"|"cf"|"both"|"param"|"paramCF", toggle key, hint] */
+  const row=(label,full,v,on,key,hint)=>h("tr",null,
+    h("th",{scope:"row",title:tr(full)+(hint?" — "+tr(hint):""),class:"at-h"},tr(label)),h("td",null,v),
+    h("td",{class:"at-c"},tag(key,"pl",on!=="cf"&&on!=="paramCF")),h("td",{class:"at-c"},tag(key,"cf",on!=="pl")));
+  const G=(t)=>h("tr",{class:"at-g"},h("th",{colspan:"4"},tr(t)));
   const indM=fin.ind.reduce((a,x)=>a+num(x.monthly),0);
   const A=num(p.contractValue)*num(p.advancePct)/100;
   const table=h("table",{class:"at-t"},
-    h("thead",null,h("tr",null,h("th",{rowspan:"2"},tr("დაშვება")),h("th",{rowspan:"2"},tr("მნიშვნელობა")),h("th",{colspan:"2",class:"at-c at-gh"},tr("მოქმედებს")),h("th",{colspan:"2",class:"at-c at-gh"},tr("ჩვენება"))),
-      h("tr",null,h("th",{class:"at-c"},"P&L"),h("th",{class:"at-c"},"CF"),h("th",{class:"at-c"},"P&L"),h("th",{class:"at-c"},"CF"))),
+    h("thead",null,h("tr",null,h("th",null,tr("დაშვება")),h("th",null,tr("მნიშვნელობა")),h("th",{colspan:"2",class:"at-c"},tr("მოქმედებს")))),
     h("tbody",null,
       G("შესრულება და ჩარიცხვა"),
-      row("ფორმა 2-ის პერიოდულობა",inp("f2","დღე"),"paramCF",null,"0 — შესრულების გეგმის თარიღებით"),
-      row("ანაზღაურების ლოდინი",inp("lag","დღე"),"paramCF",null,"ფორმა 2-იდან ჩარიცხვამდე"),
-      row("დაწყების გადადება",inp("shift","დღე"),"param",null,"მთელი გეგმა გადაიწევს"),
+      row("ფორმა 2, ყოველ","ფორმა 2-ის პერიოდულობა",inp("f2","დღე"),"paramCF",null,"0 — შესრულების გეგმის თარიღებით"),
+      row("ანაზღ. ლოდინი","ანაზღაურების ლოდინი",inp("lag","დღე"),"paramCF",null,"ფორმა 2-იდან ჩარიცხვამდე"),
+      row("დაწყ. გადადება","დაწყების გადადება",inp("shift","დღე"),"param",null,"მთელი გეგმა გადაიწევს"),
       G("ავანსი"),
-      row("ავანსი",val(pv(p.advancePct)+(A?" · "+gel0(A):"")),"cf","adv"),
-      row("ავანსის ჩარიცხვა",val((p.advanceDate||p.contractDate)?fmtDate(p.advanceDate||p.contractDate):"—"),"cf","adv"),
-      row("ავანსის გაქვითვა",val(p.advancePct?(p.advFrom!=null||p.advTo!=null?fmtNum(num(p.advFrom))+"–"+fmtNum(p.advTo??100)+"%":tr("თანაბრად")):"—"),"cf","adv"),
-      row("cash cover — ავანსი",val(p.cashCover?pv(p.cashCover)+" · "+gel0(A*num(p.cashCover)/100):"—"),"cf","cover"),
+      row("ავანსი","ავანსი — % და თანხა",val(pv(p.advancePct)+(A?" · "+gel0(A):"")),"cf","adv","პროექტის მონაცემებიდან"),
+      row("ჩარიცხვა","ავანსის ჩარიცხვის თარიღი",val((p.advanceDate||p.contractDate)?fmtDate(p.advanceDate||p.contractDate):"—"),"cf","adv","პროექტის მონაცემებიდან"),
+      row("გაქვითვა","ავანსის გაქვითვა",val(p.advancePct?(p.advFrom!=null||p.advTo!=null?fmtNum(num(p.advFrom))+"–"+fmtNum(p.advTo??100)+"%":tr("თანაბრად")):"—"),"cf","adv","შესრულების რომელ %-ებს შორის იქვითება"),
+      row("cash cover","cash cover — ავანსი",val(p.cashCover?pv(p.cashCover)+" · "+gel0(A*num(p.cashCover)/100):"—"),"cf","cover","ავანსის მიღებისას იბლოკება, გაქვითვასთან ერთად თავისუფლდება"),
       G("დაკავებები"),
-      row("მოკლევადიანი",val(pv(p.retShort)),"cf","ret"),
-      row("გრძელვადიანი",val(pv(p.retLong)),"cf","ret"),
+      row("მოკლ.","მოკლევადიანი დაკავება",val(pv(p.retShort)),"cf","ret","პროექტის მონაცემებიდან"),
+      row("გრძელ.","გრძელვადიანი დაკავება",val(pv(p.retLong)),"cf","ret","პროექტის მონაცემებიდან"),
       G("ხარჯები"),
-      row("გაუთვალისწინებელი ხარჯი",inp("cont","%"),"both","cont","შემოსავლის %"),
-      row("მობილიზაცია / დემობილიზაცია",inp("mob","%"),"both","mob","შემოსავლის %"),
-      row("არაპირდაპირი ხარჯი, თვეში",val(indM?gel0(indM):"—"),"both","ind","„სხვა ხარჯებიდან“"),
-      row("არაპირდაპირის გადახდის რიცხვი",inp("ovDay",""),"paramCF",null,"მომდევნო თვის"),
+      row("გაუთვალისწ.","გაუთვალისწინებელი ხარჯი",inp("cont","%"),"both","cont","შემოსავლის %"),
+      row("მობ./დემობ.","მობილიზაცია / დემობილიზაცია",inp("mob","%"),"both","mob","შემოსავლის %"),
+      row("არაპირდ., თვეში","არაპირდაპირი ხარჯი, თვეში",val(indM?gel0(indM):"—"),"both","ind","„სხვა ხარჯების“ გვერდიდან"),
+      row("არაპირდ. რიცხვი","არაპირდაპირი ხარჯის გადახდის რიცხვი",inp("ovDay",""),"paramCF",null,"მომდევნო თვის რიცხვი"),
       G("გადასახადები და ნაშთი"),
-      row("დღგ-ს განაკვეთი",inp("vat","%"),"cf","vat"),
-      row("დღგ-ს გადახდის რიცხვი",inp("vatDay",""),"paramCF",null,"მომდევნო თვის"),
-      row("საწყისი ნაშთი",inp("open","₾"),"cf","open")));
+      row("დღგ","დღგ-ს განაკვეთი",inp("vat","%"),"cf","vat"),
+      row("დღგ, რიცხვი","დღგ-ს გადახდის რიცხვი",inp("vatDay",""),"paramCF",null,"მომდევნო თვის რიცხვი"),
+      row("საწყ. ნაშთი","საწყისი ნაშთი",inp("open","₾"),"cf","open")));
   const toProj=h("button",{class:"as-link",type:"button",onclick:()=>{ S.tab="info"; pushNav(); render(); }},tr("ავანსი და დაკავებები იცვლება: პროექტის მონაცემები")+" →");
   return h("div",{class:"as-page at-page"},h("div",{class:"row",style:"justify-content:flex-end;margin-bottom:6px"},h("span",{id:"sched-status",class:"muted small"})),
     h("div",{class:"at-two"},h("section",{class:"as-grp at-left"},h("div",{class:"as-gt"},h("span",{class:"fs-pi"},"≈"),h("span",null,tr("დაშვებები"))),table,toProj),renderRules(p,fin,edit)));

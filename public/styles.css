@@ -2490,3 +2490,16 @@ body.side-drag{user-select:none;cursor:col-resize}
 .at-two .rl-name{width:160px}
 .at-t th.at-h{cursor:help;text-decoration:underline dotted #b6c0cc;text-underline-offset:3px}
 .at-t tbody td,.at-t tbody th{padding-top:2px;padding-bottom:2px}
+/* compact assumptions table: rectangular right-aligned inputs, clickable P&L / CF tags */
+.at-two{grid-template-columns:minmax(0,500px) minmax(0,1fr)}
+.at-v input{border-radius:2px!important;text-align:right;width:76px;border:1px solid #cbd5e1;background:#fff;box-shadow:none}
+.at-v b{display:inline-block;min-width:76px;text-align:right}
+.at-t td:nth-child(2){text-align:right;width:1%;white-space:nowrap}
+.at-t thead th:nth-child(2){text-align:right}
+.at-t td.at-c{width:46px}
+.at-tg{border:0;cursor:pointer;font:inherit;font-size:.6rem;font-weight:700}
+.at-tg.off{background:#eef1f4!important;color:#b6c0cc!important}
+.at-tg:hover{filter:brightness(.95)}
+.at-tg:disabled{cursor:default}
+.at-v{justify-content:flex-end}
+.at-v em{display:inline-block;width:24px;min-width:24px;text-align:left}
