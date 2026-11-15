@@ -236,9 +236,13 @@ function renderBar(){
   const ti=(v,l,ic)=>h("button",{type:"button",class:"tn-i"+(cur===v?" on":"")+(ic?" tn-ic":""),"aria-current":cur===v?"page":null,title:ic?tr(l):null,"aria-label":ic?tr(l):null,
     onclick:()=>{ if(cur===v&&RB.has){ rbFold(!S.rbMin); return; } go(v); }},h("span",{class:"tn-l"},ic?icon(ic):tr(l)));
   /* inside a project: "projects ▸" then a tab of its own for the open project */
-  const projTab=inProj?h("button",{type:"button",class:"tn-i tn-proj"+(cur==="proj"?" on":""),"aria-current":"page",title:P().name||"",
-    onclick:()=>{ if(S.view==="report"){ go("project",{pid:S.pid,tab:S.tab||"reports"}); return; } if(RB.has) rbFold(!S.rbMin); }},h("span",{class:"tn-l"},pShort(P()))):null;
-  const homeTab=ti("home","პროექტები"); if(inProj) homeTab.classList.add("tn-crumb");
+  /* inside a project the "projects" tab stays open and reads "projects › <project>" */
+  const homeTab=inProj?h("div",{class:"tn-i on tn-path","aria-current":"page"},h("span",{class:"tn-l"},
+      h("button",{type:"button",class:"tn-up",title:tr("პროექტების სია"),onclick:()=>go("home")},tr("პროექტები")),
+      h("span",{class:"tn-sep","aria-hidden":"true"},"›"),
+      h("button",{type:"button",class:"tn-cur",title:P().name||"",onclick:()=>{ if(S.view==="report"){ go("project",{pid:S.pid,tab:S.tab||"reports"}); return; } if(RB.has) rbFold(!S.rbMin); }},pShort(P()))))
+    :ti("home","პროექტები");
+  const projTab=null;
   tn.replaceChildren(...(S.me&&!S.me.mustChange?[homeTab,projTab,S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,ti("reports","რეპორტები"),
 S.admin||S.reviewer?ti("analysis","ანალიტიკა"):null].filter(Boolean):[]));
   /* settings sit on the right, by the language and account buttons */

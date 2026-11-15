@@ -2628,3 +2628,10 @@ body.side-drag{user-select:none;cursor:col-resize}
 .sp-plus:hover{color:var(--accent)}
 .sp-plus .ico{width:17px;height:17px}
 .sp-plus.tip::after{left:auto;right:0;transform:none}
+/* open project: the projects tab shows the path "projects › project" */
+.topnav .tn-path .tn-l{gap:10px;padding:0 22px!important}
+.tn-path button{background:none;border:0;padding:0;font:inherit;cursor:pointer;color:inherit}
+.tn-path .tn-up{font-weight:800;color:#0f2a2b}
+.tn-path .tn-up:hover{color:var(--accent);text-decoration:underline}
+.tn-path .tn-sep{color:#94a3b8;font-size:1.05rem;font-weight:400;line-height:1}
+.tn-path .tn-cur{font-family:var(--f-body);text-transform:none;letter-spacing:0;font-weight:600;color:#334155;font-size:.84rem;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
