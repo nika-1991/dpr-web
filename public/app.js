@@ -244,7 +244,7 @@ function renderBar(){
       (()=>{ const c=[P().companyCode,P().projectCode,P().accountingCode].filter(Boolean); return c.length?h("span",{class:"tn-codes",title:c.join(" · ")},c.map(x=>h("span",{class:"tn-code"},x))):null; })())))
     :ti("home","პროექტები");
   const projTab=null;
-  tn.replaceChildren(...(S.me&&!S.me.mustChange?[homeTab,projTab,S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,ti("reports","რეპორტები"),
+  tn.replaceChildren(...(S.me&&!S.me.mustChange?[homeTab,projTab,S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,S.admin||S.reviewer?ti("reports","რეპორტები"):null,
 S.admin||S.reviewer?ti("analysis","ანალიტიკა"):null].filter(Boolean):[]));
   /* settings sit on the right, by the language and account buttons */
   if(S.me&&!S.me.mustChange&&S.admin) me.append(h("button",{class:"bar-gear"+(cur==="settings"?" on":""),type:"button",title:tr("პარამეტრები"),"aria-label":tr("პარამეტრები"),"aria-current":cur==="settings"?"page":null,
@@ -275,7 +275,7 @@ function render(){
   else if(S.view==="users") v=renderUsers();
   else if(S.view==="analysis") v=renderAnalysis();
   else if(S.view==="company") v=renderCompany();
-  else if(S.view==="reports") v=renderReportsHub();
+  else if(S.view==="reports") v=S.admin||S.reviewer?renderReportsHub():renderMissing();
   else if(PLACEHOLDERS[S.view]) v=renderPlaceholder(PLACEHOLDERS[S.view]);
   else if(S.view==="project") v=P()?renderProject():renderMissing();
   else if(S.view==="report") v=renderReport();
@@ -309,7 +309,7 @@ function appRibbon(){
   const R=(label,items,cur,on)=>rbGrp(label,rbRadio(items,cur,on,items.length>=4));
   if(S.view==="company"){ const t=S.coTab||"pl", go_=k=>{ S.coTab=k; render(); };
     return [R("ანგარიშგება",[["pl","P&L","chart"],["cf","CF","pulse"]],t,go_),R("დაშვებები",[["fixed","ფიქსირებული ხარჯები","building"],["loans","სესხები","coins"],["set","ერთჯერადი","issues"]],t,go_)]; }
-  if(S.view==="reports"){ const t=S.rpTab||"ibl";
+  if(S.view==="reports"&&(S.admin||S.reviewer)){ const t=S.rpTab||"ibl";
     return [R("რეესტრები",[["ibl","Liabilities","coins"],["ret","Retention","pause"],["pledge","Pledged assets","building"],["guar","Guarantees","checkc"]],t,k=>{ S.rpTab=k; render(); })]; }
   if(S.view==="settings"||S.view==="users") return [R("პარამეტრები",[["users","მომხმარებლები","personnel"],["settings","სიები","list"]],S.view,k=>{ if(k==="users") S.userSel=null; go(k); }),
     rbGrp("მონაცემები",h("a",{class:"rb-ro",href:"/api/admin/backup",download:"",title:tr("ბაზა და ყველა ფოტო ერთ .zip ფაილში")},icon("down"),h("span",null,tr("სარეზერვო ასლის გადმოწერა"))))];
