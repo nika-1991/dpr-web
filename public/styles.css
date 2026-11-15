@@ -2635,3 +2635,8 @@ body.side-drag{user-select:none;cursor:col-resize}
 .tn-path .tn-up:hover{color:var(--accent);text-decoration:underline}
 .tn-path .tn-sep{color:#94a3b8;font-size:1.05rem;font-weight:400;line-height:1}
 .tn-path .tn-cur{font-family:var(--f-body);text-transform:none;letter-spacing:0;font-weight:600;color:#334155;font-size:.84rem;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* the projects-path tab slopes down on the right in the same S-curve the child tab used */
+.topnav .tn-path{margin-right:40px;position:relative}
+.topnav .tn-path .tn-l{position:relative;overflow:visible;border-radius:0!important}
+.topnav .tn-path.on .tn-l::after{content:""!important;display:block!important;position:absolute;right:-41px;bottom:0;width:42px;height:100%;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 47 40' preserveAspectRatio='none'%3E%3Cpath d='M47 40 C27 40 25 1 0 1 L0 40 Z' fill='%23eef1f5'/%3E%3Cpath d='M47 40 C27 40 25 1 0 1' fill='none' stroke='%232bc4a8' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat 0 0/100% 100%}
