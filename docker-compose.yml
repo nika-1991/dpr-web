@@ -11,7 +11,7 @@ services:
       # COOKIE_SECURE: "true"   # ჩართეთ, როცა საიტი HTTPS-ით მუშაობს
       # TRUST_PROXY: "1"        # ჩართეთ, თუ წინ დგას Nginx/Caddy
     volumes:
-      - dpr-data:/data
+      - dpr-data:/var/data
 
 volumes:
   dpr-data:
