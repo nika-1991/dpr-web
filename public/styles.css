@@ -2609,3 +2609,22 @@ body.side-drag{user-select:none;cursor:col-resize}
 .sp-ic{background:#dcefee;color:var(--accent)}
 .sp-cnt{background:#fff!important;border-color:#cfd7e0!important;color:#64748b}
 .sp-wrap{background:linear-gradient(160deg,#4a545e,#3a434c);border-radius:12px;padding:2px 8px 4px;color-scheme:dark}
+/* special conditions back on the light card; each condition a white band; + at the right of the title */
+.sp-wrap{background:none!important;padding:0!important;color-scheme:light;margin-top:8px}
+.sp-box{color-scheme:light}
+.sp-t th{color:#64748b}
+.sp-t td{background:#fff!important;border-top:1px solid #dde3ea!important;border-bottom:1px solid #dde3ea!important}
+.sp-t td:first-child{border-left:1px solid #dde3ea!important}
+.sp-t td:last-child{border-right:1px solid #dde3ea!important}
+.sp-t tbody tr{box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.sp-t .inp{background:#f6f8fa!important;border-color:#cfd7e0!important;color:#1e293b}
+.sp-t .inp::placeholder{color:#94a3b8}
+.sp-sb:not(.on){background:#f6f8fa!important;border-color:#cfd7e0!important;color:#475569}
+.sp-sb.on{background:#c9f0d6;border-color:#9fdfb6;color:#14532d}
+.sp-amt em,.sp-x{color:#94a3b8}
+.sp-c input{accent-color:#22a35a}
+.sp-hd{position:relative}
+.sp-plus{margin-left:auto;width:30px;height:30px;border-radius:8px;border:0;background:#fff;color:#1f2a37;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 0 8px rgba(100,118,140,.28),0 3px 8px -3px rgba(100,118,140,.38)}
+.sp-plus:hover{color:var(--accent)}
+.sp-plus .ico{width:17px;height:17px}
+.sp-plus.tip::after{left:auto;right:0;transform:none}

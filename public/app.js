@@ -2663,8 +2663,8 @@ function renderSpec(p,fin,edit){
       h("td",{class:"sp-c"},edit?h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?"))){ L.splice(i,1); redraw(); } }},"✕"):null)); });
   const add=()=>{ L.push({id:Math.random().toString(36).slice(2,8),on:true,name:"",desc:"",dir:"out",amount:null,pl:"cost",cf:"cost",when:"once",from:p.startDate||todayISO(),to:""}); redraw(); };
   return h("section",{class:"as-grp sp-box"},
-    h("div",{class:"sp-hd"},h("span",{class:"sp-ic"},icon("issues")),h("b",null,tr("სპეციალური პირობები")),h("span",{class:"muted"},tr("ხელშეკრულებასთან დაკავშირებული ერთჯერადი ან პერიოდული თანხები"))),
-    h("div",{class:"sp-tools"},h("span",{class:"sp-cnt"},L.length+" "+tr("პირობა")),edit?h("button",{class:"sp-add",type:"button",onclick:add},icon("add"),tr("პირობა")):null),
+    h("div",{class:"sp-hd"},h("span",{class:"sp-ic"},icon("issues")),h("b",null,tr("სპეციალური პირობები")),h("span",{class:"muted"},tr("ხელშეკრულებასთან დაკავშირებული ერთჯერადი ან პერიოდული თანხები")),
+      edit?h("button",{class:"sp-plus tip",type:"button","aria-label":tr("პირობის დამატება"),"data-tip":tr("პირობის დამატება"),onclick:add},icon("add")):null),
     L.length?h("div",{class:"sp-wrap"},h("table",{class:"sp-t"},
       h("thead",null,h("tr",null,["✓","დასახელება","ტიპი","თანხა, ₾","P&L","CF","რეჟიმი","თარიღი / პერიოდი","აღწერა",""].map(t=>h("th",null,tr(t))))),
       h("tbody",null,rows))):h("p",{class:"muted small",style:"margin:6px 0 0"},tr("ჯერ არცერთი პირობა არ არის.")));
