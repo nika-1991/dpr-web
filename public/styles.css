@@ -2652,3 +2652,5 @@ body.side-drag{user-select:none;cursor:col-resize}
 .tn-path .tn-up:hover{background:#3fd3b7;text-decoration:none!important;color:#06302d!important}
 .tn-path .tn-sep{display:none}
 .tn-path .tn-cur{align-self:center}
+a.rb-ro{text-decoration:none;color:#334155}
+a.rb-ro:hover{color:var(--accent)}

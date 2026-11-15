@@ -740,6 +740,39 @@ api.delete("/reports/:id", auth, admin, (req, res) => {
   res.json({ ok: true });
 });
 
+/* ---------------- full backup (admin): the database and every uploaded file in one .zip ---------------- */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = (buf, c = 0xffffffff) => { for (let i = 0; i < buf.length; i++) c = CRC_T[(c ^ buf[i]) & 0xff] ^ (c >>> 8); return c; };
+/* a plain (stored, uncompressed) zip written straight to the response, file by file */
+async function sendZip(res, files) {
+  const central = []; let off = 0;
+  const w = (b) => new Promise((ok) => { if (res.write(b)) ok(); else res.once("drain", ok); });
+  const dt = new Date(), dosT = (dt.getHours() << 11) | (dt.getMinutes() << 5) | (dt.getSeconds() >> 1), dosD = ((dt.getFullYear() - 1980) << 9) | ((dt.getMonth() + 1) << 5) | dt.getDate();
+  for (const f of files) {
+    const name = Buffer.from(f.name, "utf8"), data = fs.readFileSync(f.path), crc = (crc32(data) ^ 0xffffffff) >>> 0;
+    const h = Buffer.alloc(30); h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(20, 4); h.writeUInt16LE(0x0800, 6); h.writeUInt16LE(0, 8);
+    h.writeUInt16LE(dosT, 10); h.writeUInt16LE(dosD, 12); h.writeUInt32LE(crc, 14); h.writeUInt32LE(data.length, 18); h.writeUInt32LE(data.length, 22); h.writeUInt16LE(name.length, 26); h.writeUInt16LE(0, 28);
+    await w(h); await w(name); await w(data);
+    const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8); c.writeUInt16LE(0, 10);
+    c.writeUInt16LE(dosT, 12); c.writeUInt16LE(dosD, 14); c.writeUInt32LE(crc, 16); c.writeUInt32LE(data.length, 20); c.writeUInt32LE(data.length, 24); c.writeUInt16LE(name.length, 28);
+    c.writeUInt32LE(off, 42); central.push(c, name); off += 30 + name.length + data.length;
+  }
+  const cd = Buffer.concat(central), e = Buffer.alloc(22); e.writeUInt32LE(0x06054b50, 0); e.writeUInt16LE(files.length, 8); e.writeUInt16LE(files.length, 10);
+  e.writeUInt32LE(cd.length, 12); e.writeUInt32LE(off, 16); await w(cd); await w(e); res.end();
+}
+api.get("/admin/backup", auth, admin, async (req, res) => {
+  const tmp = path.join(DATA_DIR, "backup-" + Date.now() + ".sqlite");
+  try {
+    await db.backup(tmp);
+    const files = [{ name: "dpr.sqlite", path: tmp }];
+    for (const f of fs.readdirSync(UPLOAD_DIR)) { const fp = path.join(UPLOAD_DIR, f); if (fs.statSync(fp).isFile()) files.push({ name: "uploads/" + f, path: fp }); }
+    const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/^(\d{8})/, "$1-");
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", 'attachment; filename="dpr-backup-' + stamp + '.zip"');
+    await sendZip(res, files);
+  } catch (e) { if (!res.headersSent) res.status(500).json({ error: "ასლი ვერ შეიქმნა: " + e.message }); else res.end(); }
+  finally { try { fs.unlinkSync(tmp); } catch {} }
+});
 /* ---------------- photo uploads ---------------- */
 const MIME_EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
 api.post("/uploads", auth, express.raw({ type: Object.keys(MIME_EXT), limit: "15mb" }), (req, res) => {

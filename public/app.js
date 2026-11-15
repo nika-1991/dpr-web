@@ -310,7 +310,8 @@ function appRibbon(){
     return [R("ანგარიშგება",[["pl","P&L","chart"],["cf","CF","pulse"]],t,go_),R("დაშვებები",[["fixed","ფიქსირებული ხარჯები","building"],["loans","სესხები","coins"],["set","ერთჯერადი","issues"]],t,go_)]; }
   if(S.view==="reports"){ const t=S.rpTab||"ibl";
     return [R("რეესტრები",[["ibl","Liabilities","coins"],["ret","Retention","pause"],["pledge","Pledged assets","building"],["guar","Guarantees","checkc"]],t,k=>{ S.rpTab=k; render(); })]; }
-  if(S.view==="settings"||S.view==="users") return [R("პარამეტრები",[["users","მომხმარებლები","personnel"],["settings","სიები","list"]],S.view,k=>{ if(k==="users") S.userSel=null; go(k); })];
+  if(S.view==="settings"||S.view==="users") return [R("პარამეტრები",[["users","მომხმარებლები","personnel"],["settings","სიები","list"]],S.view,k=>{ if(k==="users") S.userSel=null; go(k); }),
+    rbGrp("მონაცემები",h("a",{class:"rb-ro",href:"/api/admin/backup",download:"",title:tr("ბაზა და ყველა ფოტო ერთ .zip ფაილში")},icon("down"),h("span",null,tr("სარეზერვო ასლის გადმოწერა"))))];
   return null;
 }
 function renderRibbon(){
@@ -748,6 +749,7 @@ const ICONS={
   chart:'<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
   chevron:'<path d="m6 15 6-6 6 6"/>',
   add:'<path d="M12 5v14M5 12h14"/>',
+  down:'<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
   pen:'<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/>',
   receipt:'<path d="M5 3h14v18l-2.3-1.5L14.3 21 12 19.5 9.7 21l-2.4-1.5L5 21z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
   check:'<path d="M20 6 9 17l-5-5"/>',
