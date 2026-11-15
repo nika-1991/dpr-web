@@ -2654,3 +2654,8 @@ body.side-drag{user-select:none;cursor:col-resize}
 .tn-path .tn-cur{align-self:center}
 a.rb-ro{text-decoration:none;color:#334155}
 a.rb-ro:hover{color:var(--accent)}
+/* project codes move from the ribbon to the tab, small and pale after the name */
+.rb-ptabs .pid{display:none!important}
+.rb-ptabs>.tabs.tgroups.trad .tgrp:first-child{padding-left:4px!important}
+.rb-ptabs>.tabs.tgroups.trad .tgrp:first-child::before{display:none!important}
+.tn-path .tn-codes{align-self:center;font-family:var(--f-mono);font-size:.62rem;font-weight:500;color:#94a3b8;letter-spacing:.02em;text-transform:none;white-space:nowrap}
