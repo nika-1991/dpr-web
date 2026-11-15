@@ -2657,7 +2657,7 @@ function renderSpec(p,fin,edit){
       h("td",null,h("span",{class:"sp-amt"},tin(x,"amount","თანხა"),h("em",null,"₾"))),
       h("td",null,sel(x,"pl",PL[dir],"P&L")),
       h("td",null,sel(x,"cf",CF[dir],"CF")),
-      h("td",null,stack(x,"when",[["once","ერთ თარიღზე"],["spread","პერიოდში"]],"once")),
+      h("td",null,stack(x,"when",[["once","თარიღი"],["spread","პერიოდი"]],"once")),
       h("td",null,spread?h("div",{class:"sp-dates"},tin(x,"from","დან",{type:"date"}),tin(x,"to","მდე",{type:"date"})):tin(x,"from","თარიღი",{type:"date"})),
       h("td",null,h("input",{class:"inp sp-desc",value:x.desc||"",disabled:!edit,placeholder:tr("აღწერა"),"aria-label":tr("აღწერა"),title:x.desc||"",onchange:e=>{ x.desc=e.target.value.trim(); redraw(); }})),
       h("td",{class:"sp-c"},edit?h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?"))){ L.splice(i,1); redraw(); } }},"✕"):null)); });
