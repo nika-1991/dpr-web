@@ -2584,3 +2584,22 @@ body.side-drag{user-select:none;cursor:col-resize}
 .sp-t th{color:#475569}
 .sp-t .inp,.sp-sb:not(.on),.sp-cnt{background:#fff;border-color:#cfd7e0}
 .sp-ic{background:#dcefee}
+/* special conditions on a dark slate card (set apart from the light assumptions), light-green selections, each condition its own band */
+.sp-box{background:linear-gradient(160deg,#4a545e,#3a434c)!important;box-shadow:0 10px 24px -12px rgba(15,23,42,.55)!important;color:#e7edf2;color-scheme:dark}
+.sp-hd b{color:#fff}.sp-hd .muted{color:#aab6c2!important}
+.sp-ic{background:rgba(255,255,255,.1);color:#9be7b5}
+.sp-cnt{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.18)!important;color:#d6dee6}
+.sp-add{background:#bff0cf;color:#14532d}
+.sp-wrap{border-top:0}
+.sp-t{border-collapse:separate;border-spacing:0 6px}
+.sp-t th{color:#aab6c2}
+.sp-t td{border-top:0;background:rgba(255,255,255,.06)}
+.sp-t td:first-child{border-radius:9px 0 0 9px}
+.sp-t td:last-child{border-radius:0 9px 9px 0}
+.sp-t .inp{background:#2f373f!important;border-color:#5b6672!important;color:#f1f5f9}
+.sp-t .inp::placeholder{color:#8a96a3}
+.sp-amt em{color:#aab6c2}
+.sp-sb:not(.on){background:#2f373f!important;border-color:#5b6672!important;color:#c7d0da}
+.sp-sb.on{background:#bff0cf;border-color:#bff0cf;color:#14532d}
+.sp-c input{accent-color:#7fdc9f}
+.sp-x{color:#aab6c2}
