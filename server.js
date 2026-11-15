@@ -106,6 +106,7 @@ const DEFAULT_LISTS = {
 if (!db.prepare("SELECT 1 FROM config WHERE key='lists'").get())
   db.prepare("INSERT INTO config(key,data) VALUES('lists',?)").run(JSON.stringify(DEFAULT_LISTS));
 
+console.log("ADMIN_RESET=" + (process.env.ADMIN_RESET ? JSON.stringify(process.env.ADMIN_RESET) : "(არ არის)") + " ADMIN_PASSWORD=" + (process.env.ADMIN_PASSWORD ? "(მითითებულია)" : "(არ არის)"));
 /* first administrator */
 if (!db.prepare("SELECT 1 FROM users LIMIT 1").get()) {
   const username = process.env.ADMIN_USERNAME || "admin";
@@ -120,7 +121,7 @@ if (!db.prepare("SELECT 1 FROM users LIMIT 1").get()) {
   console.log("   პაროლი:       " + (generated ? password : "(ADMIN_PASSWORD-დან)"));
   if (generated) console.log(" პირველი შესვლისას სისტემა პაროლის შეცვლას მოითხოვს.");
   console.log("==============================================\n");
-} else if (process.env.ADMIN_RESET === "true" && process.env.ADMIN_PASSWORD) {
+} else if (/^\s*(true|1|yes|კი)\s*$/i.test(process.env.ADMIN_RESET || "") && process.env.ADMIN_PASSWORD) {
   /* emergency: ADMIN_RESET=true puts the main admin back on ADMIN_PASSWORD (and re-activates it); remove the variable afterwards */
   const username = process.env.ADMIN_USERNAME || "admin";
   const a = db.prepare("SELECT id FROM users WHERE username=?").get(username);
