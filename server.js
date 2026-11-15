@@ -697,6 +697,11 @@ function cleanSchedule(b) {
     /* which assumption lines feed the P&L / the cash flow */
     show: Object.fromEntries(Object.entries(fb.show && typeof fb.show === "object" ? fb.show : {}).slice(0, 40).filter(([k]) => /^[a-z]{1,12}$/.test(k))
       .map(([k, v]) => [k, { pl: v?.pl !== false, cf: v?.cf !== false }])),
+    /* special items: a one-off or evenly spread amount, placed under a chosen P&L line and a chosen CF line */
+    spec: (Array.isArray(fb.spec) ? fb.spec : []).slice(0, 60).map((x) => ({ id: str(x?.id, 20) || newId(6), on: x?.on !== false, name: str(x?.name, 120).trim(), desc: str(x?.desc, 400).trim(),
+      dir: x?.dir === "in" ? "in" : "out", amount: cleanNum(x?.amount), pl: ["rev", "cost", "ind", "none"].includes(x?.pl) ? x.pl : "none",
+      cf: ["works", "in", "cost", "ov", "out", "none"].includes(x?.cf) ? x.cf : "none", when: x?.when === "spread" ? "spread" : "once",
+      from: ISO_RE.test(x?.from || "") ? x.from : "", to: ISO_RE.test(x?.to || "") ? x.to : "" })),
     rules: (Array.isArray(fb.rules) ? fb.rules : []).slice(0, 50).map((x) => ({ id: str(x?.id, 20) || newId(6), name: str(x?.name, 120).trim(), on: x?.on !== false,
       base: str(x?.base, 200), pct: pctv(x?.pct, 0), amount: cleanNum(x?.amount), from: ISO_RE.test(x?.from || "") ? x.from : "", to: ISO_RE.test(x?.to || "") ? x.to : "",
       rel: ["monthly", "date", "end", "none"].includes(x?.rel) ? x.rel : "end", relAmt: cleanNum(x?.relAmt), relDate: ISO_RE.test(x?.relDate || "") ? x.relDate : "" })) };
