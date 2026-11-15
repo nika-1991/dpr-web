@@ -2603,3 +2603,9 @@ body.side-drag{user-select:none;cursor:col-resize}
 .sp-sb.on{background:#bff0cf;border-color:#bff0cf;color:#14532d}
 .sp-c input{accent-color:#7fdc9f}
 .sp-x{color:#aab6c2}
+/* only the conditions table is dark; the card head stays light like the assumptions */
+.sp-box{background:#eef1f5!important;box-shadow:4px 4px 10px rgba(100,118,140,.25),-4px -4px 10px rgba(255,255,255,.9)!important;color:var(--ink);color-scheme:light}
+.sp-hd b{color:#1f2a37}.sp-hd .muted{color:#64748b!important}
+.sp-ic{background:#dcefee;color:var(--accent)}
+.sp-cnt{background:#fff!important;border-color:#cfd7e0!important;color:#64748b}
+.sp-wrap{background:linear-gradient(160deg,#4a545e,#3a434c);border-radius:12px;padding:2px 8px 4px;color-scheme:dark}
