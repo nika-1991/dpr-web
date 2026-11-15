@@ -2659,3 +2659,6 @@ a.rb-ro:hover{color:var(--accent)}
 .rb-ptabs>.tabs.tgroups.trad .tgrp:first-child{padding-left:4px!important}
 .rb-ptabs>.tabs.tgroups.trad .tgrp:first-child::before{display:none!important}
 .tn-path .tn-codes{align-self:center;font-family:var(--f-mono);font-size:.62rem;font-weight:500;color:#94a3b8;letter-spacing:.02em;text-transform:none;white-space:nowrap}
+.tn-path .tn-nm{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:0;line-height:1.15}
+.tn-path .tn-nm .tn-cur{align-self:flex-start}
+.tn-path .tn-nm .tn-codes{font-size:.58rem}
