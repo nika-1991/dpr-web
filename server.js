@@ -120,6 +120,13 @@ if (!db.prepare("SELECT 1 FROM users LIMIT 1").get()) {
   console.log("   პაროლი:       " + (generated ? password : "(ADMIN_PASSWORD-დან)"));
   if (generated) console.log(" პირველი შესვლისას სისტემა პაროლის შეცვლას მოითხოვს.");
   console.log("==============================================\n");
+} else if (process.env.ADMIN_RESET === "true" && process.env.ADMIN_PASSWORD) {
+  /* emergency: ADMIN_RESET=true puts the main admin back on ADMIN_PASSWORD (and re-activates it); remove the variable afterwards */
+  const username = process.env.ADMIN_USERNAME || "admin";
+  const a = db.prepare("SELECT id FROM users WHERE username=?").get(username);
+  if (a) db.prepare("UPDATE users SET password_hash=?, must_change=0, active=1, role='admin' WHERE id=?").run(bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10), a.id);
+  else db.prepare("INSERT INTO users(id,username,name,password_hash,role,active,must_change,created_at) VALUES(?,?,?,?,?,1,0,?)").run(newId(), username, "ადმინისტრატორი", bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10), "admin", now());
+  console.log("ADMIN_RESET: '" + username + "' პაროლი დაბრუნდა ADMIN_PASSWORD-ზე. ახლა წაშალეთ ADMIN_RESET ცვლადი.");
 } else if (process.env.ADMIN_PASSWORD) {
   /* existing databases: the main admin still on the ADMIN_PASSWORD is not asked to change it */
   const a = db.prepare("SELECT id,password_hash FROM users WHERE username=? AND must_change=1").get(process.env.ADMIN_USERNAME || "admin");
