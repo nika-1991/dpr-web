@@ -2503,3 +2503,11 @@ body.side-drag{user-select:none;cursor:col-resize}
 .at-tg:disabled{cursor:default}
 .at-v{justify-content:flex-end}
 .at-v em{display:inline-block;width:24px;min-width:24px;text-align:left}
+/* assumptions: status never pushes the table; small inputs of one shared width; table only as wide as needed */
+.at-page>.row:first-child{position:relative;height:0;margin:0!important}
+.at-page>.row:first-child>#sched-status{position:absolute;right:0;top:-16px}
+.at-t{width:auto!important}
+.at-t tbody th{padding-right:18px}
+.at-v input{width:var(--aw,40px)!important;min-width:0;height:20px!important;min-height:0!important;padding:0 4px!important;font-size:.72rem!important;line-height:20px}
+.at-v b{min-width:0}
+.at-two{grid-template-columns:auto minmax(0,1fr)}

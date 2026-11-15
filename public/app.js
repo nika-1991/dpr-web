@@ -2574,7 +2574,10 @@ function renderAssume(p){
   const save=()=>saveSchedule();
   const pv=v=>v!=null&&v!==""?fmtNum(num(v))+"%":"—";
   /* one table: assumption · value · unit · where it applies · shown in P&L · shown in CF */
-  const inp=(k,u)=>h("span",{class:"at-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(fin[k]??""),disabled:!edit,"aria-label":k,onchange:e=>{ fin[k]=num(e.target.value); save(); setTimeout(render,0); }}),h("em",null,u||""));
+  /* inputs share one width: the longest value they hold (grows while typing) */
+  const fitAll=()=>{ const t=document.querySelector(".at-t"); if(!t) return; const L=Math.max(3,...[...t.querySelectorAll(".at-v input")].map(i=>i.value.length)); t.style.setProperty("--aw",(L*7.4+12)+"px"); };
+  const inp=(k,u)=>h("span",{class:"at-v"},h("input",{class:"inp num",inputmode:"decimal",value:String(fin[k]??""),disabled:!edit,"aria-label":k,oninput:fitAll,onchange:e=>{ fin[k]=num(e.target.value); save(); setTimeout(render,0); }}),h("em",null,u||""));
+  requestAnimationFrame(fitAll);
   const val=(v)=>h("span",{class:"at-v"},h("b",null,v),h("em",null,""));
   /* P&L / CF tag: coloured when the line goes into that statement, grey when it doesn't — click to switch */
   const tag=(key,kind,applies)=>{ if(!applies) return null; const lbl=kind==="pl"?"P&L":"CF";
@@ -2603,7 +2606,9 @@ function renderAssume(p){
       row("cash cover","cash cover — ავანსი",val(p.cashCover?pv(p.cashCover)+" · "+gel0(A*num(p.cashCover)/100):"—"),"cf","cover","ავანსის მიღებისას იბლოკება, გაქვითვასთან ერთად თავისუფლდება"),
       G("დაკავებები"),
       row("მოკლ.","მოკლევადიანი დაკავება",val(pv(p.retShort)),"cf","ret","პროექტის მონაცემებიდან"),
+      row("მოკლ., ჩარიცხვა","მოკლევადიანი დაკავების ჩარიცხვა",val(p.retShortMode==="days"?tr("დასრ.")+" + "+num(p.retShortDays)+" "+tr("დღე"):tr("ბოლოსთან ერთად")),"cf","ret","ბოლო შესრულების ჩარიცხვიდან; პროექტის მონაცემებიდან"),
       row("გრძელ.","გრძელვადიანი დაკავება",val(pv(p.retLong)),"cf","ret","პროექტის მონაცემებიდან"),
+      row("გრძელ., ჩარიცხვა","გრძელვადიანი დაკავების ჩარიცხვა",val(p.retLongMode==="guar"?tr("მოკლ.-თან ერთად"):tr("დასრ.")+" + "+(p.retLongMonths??24)+" "+tr("თვე")),"cf","ret","საბანკო გარანტიით მოკლევადიანთან ერთად, ან საგარანტიო პერიოდის ბოლოს; პროექტის მონაცემებიდან"),
       G("ხარჯები"),
       row("გაუთვალისწ.","გაუთვალისწინებელი ხარჯი",inp("cont","%"),"both","cont","შემოსავლის %"),
       row("მობ./დემობ.","მობილიზაცია / დემობილიზაცია",inp("mob","%"),"both","mob","შემოსავლის %"),
