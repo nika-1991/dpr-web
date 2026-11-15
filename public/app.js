@@ -3306,8 +3306,28 @@ function renderUsers(){
         self?null:h("button",{class:"btn sm ghost u-off",type:"button",onclick:async()=>{ try{ await api("PATCH","/users/"+u.id,{active:!u.active}); toast(u.active?"წვდომა გაითიშა":"წვდომა აღდგა"); refresh(); }catch(e){ toast(errMsg(e)); } }},u.active?"გათიშვა":"ჩართვა"),
         box)));
   });
-  const add=h("button",{type:"button",class:"rep-add tip","data-tip":tr("ახალი მომხმარებელი"),"aria-label":tr("ახალი მომხმარებელი"),onclick:()=>newUserDialog(refresh)},"+");
-  return [h("section",{class:"panel"},
+  const add=h("button",{type:"button",class:"rep-add tip","data-tip":tr("ახალი მომხმარებელი"),"aria-label":tr("ახალი მომხმარებელი"),onclick:()=>{ S.newUser=true; render(); }},"+");
+  /* new user: an editable row at the top of the table */
+  if(S.newUser){
+    const nIn=h("input",{class:"inp nu-in",placeholder:tr("სახელი გვარი"),"aria-label":tr("სახელი და გვარი")});
+    const uIn=h("input",{class:"inp nu-in mono",autocomplete:"off",autocapitalize:"none",placeholder:"g.beridze","aria-label":tr("მომხმარებლის სახელი (ლათინურად)")});
+    const eIn=h("input",{class:"inp nu-in",type:"email",autocomplete:"off",placeholder:tr("ელფოსტა"),"aria-label":tr("ელფოსტა")});
+    const tIn=h("input",{class:"inp nu-in mono",type:"tel",autocomplete:"off",placeholder:"5XX XX XX XX","aria-label":tr("ტელეფონი")});
+    const rIn=h("select",{class:"inp nu-in","aria-label":tr("როლი")},h("option",{value:"employee"},tr("თანამშრომელი")),h("option",{value:"admin"},tr("ადმინისტრატორი")));
+    const pIn=h("input",{class:"inp nu-in mono nu-pw",inputmode:"numeric",maxlength:"4",value:genPassword(),"aria-label":tr("დროებითი პაროლი"),title:tr("დროებითი პაროლი")});
+    const save=async()=>{ const body={username:uIn.value.trim(),name:nIn.value.trim(),role:rIn.value,password:pIn.value,phone:tIn.value.trim(),email:eIn.value.trim()};
+      if(!body.name){ nIn.focus(); toast(tr("შეიყვანეთ სახელი")); return; } if(!body.username){ uIn.focus(); toast(tr("შეიყვანეთ მომხმარებლის სახელი")); return; }
+      try{ const res=await api("POST","/users",body); S.newUser=false; S.created={...body,res}; toast(tr("მომხმარებელი შეიქმნა")); await refresh(); }catch(ex){ toast(errMsg(ex)); } };
+    rows.unshift(h("tr",{class:"nu-row"},
+      h("td",null,nIn,uIn),h("td",null,eIn,tIn),h("td",null,rIn),
+      h("td",{class:"small"},h("span",{class:"muted"},tr("პაროლი")+": "),pIn),
+      h("td",{colspan:"2",class:"nu-act"},h("button",{class:"btn sm primary",type:"button",onclick:save},tr("შენახვა")),h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ S.newUser=false; render(); }},tr("გაუქმება"))),
+      h("td")));
+    setTimeout(()=>nIn.focus(),0);
+  }
+  const done=S.created?h("div",{class:"notice info",style:"margin-bottom:10px"},tr("გადაეცით თანამშრომელს")+": ",h("span",{class:"pw"},S.created.username)," · "+tr("დროებითი პაროლი")+" ",h("span",{class:"pw"},S.created.password),". ",
+    mailNotice(S.created.res,S.created.email,S.created.name,S.created.username,S.created.password),h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ S.created=null; render(); }},"✕")):null;
+  return [done,h("section",{class:"panel"},
       h("div",{class:"tw"},h("table",{class:"rt stack users"},h("thead",null,h("tr",null,["სახელი","კონტაქტი","როლი","წვდომა","ბოლო შესვლა","სტატუსი"].map(t=>h("th",null,t)),h("th",{class:"rep-add-th"},add))),h("tbody",null,rows))))];
 }
 /* new user: a dialog opened from the "+" at the end of the users table heading */

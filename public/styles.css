@@ -2665,3 +2665,11 @@ a.rb-ro:hover{color:var(--accent)}
 .tn-path .tn-codes{display:flex;gap:3px;margin-top:2px}
 .tn-path .tn-code{font-family:var(--f-mono);font-size:.56rem;line-height:1;padding:2px 4px;border-radius:4px;background:#fff;border:1px solid #dbe2ea;color:#64748b;letter-spacing:.02em}
 .tn-path .tn-code{border-radius:0;padding:2px 5px}
+/* new user as an editable top row */
+.users tr.nu-row td{background:#f3faf8;vertical-align:top}
+.nu-in{display:block;height:28px;font-size:.76rem;padding:0 8px;margin:2px 0;width:170px;box-sizing:border-box}
+.nu-pw{width:70px;display:inline-block}
+.nu-act{white-space:nowrap}
+.nu-act .btn{margin-right:6px}
+.users tr.nu-row .nu-in{border:1px solid #cfd7e0!important;background:#fff!important}
+.users tr.nu-row .nu-pw{width:62px;margin-left:4px}
