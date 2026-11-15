@@ -2543,3 +2543,37 @@ body.side-drag{user-select:none;cursor:col-resize}
 .sp-dir{align-self:flex-end}
 .sp-desc{height:auto!important;min-height:26px;padding:4px 7px!important;resize:vertical;width:100%;box-sizing:border-box}
 .sp-x{margin-left:auto}
+/* special conditions as a compact table */
+.sp-box{padding:12px 14px!important}
+.sp-hd{display:flex;align-items:center;gap:10px;font-size:.82rem}
+.sp-hd .muted{font-size:.74rem}
+.sp-ic{width:30px;height:30px;border-radius:8px;background:#e6f4f1;color:var(--accent);display:inline-flex;align-items:center;justify-content:center}
+.sp-ic .ico{width:16px;height:16px}
+.sp-tools{display:flex;align-items:center;gap:8px;margin:10px 0 8px}
+.sp-cnt{font-size:.7rem;color:#64748b;border:1px solid #d5dce4;border-radius:7px;padding:4px 10px;background:#fff}
+.sp-add{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:inherit;font-size:.76rem;font-weight:700;padding:6px 14px;cursor:pointer}
+.sp-add .ico{width:15px;height:15px}
+.sp-add:hover{filter:brightness(1.08)}
+.sp-wrap{overflow-x:auto;border-top:1px solid #e3e8ee}
+.sp-t{border-collapse:collapse;width:100%;font-size:.74rem}
+.sp-t th{font-size:.66rem;font-weight:600;color:#64748b;text-align:left;padding:7px 5px;white-space:nowrap}
+.sp-t td{padding:5px;border-top:1px solid #eef1f4;vertical-align:middle}
+.sp-t tr.off td{opacity:.5}
+.sp-c{text-align:center;width:24px}
+.sp-c input{width:16px;height:16px;accent-color:var(--accent)}
+.sp-t .inp{height:30px;font-size:.74rem;padding:0 8px;border-radius:6px;box-sizing:border-box}
+.sp-t .sp-name{width:150px;font-weight:600}
+.sp-t .sp-desc{width:150px}
+.sp-amt{display:inline-flex;align-items:center;gap:4px}
+.sp-amt .inp{width:96px;text-align:right}
+.sp-amt em{font-style:normal;color:#94a3b8;font-size:.7rem}
+.sp-t .sp-sel{min-width:0;width:118px}
+.sp-stk{display:flex;flex-direction:column;gap:2px;width:max-content}
+.sp-sb{border:1px solid #d5dce4;background:#fff;border-radius:5px;font:inherit;font-size:.64rem;padding:1px 8px;cursor:pointer;color:#475569;white-space:nowrap;line-height:1.5}
+.sp-sb.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.sp-dates{display:flex;flex-direction:column;gap:2px}
+.sp-dates .inp{height:22px!important;font-size:.68rem}
+.sp-t input[type=date]{width:128px}
+.sp-x{border:0;background:none;color:#94a3b8;cursor:pointer;font-size:.8rem}
+.sp-x:hover{color:#c0262d}
+.at-two{grid-template-columns:auto minmax(0,1fr)}

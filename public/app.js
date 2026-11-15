@@ -2647,20 +2647,27 @@ function renderSpec(p,fin,edit){
   const lab=(t,...k)=>h("label",{class:"sp-f"},h("span",null,tr(t)),...k);
   const PL={in:[["none","არ აისახება"],["rev","შემოსავალი"]],out:[["none","არ აისახება"],["cost","პირდაპირი ხარჯი"],["ind","არაპირდაპირი ხარჯი"]]};
   const CF={in:[["none","არ აისახება"],["works","ჩარიცხვა შესრულებიდან"],["in","სხვა ჩარიცხვა"]],out:[["none","არ აისახება"],["cost","ხარჯები"],["ov","არაპირდაპირი ხარჯი"],["out","სხვა გადახდა"]]};
-  const cards=L.map((x,i)=>{ const dir=x.dir||"out";
-    return h("div",{class:"sp-card"+(x.on===false?" off":"")},
-      h("div",{class:"sp-r"},h("input",{type:"checkbox",checked:x.on!==false,disabled:!edit,title:tr("ჩართულია"),"aria-label":tr("ჩართულია"),onchange:e=>{ x.on=e.target.checked; redraw(); }}),
-        h("input",{class:"inp sp-name",value:x.name||"",disabled:!edit,placeholder:tr("დასახელება"),"aria-label":tr("დასახელება"),onchange:e=>{ x.name=e.target.value.trim(); redraw(); }}),
-        h("div",{class:"vswitch pl-sw sp-dir"},[["in","შემოსავალი"],["out","ხარჯი"]].map(([k,l])=>h("button",{type:"button",class:"vbtn vtxt"+(dir===k?" on":""),disabled:!edit,onclick:()=>{ x.dir=k; x.pl="none"; x.cf="none"; redraw(); }},tr(l)))),
-        lab("თანხა, ₾",tin(x,"amount","თანხა")),
-        edit?h("button",{class:"btn sm ghost sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?"))){ L.splice(i,1); redraw(); } }},"✕"):null),
-      h("div",{class:"sp-r"},lab("P&L",sel(x,"pl",PL[dir],"P&L")),lab("CF",sel(x,"cf",CF[dir],"CF")),
-        lab("დრო",h("div",{class:"vswitch pl-sw"},[["once","ერთ თარიღზე"],["spread","პერიოდში"]].map(([k,l])=>h("button",{type:"button",class:"vbtn vtxt"+((x.when||"once")===k?" on":""),disabled:!edit,onclick:()=>{ x.when=k; redraw(); }},tr(l))))),
-        lab(x.when==="spread"?"დან":"თარიღი",tin(x,"from","დან",{type:"date"})),x.when==="spread"?lab("მდე",tin(x,"to","მდე",{type:"date"})):null),
-      h("textarea",{class:"inp sp-desc",rows:"1",disabled:!edit,placeholder:tr("აღწერა"),"aria-label":tr("აღწერა"),onchange:e=>{ x.desc=e.target.value.trim(); redraw(); }},x.desc||"")); });
-  return h("section",{class:"as-grp sp-box"},h("div",{class:"as-gt"},icon("issues"),h("span",null,tr("სპეციალური პირობები")),h("small",{class:"muted"},tr("ხელშეკრულებასთან დაკავშირებული ერთჯერადი ან პერიოდული თანხები"))),
-    cards.length?cards:h("p",{class:"muted small",style:"margin:4px 0"},tr("ჯერ არცერთი პირობა არ არის.")),
-    edit?h("div",{class:"as-foot"},h("button",{class:"btn sm",type:"button",onclick:()=>{ L.push({id:Math.random().toString(36).slice(2,8),on:true,name:"",desc:"",dir:"out",amount:null,pl:"cost",cf:"cost",when:"once",from:p.startDate||todayISO(),to:""}); redraw(); }},"+ ",tr("პირობა"))):null);
+  /* one table row per item; type and timing as small stacked switches */
+  const stack=(x,k,opts,def,onSet)=>h("div",{class:"sp-stk"},opts.map(([v,l])=>h("button",{type:"button",class:"sp-sb"+((x[k]||def)===v?" on":""),disabled:!edit,onclick:()=>{ x[k]=v; if(onSet) onSet(v); redraw(); }},tr(l))));
+  const rows=L.map((x,i)=>{ const dir=x.dir||"out", spread=x.when==="spread";
+    return h("tr",{class:x.on===false?"off":""},
+      h("td",{class:"sp-c"},h("input",{type:"checkbox",checked:x.on!==false,disabled:!edit,"aria-label":tr("ჩართულია"),onchange:e=>{ x.on=e.target.checked; redraw(); }})),
+      h("td",null,h("input",{class:"inp sp-name",value:x.name||"",disabled:!edit,placeholder:tr("დასახელება"),"aria-label":tr("დასახელება"),title:x.name||"",onchange:e=>{ x.name=e.target.value.trim(); redraw(); }})),
+      h("td",null,stack(x,"dir",[["in","შემოს."],["out","ხარჯი"]],"out",()=>{ x.pl="none"; x.cf="none"; })),
+      h("td",null,h("span",{class:"sp-amt"},tin(x,"amount","თანხა"),h("em",null,"₾"))),
+      h("td",null,sel(x,"pl",PL[dir],"P&L")),
+      h("td",null,sel(x,"cf",CF[dir],"CF")),
+      h("td",null,stack(x,"when",[["once","ერთ თარიღზე"],["spread","პერიოდში"]],"once")),
+      h("td",null,spread?h("div",{class:"sp-dates"},tin(x,"from","დან",{type:"date"}),tin(x,"to","მდე",{type:"date"})):tin(x,"from","თარიღი",{type:"date"})),
+      h("td",null,h("input",{class:"inp sp-desc",value:x.desc||"",disabled:!edit,placeholder:tr("აღწერა"),"aria-label":tr("აღწერა"),title:x.desc||"",onchange:e=>{ x.desc=e.target.value.trim(); redraw(); }})),
+      h("td",{class:"sp-c"},edit?h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?"))){ L.splice(i,1); redraw(); } }},"✕"):null)); });
+  const add=()=>{ L.push({id:Math.random().toString(36).slice(2,8),on:true,name:"",desc:"",dir:"out",amount:null,pl:"cost",cf:"cost",when:"once",from:p.startDate||todayISO(),to:""}); redraw(); };
+  return h("section",{class:"as-grp sp-box"},
+    h("div",{class:"sp-hd"},h("span",{class:"sp-ic"},icon("issues")),h("b",null,tr("სპეციალური პირობები")),h("span",{class:"muted"},tr("ხელშეკრულებასთან დაკავშირებული ერთჯერადი ან პერიოდული თანხები"))),
+    h("div",{class:"sp-tools"},h("span",{class:"sp-cnt"},L.length+" "+tr("პირობა")),edit?h("button",{class:"sp-add",type:"button",onclick:add},icon("add"),tr("პირობა")):null),
+    L.length?h("div",{class:"sp-wrap"},h("table",{class:"sp-t"},
+      h("thead",null,h("tr",null,["✓","დასახელება","ტიპი","თანხა, ₾","P&L","CF","რეჟიმი","თარიღი / პერიოდი","აღწერა",""].map(t=>h("th",null,tr(t))))),
+      h("tbody",null,rows))):h("p",{class:"muted small",style:"margin:6px 0 0"},tr("ჯერ არცერთი პირობა არ არის.")));
 }
 /* special conditions editor: one line each — name · CF line · % (or amount) · period · release */
 function renderRules(p,fin,edit){
