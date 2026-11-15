@@ -2662,3 +2662,6 @@ a.rb-ro:hover{color:var(--accent)}
 .tn-path .tn-nm{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:0;line-height:1.15}
 .tn-path .tn-nm .tn-cur{align-self:flex-start}
 .tn-path .tn-nm .tn-codes{font-size:.58rem}
+.tn-path .tn-codes{display:flex;gap:3px;margin-top:2px}
+.tn-path .tn-code{font-family:var(--f-mono);font-size:.56rem;line-height:1;padding:2px 4px;border-radius:4px;background:#fff;border:1px solid #dbe2ea;color:#64748b;letter-spacing:.02em}
+.tn-path .tn-code{border-radius:0;padding:2px 5px}

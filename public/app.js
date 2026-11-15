@@ -241,7 +241,7 @@ function renderBar(){
       h("button",{type:"button",class:"tn-up",title:tr("პროექტების სია"),onclick:()=>go("home")},tr("პროექტები")),
       h("span",{class:"tn-sep","aria-hidden":"true"},"›"),
       h("span",{class:"tn-nm"},h("button",{type:"button",class:"tn-cur",title:P().name||"",onclick:()=>{ if(S.view==="report"){ go("project",{pid:S.pid,tab:S.tab||"reports"}); return; } if(RB.has) rbFold(!S.rbMin); }},pShort(P())),
-      (()=>{ const c=[P().companyCode,P().projectCode,P().accountingCode].filter(Boolean); return c.length?h("span",{class:"tn-codes",title:c.join(" · ")},c.join(" · ")):null; })())))
+      (()=>{ const c=[P().companyCode,P().projectCode,P().accountingCode].filter(Boolean); return c.length?h("span",{class:"tn-codes",title:c.join(" · ")},c.map(x=>h("span",{class:"tn-code"},x))):null; })())))
     :ti("home","პროექტები");
   const projTab=null;
   tn.replaceChildren(...(S.me&&!S.me.mustChange?[homeTab,projTab,S.admin||S.reviewer?ti("company","კონსოლიდაცია"):null,ti("reports","რეპორტები"),
