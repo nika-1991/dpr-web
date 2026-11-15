@@ -18,6 +18,10 @@ const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
 const COOKIE = "dpr_session";
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+/* say in the log where the data lives and since when, so a wiped (non-persistent) folder is easy to spot */
+{ const mark = path.join(DATA_DIR, ".created");
+  if (!fs.existsSync(mark)) fs.writeFileSync(mark, new Date().toISOString());
+  console.log("მონაცემების საქაღალდე: " + DATA_DIR + " · შექმნილია: " + fs.readFileSync(mark, "utf8").trim()); }
 
 /* ---------------- database ---------------- */
 const db = new Database(path.join(DATA_DIR, "dpr.sqlite"));
