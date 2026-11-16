@@ -3496,7 +3496,7 @@ function renderSettings(){
   const groupRows=([k,l,pre])=>{ const L=U[k], rows=[h("tr",{class:"um-gr"},h("th",{colspan:String(N)},tr(l)))];
     L.forEach((x,i)=>{ if(i===L.length-1) rows.push(S.uAdd===k?addRow(k):plus(k));
       rows.push(h("tr",null,h("th",{scope:"row"},h("span",null,tr(x)),h("button",{class:"sp-x um-del",type:"button","aria-label":tr("წაშლა")+" "+x,onclick:()=>{ if(!confirm(tr("წავშალო?")+" „"+x+"“")) return; L.splice(i,1); save(); render(); }},"✕")),
-        U.units.map(u=>h("td",{class:"um-c"},h("input",{type:"checkbox",checked:has(u,pre+x),"aria-label":x+" — "+u,onchange:e=>{ tog(u,pre+x,e.target.checked); save(); }}))),h("td"))); });
+        U.units.map(u=>h("td",{class:"um-c"},h("input",{type:"checkbox",checked:has(u,pre+x),"aria-label":x+" — "+u,onchange:e=>{ tog(u,pre+x,e.target.checked); save(); drawPrev(); }}))),h("td"))); });
     if(!L.length) rows.push(S.uAdd===k?addRow(k):plus(k)); return rows; };
   let nu=null;
   const umat=h("div",{class:"um-wrap"},h("table",{class:"um-t"},
@@ -3506,9 +3506,18 @@ function renderSettings(){
         nu=h("input",{class:"inp",placeholder:tr("ერთეული"),"aria-label":tr("ახალი ერთეული"),onkeydown:e=>{ if(e.key==="Escape"){ S.uAdd=null; render(); } }}),void setTimeout(()=>nu&&nu.focus(),0))
         :h("button",{type:"button",class:"um-pb",title:tr("ერთეულის დამატება"),"aria-label":tr("ერთეულის დამატება"),onclick:()=>{ S.uAdd="unit"; render(); }},"+")))),
     h("tbody",null,G.flatMap(groupRows))));
-  const wta=h("textarea",{class:"inp um-wx",rows:12,value:U.weather.join("\n"),oninput:e=>{ U.weather=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean); save(); }});
+  const wta=h("textarea",{class:"inp um-wx",rows:12,value:U.weather.join("\n"),oninput:e=>{ U.weather=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean); save(); drawPrev(); }});
+  /* live preview of the drop-downs as people will see them: pick an item, the unit list shows what it offers */
+  const prev=h("div",{class:"um-prev"}), P=S.uPrev||(S.uPrev={});
+  const sel=(items,cur,on,lbl)=>{ const el=h("select",{class:"inp","aria-label":lbl,onchange:e=>{ on(e.target.value); drawPrev(); }},items.map(x=>h("option",{value:x},tr(x)))); el.value=cur; return el; };
+  function drawPrev(){ prev.replaceChildren(h("div",{class:"um-ph"},tr("გადახედვა")),
+    ...G.map(([k,l,pre])=>{ const L=U[k]; if(!L.includes(P[k])) P[k]=L[0]; const us=U.units.filter(u=>has(u,pre+P[k]));
+      return h("div",{class:"um-pr"},h("label",null,tr(l)),h("div",{class:"um-pp"},sel(L,P[k],v=>{ P[k]=v; },tr(l)),
+        us.length?sel(us,us.includes(P["u_"+k])?P["u_"+k]:us[0],v=>{ P["u_"+k]=v; },tr("ერთეული")):h("span",{class:"um-none"},tr("ერთეული არ არის")))); }),
+    h("div",{class:"um-pr"},h("label",null,tr("ამინდი")),h("div",{class:"um-pp"},sel(U.weather,U.weather[0],()=>{},tr("ამინდი"))))); }
+  drawPrev();
   return h("section",{class:"panel um-panel"},h("div",{class:"panel-h"},h("h2",null,tr("ჩამოსაშლელი სიები"))),
-    h("div",{class:"panel-b um-two"},umat,h("div",{class:"field um-wf"},h("label",null,tr("ამინდი")),wta)));
+    h("div",{class:"panel-b um-two"},umat,h("div",{class:"um-side"},prev,h("div",{class:"field um-wf"},h("label",null,tr("ამინდი")),wta))));
 }
 
 /* ---------- EXCEL EXPORT ---------- */
