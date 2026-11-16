@@ -2691,3 +2691,11 @@ a.rb-ro:hover{color:var(--accent)}
 .pl-ol{list-style:decimal}
 .pl-li{display:list-item}
 .pl-li .sp-x{float:right}
+.pl-box{max-width:760px}
+.pl-t{width:100%;border-collapse:collapse;font-size:.76rem;margin-top:6px}
+.pl-t th{font-size:.66rem;color:#64748b;text-align:left;padding:5px 8px;border-bottom:1px solid #d6dde5}
+.pl-t td{padding:4px 8px;border-bottom:1px solid #eef1f4}
+.pl-t .num{text-align:right;font-variant-numeric:tabular-nums}
+.pl-t tfoot th{border-top:1px solid #cbd5e1;border-bottom:0;color:#1f2a37;font-size:.74rem}
+.pl-t tr.pl-man td{color:#64748b}
+.pl-box .pl-add{margin-top:10px}

@@ -102,8 +102,6 @@ const DEFAULT_LISTS = {
   fuelTypes: ["დიზელი", "ბენზინი", "გაზი", "სხვა"],
   positions: ["დღიური მუშა", "მობილური ჯგუფი", "სხვა"],
   units: ["მ", "მ²", "მ³", "ტ", "ცალი", "სთ", "დღე", "ლიტრი", "კგ"],
-  machines: ["ფრეზი", "ბობკატი", "წყლის მანქანა", "თვითმცლელი", "ექსკავატორი", "ზოლსაჭრელი", "უკუციცხვიანი დამტვირთველი", "ჰაიაპი",
-    "ასფალტის ვიბროფილა", "გრეიდერი", "გრუნტის სატკეპნი", "სტაბილიზაციის დანადგარი", "ასფალტის დამგები კომპლექტი"],
 };
 if (!db.prepare("SELECT 1 FROM config WHERE key='lists'").get())
   db.prepare("INSERT INTO config(key,data) VALUES('lists',?)").run(JSON.stringify(DEFAULT_LISTS));
@@ -420,7 +418,12 @@ const PROJECT_FIELDS = ["name", "shortName", "contractDate", "contractEnd", "sta
 /* HSE items every new report starts with; each project can edit its own copy */
 const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
 const cleanMachines = (v) => { const seen = new Set(); return (Array.isArray(v) ? v : []).map((x) => String(x ?? "").trim().slice(0, 120)).filter((x) => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase())).slice(0, 300).sort((a, b) => a.localeCompare(b, "ka")); };
-const globalMachines = () => cleanMachines((parse(db.prepare("SELECT data FROM config WHERE key='lists'").get()) || {}).machines);
+/* once: the predefined machinery list is dropped (projects keep only machines actually written or added by hand) */
+{ const OLD = new Set(["ფრეზი", "ბობკატი", "წყლის მანქანა", "თვითმცლელი", "ექსკავატორი", "ზოლსაჭრელი", "უკუციცხვიანი დამტვირთველი", "ჰაიაპი", "ასფალტის ვიბროფილა", "გრეიდერი", "გრუნტის სატკეპნი", "სტაბილიზაციის დანადგარი", "ასფალტის დამგები კომპლექტი"]);
+  if (!db.prepare("SELECT 1 FROM config WHERE key='mach_v2'").get()) {
+    for (const r of db.prepare("SELECT id,data FROM projects").all()) { const p = JSON.parse(r.data); if (Array.isArray(p.machines)) { p.machines = p.machines.filter((x) => !OLD.has(x)); db.prepare("UPDATE projects SET data=? WHERE id=?").run(JSON.stringify(p), r.id); } }
+    const L = parse(db.prepare("SELECT data FROM config WHERE key='lists'").get()); if (L) { delete L.machines; db.prepare("UPDATE config SET data=? WHERE key='lists'").run(JSON.stringify(L)); }
+    db.prepare("INSERT INTO config(key,data) VALUES('mach_v2','1')").run(); } }
 function cleanProject(body, base) {
   const p = { ...base };
   for (const k of PROJECT_FIELDS) if (body[k] !== undefined) p[k] = body[k];
@@ -451,7 +454,7 @@ api.post("/projects", auth, admin, (req, res) => {
   const p = cleanProject(req.body || {}, { createdAt: now(), createdBy: req.user.id });
   if (!p.name) return res.status(400).json({ error: "მიუთითეთ პროექტის დასახელება" });
   /* a new project starts with the company's machinery list from Settings; afterwards it keeps its own */
-  if (!Array.isArray(req.body?.machines)) p.machines = globalMachines();
+  if (!Array.isArray(req.body?.machines)) p.machines = [];
   const id = newId(8);
   db.prepare("INSERT INTO projects(id,data,updated_at) VALUES(?,?,?)").run(id, JSON.stringify(p), now());
   res.json(withId(id, p));
@@ -460,7 +463,7 @@ api.post("/projects/:id/machines", auth, (req, res) => {
   const p = getProject(req.params.id); if (!p) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
   if (!canWork(p, req.user) && !canReview(p, req.user)) return res.status(403).json({ error: "წვდომა არ გაქვთ" });
   const v = String(req.body?.value || "").trim().slice(0, 120); if (!v) return res.status(400).json({ error: "მნიშვნელობა ცარიელია" });
-  p.machines = cleanMachines([...(Array.isArray(p.machines) ? p.machines : globalMachines()), v]);
+  p.machines = cleanMachines([...(Array.isArray(p.machines) ? p.machines : []), v]);
   db.prepare("UPDATE projects SET data=?, updated_at=? WHERE id=?").run(JSON.stringify(p), now(), req.params.id);
   res.json({ machines: p.machines });
 });
