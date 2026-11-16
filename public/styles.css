@@ -2761,3 +2761,18 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .um-none{font-size:.7rem;color:#b45309;align-self:center;white-space:nowrap}
 .um-t th.um-pc,.um-t td.um-pc{padding-left:14px!important;text-align:left}
 .um-t td.um-pc select.um-ps{height:22px;font-size:.7rem;padding:0 4px;width:96px;min-width:96px}
+/* subcontractor payment terms */
+.sb-lbl{border:1px dashed #c3ccd6;background:#fff;border-radius:6px;padding:2px 8px;font-size:.72rem;color:#64748b;cursor:pointer;white-space:nowrap}
+.sb-lbl.on{border-style:solid;border-color:#9fd8b4;background:#eaf8ef;color:#14532d}
+.sb-lbl:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.sb-lbl:disabled{cursor:default}
+.sb-tr>td{background:#f6f8fa;padding:10px 12px!important}
+.sb-box{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.sb-grp{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid #e3e8ee;border-radius:8px;padding:8px 10px;width:220px}
+.sb-t{font-size:.72rem;font-weight:800;color:#1f2a37}
+.sb-f{display:flex;flex-direction:column;gap:2px;font-size:.68rem;color:#64748b}
+.sb-f .inp{height:26px;font-size:.74rem;padding:0 6px}
+.sb-f small{font-size:.62rem}
+.sb-n{font-size:.64rem;line-height:1.35}
+.sb-row{display:flex;gap:6px}.sb-row .inp{flex:1;min-width:0}.sb-row .sb-u{flex:0 0 70px}
+.sb-act{display:flex;flex-direction:column;gap:6px;align-self:flex-end}

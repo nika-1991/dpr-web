@@ -429,6 +429,10 @@ api.get("/projects", auth, (req, res) => {
 const PROJECT_FIELDS = ["name", "shortName", "contractDate", "contractEnd", "startDate", "endDate", "contractValue", "advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover", "advanceDate", "retShortMode", "retShortDays", "retLongMode", "retLongMonths", "machines", "subs", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
 /* HSE items every new report starts with; each project can edit its own copy */
 const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
+/* a subcontractor's payment terms: when its works are paid (schedule terms / N days after the works / back-to-back with our form 2),
+   an advance (% of its planned value, recovered pro rata from every payment) and a retention (% held, returned after its last payment) */
+const cleanSubPay = (v) => { const n = (x, a, b) => { const k = Number(x); return Number.isFinite(k) ? Math.max(a, Math.min(b, k)) : 0; }, d = (x) => (/^\d{4}-\d{2}-\d{2}$/.test(String(x || "")) ? String(x) : "");
+  return { mode: ["std", "days", "f2"].includes(v.mode) ? v.mode : "std", days: n(v.days, 0, 365), adv: n(v.adv, 0, 100), advDate: d(v.advDate), ret: n(v.ret, 0, 100), retN: n(v.retN, 0, 120), retU: v.retU === "m" ? "m" : "d" }; };
 const cleanMachines = (v) => { const seen = new Set(); return (Array.isArray(v) ? v : []).map((x) => String(x ?? "").trim().slice(0, 120)).filter((x) => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase())).slice(0, 300).sort((a, b) => a.localeCompare(b, "ka")); };
 /* once: the predefined machinery list is dropped (projects keep only machines actually written or added by hand) */
 { const OLD = new Set(["ფრეზი", "ბობკატი", "წყლის მანქანა", "თვითმცლელი", "ექსკავატორი", "ზოლსაჭრელი", "უკუციცხვიანი დამტვირთველი", "ჰაიაპი", "ასფალტის ვიბროფილა", "გრეიდერი", "გრუნტის სატკეპნი", "სტაბილიზაციის დანადგარი", "ასფალტის დამგები კომპლექტი"]);
@@ -450,7 +454,7 @@ function cleanProject(body, base) {
   p.dprStart = Math.max(1, parseInt(p.dprStart, 10) || 1);
   for (const k of ["advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover"]) { const n = parseFloat(String(p[k] ?? "").replace(",", ".")); p[k] = isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * 100) / 100)) : null; }
   if (p.machines !== undefined) p.machines = cleanMachines(p.machines);
-  p.subs = (Array.isArray(p.subs) ? p.subs : []).slice(0, 100).map((x) => ({ id: String(x?.id ?? "").slice(0, 20) || newId(6), name: String(x?.name ?? "").trim().slice(0, 300), contact: String(x?.contact ?? "").trim().slice(0, 300) })).filter((x) => x.name);
+  p.subs = (Array.isArray(p.subs) ? p.subs : []).slice(0, 100).map((x) => ({ id: String(x?.id ?? "").slice(0, 20) || newId(6), name: String(x?.name ?? "").trim().slice(0, 300), contact: String(x?.contact ?? "").trim().slice(0, 300), ...(x?.pay && typeof x.pay === "object" ? { pay: cleanSubPay(x.pay) } : {}) })).filter((x) => x.name);
   p.retShortMode = p.retShortMode === "days" ? "days" : "with";
   p.retLongMode = p.retLongMode === "guar" ? "guar" : "months";
   { const n = parseInt(p.retShortDays, 10); p.retShortDays = isFinite(n) ? Math.max(0, Math.min(1000, n)) : null; }
