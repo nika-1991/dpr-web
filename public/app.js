@@ -719,6 +719,12 @@ const SECTION_KEYS=["conditions","issues","hse","works","expenses","personnel","
 function ctx(){ const idx=boqIndex(P()); return {idx,item:c=>c?idx.get(normCode(c)):null}; }
 function autoItem(field,missing="ვერ მოიძებნა"){ return (r,c)=>{ if(!r.code) return ""; const it=c.item(r.code); if(!it) return {warn:missing}; return it[field]??""; }; }
 const listOpt=k=>()=>S.lists[k]||[];
+/* units that make sense for a resource / expense type (the full list for the rest) */
+function unitsFor(type){ const L=S.lists||{}, all=L.units||[];
+  if(type==="შრომა") return L.unitsLab||all;
+  if(type==="ტექნიკა"||type==="ტრანსპორტი") return L.unitsEq||all;
+  if(type==="მასალა"||type==="საწვავი") return L.unitsMat||all;
+  return [...new Set([...(L.unitsMat||[]),...(L.unitsLab||[]),...(L.unitsEq||[]),...all])]; }
 /* compact suggestion list under an input (the browser's own datalist is too airy): shown on focus / typing, click or Enter picks */
 function suggest(el,getList){
   let box=null, idx=-1;
@@ -839,7 +845,7 @@ const SECTIONS={
     {k:"type",l:"ხარჯის ტიპი",t:"select",opts:listOpt("costCats"),w:"130px",structural:true},
     {k:"machine",l:"ტექნიკა",t:"select",opts:projMachines,other:"machines",w:"170px",when:r=>r.type==="ტექნიკა"},
     {k:"desc",l:"ხარჯის აღწერა",t:"area",w:"200px"},
-    {k:"unit",l:"განზ.",t:"select",opts:listOpt("units"),w:"80px"},
+    {k:"unit",l:"განზ.",t:"select",opts:r=>unitsFor(r&&r.type),w:"80px"},
     {k:"qty",l:"რაოდ.",t:"num",w:"80px",recalc:true},
     {k:"fuelType",l:"საწვავის ტიპი",t:"select",opts:listOpt("fuelTypes"),w:"110px",when:r=>r.type==="ტექნიკა"},
     {k:"fuelQty",l:"საწვავის რაოდ.",t:"num",w:"86px",sum:true,when:r=>r.type==="ტექნიკა"},
@@ -856,14 +862,14 @@ const SECTIONS={
     {k:"meal",l:"კვება (1/0)",t:"select",opts:()=>["1","0"],w:"76px",sum:true}]},
   materials:{title:"მიღებული მასალა",en:"Received Materials",add:"+ მასალა",cols:[
     {k:"name",l:"მასალის სახელწოდება",t:"text",w:"200px"},
-    {k:"unit",l:"განზ.",t:"select",opts:listOpt("units"),w:"80px"},
+    {k:"unit",l:"განზ.",t:"select",opts:()=>unitsFor("მასალა"),w:"80px"},
     {k:"qty",l:"რაოდენობა",t:"num",w:"90px"},
     {k:"driver",l:"მძღოლი, საკონტაქტო",t:"text",w:"190px"},
     {k:"plate",l:"ავტომობილის ნომერი",t:"text",w:"110px"},
     {k:"comment",l:"შენიშვნა",t:"area",w:"170px"}]},
   fuel:{title:"მიღებული საწვავი",en:"Fuel Received at Site",add:"+ საწვავი",cols:[
     {k:"name",l:"დასახელება",t:"select",opts:listOpt("fuelTypes"),w:"140px"},
-    {k:"unit",l:"განზ.",t:"select",opts:listOpt("units"),w:"80px"},
+    {k:"unit",l:"განზ.",t:"select",opts:()=>unitsFor("მასალა"),w:"80px"},
     {k:"qty",l:"რაოდენობა",t:"num",w:"90px",sum:true},
     {k:"driver",l:"მძღოლი, საკონტაქტო",t:"text",w:"190px"},
     {k:"plate",l:"ავტომობილის ნომერი",t:"text",w:"110px"},
@@ -1151,7 +1157,7 @@ function renderRows(key,def,rows,ed){
     const needPrice=col.k==="price"&&S.rep&&S.rep.status==="submitted"&&(key!=="works"||row.code);
     const onIn=e=>{ if(needPrice) e.target.parentElement.classList.toggle("need",e.target.value==="");  row[col.k]=e.target.value; markDirty(key); if(col.recalc) refreshAmount(i); };
     let el;
-    if(col.t==="select"){ const opts=col.opts();
+    if(col.t==="select"){ const opts=col.opts(row);
       /* "other…": type a new value; on confirmation it joins the list for next time */
       const onOther=async e=>{ if(e.target.value!=="__other"){ onIn(e); if(col.structural) rerender(); return; }
         const v=(prompt(tr("ჩაწერეთ დასახელება"))||"").trim(); if(!v){ e.target.value=val; return; }
@@ -1614,7 +1620,7 @@ function renderSchedule(p){
       ...["vat","pit"].map((k,j)=>h("td",{class:"g-fz f"+(2+j)+" g-tax"},h("input",{type:"checkbox",checked:taxOf(r.x,k),disabled:!edit,"aria-label":(k==="vat"?"დღგ":"საშ.")+": "+(r.x.name||""),
         onchange:e=>{ r.x[k]=e.target.checked; saveSchedule(); }}))),
       h("td",{class:"g-fz f4 num g-calc",title:tr("ბადეში ჩაწერილი რაოდენობების ჯამი")},r.qty?fmtNum(r.qty):"—"),
-      h("td",{class:"g-fz f5 g-unit"},inp(r.x.unit,v=>{ r.x.unit=v; changed(); },{class:"g-in g-un","aria-label":"განზ.",placeholder:"—",list:"g-units","data-f":ri+":u"})),
+      h("td",{class:"g-fz f5 g-unit"},inp(r.x.unit,v=>{ r.x.unit=v; changed(); },{class:"g-in g-un","aria-label":"განზ.",placeholder:"—",list:"g-units-"+({"შრომა":"lab","ტექნიკა":"eq","მასალა":"mat"}[r.x.type]||"all"),"data-f":ri+":u"})),
       h("td",{class:"g-fz f6"},inp(r.x.price??"",v=>{ r.x.price=numOrNull(v); changed(); },{class:"g-in num","aria-label":"ერთ. ფასი",placeholder:"—",inputmode:"decimal","data-f":ri+":rp"})),
       durTd("r:"+r.x.id,planDays(r.plan)),
       gridCells(r,ri));
@@ -1696,7 +1702,7 @@ function renderSchedule(p){
   requestAnimationFrame(()=>{ if(S.gscroll){ wrap.scrollLeft=S.gscroll.x; wrap.scrollTop=S.gscroll.y; } else scrollToday(false);
     paint();
     if(S.gfocusNew){ S.gfocusNew=false; const n=wrap.querySelector('input[data-new="1"]'); if(n) n.focus(); } });
-  const units=h("datalist",{id:"g-units"},((S.lists&&S.lists.units)||[]).map(u=>h("option",{value:u})));
+  const units=[["lab","შრომა"],["eq","ტექნიკა"],["mat","მასალა"],["all",""]].map(([k,t])=>h("datalist",{id:"g-units-"+k},unitsFor(t).map(u=>h("option",{value:u}))));
   return h("div",{class:"sched"},top,
     rows.length?wrap:h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე.")),units,
     h("datalist",{id:"g-subs"},projSubs(p).map(x=>h("option",{value:x.name}))),
@@ -3473,7 +3479,7 @@ function editBtn(u,field,label){
 /* ---------- SETTINGS ---------- */
 function renderSettings(){
   if(!S.admin) return renderMissing();
-  const names={weather:"ამინდი",costCats:"ხარჯის კატეგორია",fuelTypes:"საწვავის ტიპი",positions:"პერსონალის პოზიცია",units:"ერთეული (განზ.)"};
+  const names={weather:"ამინდი",costCats:"ხარჯის კატეგორია",fuelTypes:"საწვავის ტიპი",positions:"პერსონალის პოზიცია",units:"ერთეული (განზ.) — სხვა",unitsMat:"ერთეული — მასალა",unitsLab:"ერთეული — შრომა",unitsEq:"ერთეული — ტექნიკა"};
   const fields={};
   const grid=h("div",{class:"fgrid"},Object.keys(names).map(k=>{ const id=uid(); const ta=h("textarea",{id,rows:8,value:(S.lists[k]||[]).join("\n")}); fields[k]=ta; return h("div",{class:"field"},h("label",{for:id},names[k]),ta); }));
   return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"ჩამოსაშლელი სიები"),h("h1",null,"სიები"))),

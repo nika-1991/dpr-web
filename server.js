@@ -102,6 +102,9 @@ const DEFAULT_LISTS = {
   fuelTypes: ["დიზელი", "ბენზინი", "გაზი", "სხვა"],
   positions: ["დღიური მუშა", "მობილური ჯგუფი", "სხვა"],
   units: ["მ", "მ²", "მ³", "ტ", "ცალი", "სთ", "დღე", "ლიტრი", "კგ"],
+  unitsMat: ["მ", "მ²", "მ³", "ტ", "კგ", "ცალი", "ლიტრი", "კომპლ."],
+  unitsLab: ["კაც/დღე", "კაც/სთ", "დღე", "სთ"],
+  unitsEq: ["მან/სთ", "მან/დღე", "სთ", "დღე", "რეისი"],
 };
 if (!db.prepare("SELECT 1 FROM config WHERE key='lists'").get())
   db.prepare("INSERT INTO config(key,data) VALUES('lists',?)").run(JSON.stringify(DEFAULT_LISTS));
