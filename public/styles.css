@@ -2759,3 +2759,5 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .um-pp select.inp{height:26px;font-size:.74rem;padding:0 6px;flex:1;min-width:0}
 .um-pp select.inp+select.inp{flex:0 0 90px}
 .um-none{font-size:.7rem;color:#b45309;align-self:center;white-space:nowrap}
+.um-t th.um-pc,.um-t td.um-pc{padding-left:14px!important;text-align:left}
+.um-t td.um-pc select.um-ps{height:22px;font-size:.7rem;padding:0 4px;width:96px;min-width:96px}

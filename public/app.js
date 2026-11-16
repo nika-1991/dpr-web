@@ -3484,7 +3484,10 @@ function renderSettings(){
   const TYPES=G.flatMap(([k,,pre])=>U[k].map(x=>pre+x));
   const has=(u,t)=>!U.map[u]?!/^(fuel|pos):/.test(t):U.map[u].includes(t);
   const tog=(u,t,on)=>{ const cur=U.map[u]?[...U.map[u]]:TYPES.filter(x=>!/^(fuel|pos):/.test(x)); U.map[u]=on?[...new Set([...cur,t])]:cur.filter(x=>x!==t); };
-  const N=U.units.length+2;
+  const N=U.units.length+3;
+  /* last column: the unit drop-down exactly as forms will show it for this item */
+  const PC={}; const prevCell=t=>{ const td=PC[t]; if(!td) return; const us=U.units.filter(u=>has(u,t));
+    td.replaceChildren(us.length?h("select",{class:"inp um-ps","aria-label":tr("ერთეული")},us.map(u=>h("option",null,u))):h("span",{class:"um-none"},tr("ერთეული არ არის"))); };
   /* every change is saved right away (no separate Save button) */
   const save=()=>{ clearTimeout(S.uT); S.uT=setTimeout(async()=>{ const data={costCats:U.costCats,fuelTypes:U.fuelTypes,positions:U.positions,weather:U.weather,units:U.units,unitMap:U.map};
     try{ S.lists=await api("PUT","/config/lists",data); toast("შენახულია"); }catch(e){ toast("ვერ შეინახა: "+errMsg(e)); } },500); };
@@ -3496,7 +3499,8 @@ function renderSettings(){
   const groupRows=([k,l,pre])=>{ const L=U[k], rows=[h("tr",{class:"um-gr"},h("th",{colspan:String(N)},tr(l)))];
     L.forEach((x,i)=>{ if(i===L.length-1) rows.push(S.uAdd===k?addRow(k):plus(k));
       rows.push(h("tr",null,h("th",{scope:"row"},h("span",null,tr(x)),h("button",{class:"sp-x um-del",type:"button","aria-label":tr("წაშლა")+" "+x,onclick:()=>{ if(!confirm(tr("წავშალო?")+" „"+x+"“")) return; L.splice(i,1); save(); render(); }},"✕")),
-        U.units.map(u=>h("td",{class:"um-c"},h("input",{type:"checkbox",checked:has(u,pre+x),"aria-label":x+" — "+u,onchange:e=>{ tog(u,pre+x,e.target.checked); save(); drawPrev(); }}))),h("td"))); });
+        U.units.map(u=>h("td",{class:"um-c"},h("input",{type:"checkbox",checked:has(u,pre+x),"aria-label":x+" — "+u,onchange:e=>{ tog(u,pre+x,e.target.checked); save(); prevCell(pre+x); }}))),h("td"),(PC[pre+x]=h("td",{class:"um-pc"}),PC[pre+x])));
+      prevCell(pre+x); });
     if(!L.length) rows.push(S.uAdd===k?addRow(k):plus(k)); return rows; };
   let nu=null;
   const umat=h("div",{class:"um-wrap"},h("table",{class:"um-t"},
@@ -3504,20 +3508,11 @@ function renderSettings(){
       h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა")+" "+u,title:tr("წაშლა"),onclick:()=>{ if(!confirm(tr("წავშალო?")+" „"+u+"“")) return; U.units.splice(i,1); delete U.map[u]; save(); render(); }},"✕"))),
       h("th",{class:"um-c um-uadd"},S.uAdd==="unit"?h("form",{class:"um-unew",onsubmit:e=>{ e.preventDefault(); const v=nu.value.trim(); if(!v||U.units.includes(v)) return; U.units.push(v); U.map[v]=[]; S.uAdd=null; save(); render(); }},
         nu=h("input",{class:"inp",placeholder:tr("ერთეული"),"aria-label":tr("ახალი ერთეული"),onkeydown:e=>{ if(e.key==="Escape"){ S.uAdd=null; render(); } }}),void setTimeout(()=>nu&&nu.focus(),0))
-        :h("button",{type:"button",class:"um-pb",title:tr("ერთეულის დამატება"),"aria-label":tr("ერთეულის დამატება"),onclick:()=>{ S.uAdd="unit"; render(); }},"+")))),
+        :h("button",{type:"button",class:"um-pb",title:tr("ერთეულის დამატება"),"aria-label":tr("ერთეულის დამატება"),onclick:()=>{ S.uAdd="unit"; render(); }},"+")),h("th",{class:"um-pc"},tr("ჩამოსაშლელი")))),
     h("tbody",null,G.flatMap(groupRows))));
-  const wta=h("textarea",{class:"inp um-wx",rows:12,value:U.weather.join("\n"),oninput:e=>{ U.weather=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean); save(); drawPrev(); }});
-  /* live preview of the drop-downs as people will see them: pick an item, the unit list shows what it offers */
-  const prev=h("div",{class:"um-prev"}), P=S.uPrev||(S.uPrev={});
-  const sel=(items,cur,on,lbl)=>{ const el=h("select",{class:"inp","aria-label":lbl,onchange:e=>{ on(e.target.value); drawPrev(); }},items.map(x=>h("option",{value:x},tr(x)))); el.value=cur; return el; };
-  function drawPrev(){ prev.replaceChildren(h("div",{class:"um-ph"},tr("გადახედვა")),
-    ...G.map(([k,l,pre])=>{ const L=U[k]; if(!L.includes(P[k])) P[k]=L[0]; const us=U.units.filter(u=>has(u,pre+P[k]));
-      return h("div",{class:"um-pr"},h("label",null,tr(l)),h("div",{class:"um-pp"},sel(L,P[k],v=>{ P[k]=v; },tr(l)),
-        us.length?sel(us,us.includes(P["u_"+k])?P["u_"+k]:us[0],v=>{ P["u_"+k]=v; },tr("ერთეული")):h("span",{class:"um-none"},tr("ერთეული არ არის")))); }),
-    h("div",{class:"um-pr"},h("label",null,tr("ამინდი")),h("div",{class:"um-pp"},sel(U.weather,U.weather[0],()=>{},tr("ამინდი"))))); }
-  drawPrev();
+  const wta=h("textarea",{class:"inp um-wx",rows:12,value:U.weather.join("\n"),oninput:e=>{ U.weather=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean); save(); }});
   return h("section",{class:"panel um-panel"},h("div",{class:"panel-h"},h("h2",null,tr("ჩამოსაშლელი სიები"))),
-    h("div",{class:"panel-b um-two"},umat,h("div",{class:"um-side"},prev,h("div",{class:"field um-wf"},h("label",null,tr("ამინდი")),wta))));
+    h("div",{class:"panel-b um-two"},umat,h("div",{class:"field um-wf"},h("label",null,tr("ამინდი")),wta)));
 }
 
 /* ---------- EXCEL EXPORT ---------- */
