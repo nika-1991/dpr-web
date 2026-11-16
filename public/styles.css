@@ -2725,3 +2725,10 @@ a.rb-ro:hover{color:var(--accent)}
 .um-c{padding:3px 6px!important}
 form.um-add{display:flex;gap:8px;padding:8px 0}
 form.um-add .inp{height:28px;width:180px;font-size:.76rem}
+/* units table compact: no row lines, small gaps; space only before each list */
+.um-t th,.um-t td{border-bottom:0!important;padding-top:1px!important;padding-bottom:1px!important}
+.um-t tbody th{font-size:.74rem;padding-left:16px}
+.um-t .um-c input{width:14px;height:14px;margin:0}
+.um-t tr.um-gr th{background:none;padding:12px 10px 3px!important;border-bottom:1px solid #e3e8ee!important}
+.um-t tbody tr.um-gr:first-child th{padding-top:4px!important}
+.um-t thead th{border-bottom:1px solid #d6dde5!important}
