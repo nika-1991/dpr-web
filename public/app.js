@@ -308,7 +308,7 @@ function appRibbon(){
   /* radio lists like the projects ribbon; four or more options go into two columns */
   const R=(label,items,cur,on)=>rbGrp(label,rbRadio(items,cur,on,items.length>=4));
   if(S.view==="company"){ const t=S.coTab||"pl", go_=k=>{ S.coTab=k; render(); };
-    return [R("ანგარიშგება",[["pl","P&L","chart"],["cf","CF","pulse"]],t,go_),R("დაშვებები",[["fixed","ფიქსირებული ხარჯები","building"],["loans","სესხები","coins"],["set","ერთჯერადი","issues"]],t,go_)]; }
+    return [R("ანგარიშგება",[["pl","P&L","chart"],["cf","CF","pulse"]],t,go_),R("ანალიზი",[["scen","სცენარების ანალიზი","layers"]],t,go_),R("დაშვებები",[["fixed","ფიქსირებული ხარჯები","building"],["loans","სესხები","coins"],["set","ერთჯერადი","issues"]],t,go_)]; }
   if(S.view==="reports"&&(S.admin||S.reviewer)){ const t=S.rpTab||"ibl";
     return [R("რეესტრები",[["ibl","Liabilities","coins"],["ret","Retention","pause"],["pledge","Pledged assets","building"],["guar","Guarantees","checkc"]],t,k=>{ S.rpTab=k; render(); })]; }
   if(S.view==="settings"||S.view==="users") return [R("პარამეტრები",[["users","მომხმარებლები","personnel"],["settings","სიები","list"]],S.view,k=>{ if(k==="users") S.userSel=null; go(k); }),
@@ -2760,7 +2760,7 @@ function renderCompany(){
   if(!(S.admin||S.reviewer)) return renderMissing();
   if(!S.co){ loadCompany(); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   const tab=S.coTab||"pl";
-  return h("div",{class:"co-page"},h("div",{class:"co-st"},h("span",{id:"co-status",class:"muted small"})),tab==="set"?renderCoEvents():tab==="fixed"?renderCoFixed():tab==="loans"?renderCoLoans():tab==="cf"?renderCoCF():renderCoPL());
+  return h("div",{class:"co-page"},h("div",{class:"co-st"},h("span",{id:"co-status",class:"muted small"})),tab==="scen"?h("div",{class:"empty"},icon("layers"),h("p",null,h("b",null,tr("სცენარების ანალიზი"))),h("p",{class:"muted"},tr("გვერდი მზადდება."))):tab==="set"?renderCoEvents():tab==="fixed"?renderCoFixed():tab==="loans"?renderCoLoans():tab==="cf"?renderCoCF():renderCoPL());
 }
 function renderCoPL(){
   const view=S.coView||"plan", D=coData(view), vr=1.18;
