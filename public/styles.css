@@ -2747,3 +2747,5 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .um-new{display:flex;gap:6px;align-items:center}
 .um-new .inp{height:24px;width:170px;font-size:.74rem;padding:0 6px}
 .um-unew .inp{height:22px;width:78px;font-size:.68rem;padding:0 6px}
+.um-t thead th.um-uadd{vertical-align:middle;padding:2px 6px}
+.um-unew .inp{height:22px!important;width:70px!important;min-width:70px;border-radius:4px!important;font-size:.68rem;padding:0 6px;appearance:auto}
