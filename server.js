@@ -416,9 +416,11 @@ api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
   res.json(rows.filter((p) => canSee(p, req.user)).map((p) => ({ ...p, stats: projectStats(p, p.id) })));
 });
-const PROJECT_FIELDS = ["name", "shortName", "contractDate", "contractEnd", "startDate", "endDate", "contractValue", "advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover", "advanceDate", "retShortMode", "retShortDays", "retLongMode", "retLongMonths", "subs", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
+const PROJECT_FIELDS = ["name", "shortName", "contractDate", "contractEnd", "startDate", "endDate", "contractValue", "advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover", "advanceDate", "retShortMode", "retShortDays", "retLongMode", "retLongMonths", "machines", "subs", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
 /* HSE items every new report starts with; each project can edit its own copy */
 const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
+const cleanMachines = (v) => { const seen = new Set(); return (Array.isArray(v) ? v : []).map((x) => String(x ?? "").trim().slice(0, 120)).filter((x) => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase())).slice(0, 300).sort((a, b) => a.localeCompare(b, "ka")); };
+const globalMachines = () => cleanMachines((parse(db.prepare("SELECT data FROM config WHERE key='lists'").get()) || {}).machines);
 function cleanProject(body, base) {
   const p = { ...base };
   for (const k of PROJECT_FIELDS) if (body[k] !== undefined) p[k] = body[k];
@@ -432,6 +434,7 @@ function cleanProject(body, base) {
   p.archived = !!p.archived;
   p.dprStart = Math.max(1, parseInt(p.dprStart, 10) || 1);
   for (const k of ["advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover"]) { const n = parseFloat(String(p[k] ?? "").replace(",", ".")); p[k] = isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * 100) / 100)) : null; }
+  if (p.machines !== undefined) p.machines = cleanMachines(p.machines);
   p.subs = (Array.isArray(p.subs) ? p.subs : []).slice(0, 100).map((x) => ({ id: String(x?.id ?? "").slice(0, 20) || newId(6), name: String(x?.name ?? "").trim().slice(0, 300), contact: String(x?.contact ?? "").trim().slice(0, 300) })).filter((x) => x.name);
   p.retShortMode = p.retShortMode === "days" ? "days" : "with";
   p.retLongMode = p.retLongMode === "guar" ? "guar" : "months";
@@ -447,9 +450,19 @@ function cleanProject(body, base) {
 api.post("/projects", auth, admin, (req, res) => {
   const p = cleanProject(req.body || {}, { createdAt: now(), createdBy: req.user.id });
   if (!p.name) return res.status(400).json({ error: "მიუთითეთ პროექტის დასახელება" });
+  /* a new project starts with the company's machinery list from Settings; afterwards it keeps its own */
+  if (!Array.isArray(req.body?.machines)) p.machines = globalMachines();
   const id = newId(8);
   db.prepare("INSERT INTO projects(id,data,updated_at) VALUES(?,?,?)").run(id, JSON.stringify(p), now());
   res.json(withId(id, p));
+});
+api.post("/projects/:id/machines", auth, (req, res) => {
+  const p = getProject(req.params.id); if (!p) return res.status(404).json({ error: "პროექტი ვერ მოიძებნა" });
+  if (!canWork(p, req.user) && !canReview(p, req.user)) return res.status(403).json({ error: "წვდომა არ გაქვთ" });
+  const v = String(req.body?.value || "").trim().slice(0, 120); if (!v) return res.status(400).json({ error: "მნიშვნელობა ცარიელია" });
+  p.machines = cleanMachines([...(Array.isArray(p.machines) ? p.machines : globalMachines()), v]);
+  db.prepare("UPDATE projects SET data=?, updated_at=? WHERE id=?").run(JSON.stringify(p), now(), req.params.id);
+  res.json({ machines: p.machines });
 });
 api.patch("/projects/:id", auth, admin, (req, res) => {
   const cur = getProject(req.params.id);
