@@ -2776,3 +2776,11 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .sb-n{font-size:.64rem;line-height:1.35}
 .sb-row{display:flex;gap:6px}.sb-row .inp{flex:1;min-width:0}.sb-row .sb-u{flex:0 0 70px}
 .sb-act{display:flex;flex-direction:column;gap:6px;align-self:flex-end}
+.sb-lbl.need{border-color:#f0c48a;background:#fff8ec;color:#b45309}
+.sb-wide{width:300px}
+.sb-pct .inp{width:56px;flex:0 0 56px}.sb-pct span{align-self:center;font-size:.72rem;color:#64748b}
+.sb-n2{flex:0 0 auto;align-items:center}.sb-n2 .inp{width:56px;flex:0 0 56px}.sb-n2 span{font-size:.7rem;color:#64748b}
+.sb-row .sb-f{flex:1}
+.ps-box{max-width:none;width:fit-content}
+.sb-f .inp{height:26px!important}
+.sb-grp input.inp{height:26px!important;min-height:26px;box-sizing:border-box;padding-top:0;padding-bottom:0}

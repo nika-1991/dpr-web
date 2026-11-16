@@ -1798,7 +1798,7 @@ function renderTermsPage(sc,edit){
         edit&&sum<100?h("button",{class:"btn sm",type:"button",onclick:()=>{ parts.push({pct:Math.round((100-sum)*100)/100,t:""}); redraw(); }},"+ ნაწილი ("+fmtNum(100-sum)+"%)"):null)); };
   /* resources with their own terms are listed separately; "the rest" share the type's terms */
   const namesOf=t=>[...new Set(Object.values(sc.rows||{}).flatMap(r=>(r.res||[]).filter(x=>x.type===t&&x.name&&x.name.trim()).map(x=>x.name.trim())))].sort((a,b)=>a.localeCompare(b,"ka"));
-  const cards=RES_TYPES.map(([t,c])=>{
+  const cards=RES_TYPES.filter(([t])=>t!=="ქვეკონტრაქტორი").map(([t,c])=>{
     const parts=W.types[t]||(W.types[t]=[]);
     const own=W.items[t]||(W.items[t]={});
     const names=namesOf(t), rest=names.filter(n=>!own[n]);
@@ -1826,7 +1826,7 @@ function renderTermsPage(sc,edit){
   return h("div",{class:"sched tp"},
     h("div",{class:"g-top"},
       h("div",{class:"row",style:"gap:10px;align-items:center"},h("button",{class:"btn ghost",type:"button",onclick:back},"← გეგმა-გრაფიკი"),
-        h("div",null,h("h2",{style:"margin:0"},"ანაზღაურების პირობები"),h("div",{class:"small muted"},"შესრულებიდან როდის ხდება გადახდა — რესურსის ტიპის მიხედვით, ნაწილებად."))),
+        h("div",null,h("h2",{style:"margin:0"},"ანაზღაურების პირობები"),h("div",{class:"small muted"},"შესრულებიდან როდის ხდება გადახდა — რესურსის ტიპის მიხედვით, ნაწილებად. ქვეკონტრაქტორებს პირობა ინდივიდუალურად ენიჭებათ: სიები → ქვეკონტრაქტორი."))),
       edit?h("div",{class:"g-ctrls"},h("button",{class:"btn ghost",type:"button",onclick:back},"გაუქმება"),h("button",{class:"btn primary",type:"button",onclick:save},"შენახვა")):null),
     h("div",{class:"tp-grid"},cards));
 }
@@ -2444,28 +2444,34 @@ function cfData(p,sc=S.sched){
   /* resources by their payment terms */
   const chOf=new Map(); let cur=null;
   for(const it of p.boq||[]){ if(it.type==="თავი") cur=it.name||it.code||""; else if(it.type==="პოზიცია") chOf.set(normCode(it.code),cur||tr("კოდის გარეშე")); }
-  /* subcontractors with their own terms (project lists → subcontractors) */
-  const SP=new Map(projSubs(p).filter(x=>x.pay).map(x=>[x.name.trim().toLowerCase(),x.pay])), SA=new Map();
+  /* subcontractors: each has its own terms (project lists → subcontractors); without them they are paid on the day of the works */
+  const SP=new Map(projSubs(p).map(x=>[x.name.trim().toLowerCase(),x.pay||{mode:"days",days:0}])), SA=new Map();
   /* back-to-back: a cost of day d is paid when the client pays the form 2 that covers d (+ N days) */
   const f2Pay=(d,n)=>{ const e=invs.find(([dd])=>dd>=d)||invs[invs.length-1]; return addDays(e?e[0]:d,num(f.lag)+n); };
   for(const [code,row] of Object.entries(sc.rows||{})) for(const x of row.res||[]){
     const sh=Math.round(num(f.shift)), dd=Object.keys(x.plan||{}).sort(); if(!dd.length||!num(x.price)) continue;
     const days=sh?dd.map(d=>addDays(d,sh)):dd, qOf=d=>num(x.plan[sh?addDays(d,-sh):d]);
+    const isSub=x.type==="ქვეკონტრაქტორი", nm=String(x.name||"").trim(), k=nm.toLowerCase();
+    const sp=isSub?(SP.get(k)||{mode:"days",days:0}):null;
     const parts=((T.items[x.type]||{})[x.name])||T.types[x.type]||[];
-    const nm=String(x.name||"").trim(), sp=x.type==="ქვეკონტრაქტორი"?SP.get(nm.toLowerCase()):null;
-    const use=sp&&sp.mode!=="std"?[{pct:100,t:sp.mode}]:parts.length?parts:[{pct:100,t:"0"}];
-    const acc=sp?(SA.get(nm.toLowerCase())||SA.set(nm.toLowerCase(),{n:nm,sp,tot:0,held:0,first:null,last:null}).get(nm.toLowerCase())):null;
+    const use=isSub?[{pct:100,t:sp.mode==="f2"?"f2":"days"}]:parts.length?parts:[{pct:100,t:"0"}];
+    const acc=isSub?(SA.get(k)||SA.set(k,{n:nm||tr(x.type),sp,items:[]}).get(k)):null;
+    const line="cost:"+(chOf.get(code)||tr("კოდის გარეშე"));
     for(const d of days){ const c=qOf(d)*num(x.price); if(!c) continue;
       if(taxOf(x,"vat")) vatIn[mk(d)]=(vatIn[mk(d)]||0)+c*r/(1+r);
       for(const pt of use){ const v=c*num(pt.pct)/100, pd=pt.t==="days"?addDays(d,num(sp.days)):pt.t==="f2"?f2Pay(d,num(sp.days)):dueDay(d,pt.t,days[0]);
-        put("cost:"+(chOf.get(code)||tr("კოდის გარეშე")),pd,-v,x.name||tr(x.type));
-        if(acc){ acc.tot+=v; if(!acc.first||d<acc.first) acc.first=d; if(!acc.last||pd>acc.last) acc.last=pd;
-          /* the advance is recovered pro rata from every payment; the retention is held from it */
-          if(num(sp.adv)) put("subAdvDed",pd,v*num(sp.adv)/100,nm);
-          if(num(sp.ret)){ put("subRet",pd,v*num(sp.ret)/100,nm); acc.held+=v*num(sp.ret)/100; } } } } }
-  for(const a of SA.values()){ const sp=a.sp;
-    if(num(sp.adv)&&a.tot) put("subAdv",sp.advDate||a.first,-a.tot*num(sp.adv)/100,a.n);
-    if(a.held&&a.last) put("subRetRel",sp.retU==="m"?addMonths(a.last,num(sp.retN)):addDays(a.last,num(sp.retN)),-a.held,a.n); }
+        put(line,pd,-v,x.name||tr(x.type)); if(acc) acc.items.push({d,pd,v}); } } }
+  /* per subcontractor: advance (paid on its date, recovered between the start % and end % of its progress, pro rata),
+     short- and long-term retention held from every payment and returned like ours */
+  for(const a of SA.values()){ const sp=a.sp, it=a.items.sort((x,y)=>x.d.localeCompare(y.d)); if(!it.length) continue;
+    const TV=it.reduce((s,x)=>s+x.v,0), A=TV*num(sp.adv)/100, rs=num(sp.retShort), rl=num(sp.retLong);
+    const wa=(sp.advFrom!=null?num(sp.advFrom):0)/100*TV, wb=(sp.advTo!=null?num(sp.advTo):100)/100*TV;
+    let cum=0, last=it[0].pd, hs=0, hl=0;
+    if(A) put("subAdv",sp.advDate||it[0].d,-A,a.n);
+    for(const x of it){ const c0=cum; cum+=x.v; if(x.pd>last) last=x.pd;
+      if(A){ const ded=wb>wa?A*Math.max(0,Math.min(cum,wb)-Math.max(c0,wa))/(wb-wa):(c0<wa&&cum>=wa?A:0); if(ded) put("subAdvDed",x.pd,ded,a.n); }
+      if(rs||rl){ put("subRet",x.pd,x.v*(rs+rl)/100,a.n); hs+=x.v*rs/100; hl+=x.v*rl/100; } }
+    const rd=retDates(sp,last); if(hs) put("subRetRel",rd.s,-hs,a.n); if(hl) put("subRetRel",rd.l,-hl,a.n); }
   /* overheads: the month's amount, paid on a day of the next month */
   const lo0=[p.startDate,...flows.map(x=>x.date)].filter(Boolean).sort()[0];
   const hi0=[p.endDate,...flows.map(x=>x.date)].filter(Boolean).sort().pop();
@@ -2737,9 +2743,10 @@ function renderProjLists(p){
     :h("p",{class:"muted small"},tr("გეგმა-გრაფიკში ტექნიკა ჯერ არ არის დაგეგმილი.")),add);
 }
 /* the project's subcontractors: those planned in the schedule (totalled) plus those entered by hand / in the project data */
-const subPayLabel=sp=>{ if(!sp) return tr("საერთო");
-  const a=[sp.mode==="days"?"+"+fmtNum(num(sp.days))+" "+tr("დღე"):sp.mode==="f2"?tr("ფორმა 2")+(num(sp.days)?" +"+fmtNum(num(sp.days))+" "+tr("დღე"):""):tr("საერთო")];
-  if(num(sp.adv)) a.push(tr("ავანსი")+" "+fmtNum(num(sp.adv))+"%"); if(num(sp.ret)) a.push(tr("დაკ.")+" "+fmtNum(num(sp.ret))+"%"); return a.join(" · "); };
+const subPayLabel=sp=>{ if(!sp) return tr("მიუთითეთ პირობა");
+  const a=[sp.mode==="f2"?tr("ფორმა 2")+(num(sp.days)?" +"+fmtNum(num(sp.days))+" "+tr("დღე"):""):"+"+fmtNum(num(sp.days))+" "+tr("დღე")];
+  if(num(sp.adv)) a.push(tr("ავანსი")+" "+fmtNum(num(sp.adv))+"%"+(sp.advFrom!=null||sp.advTo!=null?" ("+fmtNum(num(sp.advFrom))+"–"+fmtNum(sp.advTo??100)+"%)":""));
+  const s1=num(sp.retShort??sp.ret), s2=num(sp.retLong); if(s1||s2) a.push(tr("დაკ.")+" "+fmtNum(s1)+(s2?"+"+fmtNum(s2):"")+"%"); return a.join(" · "); };
 function renderProjSubs(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   const edit=canReview(p)&&!p.archived, T=new Map(), mine=projSubs(p);
@@ -2756,25 +2763,30 @@ function renderProjSubs(p){
   /* payment terms: saved on the subcontractor in the project data (a planned-only one is added to it) */
   const setPay=(x,pay)=>{ const L=cur(), o=L.find(y=>y.name.toLowerCase()===x.n.toLowerCase()); if(o){ if(pay) o.pay=pay; else delete o.pay; } else if(pay) L.push({id:Math.random().toString(36).slice(2,8),name:x.n,contact:"",pay}); S.psEdit=null; put(L); };
   const NC=10;
-  const editor=x=>{ const d=S.psDraft&&S.psDraft.n===x.n?S.psDraft:(S.psDraft={n:x.n,mode:"std",days:"",adv:"",advDate:"",ret:"",retN:"",retU:"d",...(x.pay||{})});
+  const editor=x=>{ const d=S.psDraft&&S.psDraft.n===x.n?S.psDraft:(S.psDraft={n:x.n,mode:"days",days:"",adv:"",advDate:"",advFrom:"",advTo:"",retShort:"",retLong:"",
+      retShortMode:"with",retShortDays:"",retLongMode:"months",retLongMonths:24,...(x.pay||{}),...(x.pay&&x.pay.mode==="std"?{mode:"days"}:{})});
     const fld=(l,el,hint)=>h("label",{class:"sb-f"},h("span",null,tr(l)),el,hint?h("small",{class:"muted"},hint):null);
-    const ni=(k,l,a={})=>h("input",{class:"inp num",type:"number",min:"0",step:"any",value:String(d[k]??""),"aria-label":tr(l),...a,oninput:e=>{ d[k]=e.target.value; if(a.redraw) render(); }});
-    const modeSel=h("select",{class:"inp","aria-label":tr("გადახდის წესი"),onchange:e=>{ d.mode=e.target.value; render(); }},
-      [["std","საერთო პირობით (გეგმა-გრაფიკი)"],["days","შესრულებიდან N დღეში"],["f2","ფორმა 2-ზე მიბმული (back-to-back)"]].map(([v,l])=>h("option",{value:v},tr(l)))); modeSel.value=d.mode;
-    const uSel=h("select",{class:"inp sb-u","aria-label":tr("ერთეული"),onchange:e=>{ d.retU=e.target.value; }},h("option",{value:"d"},tr("დღე")),h("option",{value:"m"},tr("თვე"))); uSel.value=d.retU;
-    const advAmt=x.val*num(d.adv)/100;
+    const ni=(k,l,a={})=>h("input",{class:"inp num",type:"number",min:"0",step:"any",value:String(d[k]??""),"aria-label":tr(l),...a,oninput:e=>{ d[k]=e.target.value; }});
+    const sl=(k,l,opts,re)=>{ const el=h("select",{class:"inp","aria-label":tr(l),onchange:e=>{ d[k]=e.target.value; if(re) render(); }},opts.map(([v,t])=>h("option",{value:v},tr(t)))); el.value=d[k]; return el; };
     const box=h("div",{class:"sb-box"},
-      h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("გადახდა")),fld("გადახდის წესი",modeSel),
-        d.mode!=="std"?fld(d.mode==="f2"?"+ დღე ჩვენი თანხის მიღების შემდეგ":"დღე შესრულებიდან",ni("days","დღეები")):null,
-        h("small",{class:"muted sb-n"},tr(d.mode==="f2"?"გადავუხდით, როცა დამკვეთი გადაგვიხდის ამ სამუშაოს შემცველ ფორმა 2-ს.":d.mode==="days"?"ყოველი დღის შესრულება გადაიხდება N დღის შემდეგ.":"გეგმა-გრაფიკის „ანაზღაურების პირობები“ მოქმედებს."))),
-      h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("ავანსი")),fld("ავანსი %",ni("adv","ავანსი %",{max:"100",redraw:false}),x.val?tr("გეგმიური ღირებულებიდან")+" "+gel0(x.val):null),
+      h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("გადახდა")),fld("გადახდის წესი",sl("mode","გადახდის წესი",[["days","შესრულებიდან N დღეში"],["f2","ფორმა 2-ზე მიბმული (back-to-back)"]],true)),
+        fld(d.mode==="f2"?"+ დღე ჩვენი თანხის მიღების შემდეგ":"დღე შესრულებიდან",ni("days","დღეები")),
+        h("small",{class:"muted sb-n"},tr(d.mode==="f2"?"გადავუხდით, როცა დამკვეთი გადაგვიხდის ამ სამუშაოს შემცველ ფორმა 2-ს.":"ყოველი დღის შესრულება გადაიხდება N დღის შემდეგ."))),
+      h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("ავანსი")),fld("ავანსი %",ni("adv","ავანსი %",{max:"100"}),x.val?tr("გეგმიური ღირებულებიდან")+" "+gel0(x.val):null),
         fld("გაცემის თარიღი",h("input",{class:"inp",type:"date",value:d.advDate||"","aria-label":tr("ავანსის გაცემის თარიღი"),onchange:e=>{ d.advDate=e.target.value; }}),tr("ცარიელი — პირველი სამუშაოს დღე")),
-        h("small",{class:"muted sb-n"},tr("იქვითება ყოველი გადახდიდან პროპორციულად."))),
-      h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("დაკავება")),fld("დაკავება %",ni("ret","დაკავება %",{max:"100"})),
-        fld("დაბრუნება ბოლო გადახდიდან",h("div",{class:"sb-row"},ni("retN","დაბრუნების ვადა"),uSel))),
-      h("div",{class:"sb-act"},h("button",{class:"btn sm primary",type:"button",onclick:()=>{ const pay={mode:d.mode,days:num(d.days),adv:num(d.adv),advDate:d.advDate||"",ret:num(d.ret),retN:num(d.retN),retU:d.retU};
-          const empty=pay.mode==="std"&&!pay.adv&&!pay.ret; S.psDraft=null; setPay(x,empty?null:pay); }},tr("შენახვა")),
-        x.pay?h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ if(confirm(tr("პირობა წავშალო?"))){ S.psDraft=null; setPay(x,null); } }},tr("პირობის მოხსნა")):null,
+        fld("ავანსის გაქვითვა",h("div",{class:"sb-row sb-pct"},ni("advFrom","გაქვითვა იწყება, %",{max:"100",placeholder:"0"}),h("span",null,"% –"),ni("advTo","გაქვითვა მთავრდება, %",{max:"100",placeholder:"100"}),h("span",null,"%")),
+          tr("შესრულების რომელ %-ებს შორის; 0–100 — პროპორციულად სრულად"))),
+      h("div",{class:"sb-grp sb-wide"},h("div",{class:"sb-t"},tr("დაკავება")),
+        h("div",{class:"sb-row"},fld("მოკლევადიანი %",ni("retShort","მოკლევადიანი დაკავება %",{max:"100"})),fld("გრძელვადიანი %",ni("retLong","გრძელვადიანი დაკავება %",{max:"100"}))),
+        fld("მოკლევადიანის დაბრუნება",h("div",{class:"sb-row"},sl("retShortMode","მოკლევადიანის დაბრუნება",[["with","ბოლო გადახდასთან ერთად"],["days","ბოლო გადახდიდან"]],true),
+          d.retShortMode==="days"?h("span",{class:"sb-row sb-n2"},ni("retShortDays","დღეები"),h("span",null,tr("დღეში"))):null)),
+        fld("გრძელვადიანის დაბრუნება",h("div",{class:"sb-row"},sl("retLongMode","გრძელვადიანის დაბრუნება",[["guar","მოკლევადიანთან ერთად (გარანტიით)"],["months","საგარანტიო პერიოდის ბოლოს"]],true),
+          d.retLongMode==="months"?h("span",{class:"sb-row sb-n2"},ni("retLongMonths","თვეები"),h("span",null,tr("თვე"))):null))),
+      h("div",{class:"sb-act"},h("button",{class:"btn sm primary",type:"button",onclick:()=>{ const o=v=>v===""||v==null?null:num(v);
+          const pay={mode:d.mode,days:num(d.days),adv:num(d.adv),advDate:d.advDate||"",advFrom:o(d.advFrom),advTo:o(d.advTo),retShort:num(d.retShort),retLong:num(d.retLong),
+            retShortMode:d.retShortMode,retShortDays:num(d.retShortDays),retLongMode:d.retLongMode,retLongMonths:d.retLongMonths===""?24:num(d.retLongMonths)};
+          if(pay.advFrom!=null&&pay.advTo!=null&&pay.advTo<=pay.advFrom){ toast(tr("გაქვითვის დასასრული დასაწყისზე მეტი უნდა იყოს")); return; }
+          S.psDraft=null; setPay(x,pay); }},tr("შენახვა")),
         h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ S.psEdit=null; S.psDraft=null; render(); }},tr("გაუქმება"))));
     return h("tr",{class:"sb-tr"},h("td",{colspan:String(NC)},box)); };
   let nv=null, nc=null;
@@ -2783,11 +2795,11 @@ function renderProjSubs(p){
     nv=h("input",{class:"inp",placeholder:tr("ახალი ქვეკონტრაქტორი"),"aria-label":tr("ახალი ქვეკონტრაქტორი")}),
     nc=h("input",{class:"inp",placeholder:tr("საკონტაქტო"),"aria-label":tr("საკონტაქტო")}),h("button",{class:"btn sm primary",type:"submit"},"+ ",tr("დამატება"))):null;
   const f=v=>v?fmtNum(Math.round(v*100)/100):"—", tot=L.reduce((a,x)=>a+x.val,0);
-  return h("section",{class:"as-grp pl-box"},h("div",{class:"as-gt"},icon("brief"),h("span",null,tr("ქვეკონტრაქტორები")),h("small",{class:"muted"},tr("გეგმა-გრაფიკში დაგეგმილი და პროექტის მონაცემებში შეყვანილი"))),
+  return h("section",{class:"as-grp pl-box ps-box"},h("div",{class:"as-gt"},icon("brief"),h("span",null,tr("ქვეკონტრაქტორები")),h("small",{class:"muted"},tr("გეგმა-გრაფიკში დაგეგმილი და პროექტის მონაცემებში შეყვანილი"))),
     L.length?h("table",{class:"pl-t"},h("thead",null,h("tr",null,th(null,"#"),th("n","ქვეკონტრაქტორი"),th("c","საკონტაქტო"),th("qty","რაოდ.",1),th("u","განზ."),th("days","დღე",1),th("pos","პოზიცია",1),th("val","ღირებულება",1),th(null,"ანაზღაურება"),th(null,""))),
       h("tbody",null,L.flatMap((x,i)=>[h("tr",{class:x.manual?"pl-man":""},h("td",{class:"muted"},String(i+1)),h("td",null,x.n),h("td",null,x.contact||"—"),h("td",{class:"num"},f(x.qty)),h("td",null,[...x.units].join(", ")||"—"),
         h("td",{class:"num"},x.days.size||"—"),h("td",{class:"num"},x.pos.size||"—"),h("td",{class:"num"},x.val?gel0(x.val):"—"),
-        h("td",null,h("button",{type:"button",class:"sb-lbl"+(x.pay?" on":""),disabled:!edit,"aria-expanded":String(S.psEdit===x.n),onclick:()=>{ S.psEdit=S.psEdit===x.n?null:x.n; S.psDraft=null; render(); }},subPayLabel(x.pay))),
+        h("td",null,h("button",{type:"button",class:"sb-lbl"+(x.pay?" on":" need"),disabled:!edit,"aria-expanded":String(S.psEdit===x.n),onclick:()=>{ S.psEdit=S.psEdit===x.n?null:x.n; S.psDraft=null; render(); }},subPayLabel(x.pay))),
         h("td",null,x.own&&edit?h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?")+" „"+x.n+"“")) put(cur().filter(y=>y.name.toLowerCase()!==x.n.toLowerCase())); }},"✕"):null)),
         S.psEdit===x.n&&edit?editor(x):null].filter(Boolean))),
       tot?h("tfoot",null,h("tr",null,h("th",{colspan:"7"},tr("სულ")),h("th",{class:"num"},gel0(tot)),h("th"),h("th"))):null)

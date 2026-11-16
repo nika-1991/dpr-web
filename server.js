@@ -432,7 +432,10 @@ const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
 /* a subcontractor's payment terms: when its works are paid (schedule terms / N days after the works / back-to-back with our form 2),
    an advance (% of its planned value, recovered pro rata from every payment) and a retention (% held, returned after its last payment) */
 const cleanSubPay = (v) => { const n = (x, a, b) => { const k = Number(x); return Number.isFinite(k) ? Math.max(a, Math.min(b, k)) : 0; }, d = (x) => (/^\d{4}-\d{2}-\d{2}$/.test(String(x || "")) ? String(x) : "");
-  return { mode: ["std", "days", "f2"].includes(v.mode) ? v.mode : "std", days: n(v.days, 0, 365), adv: n(v.adv, 0, 100), advDate: d(v.advDate), ret: n(v.ret, 0, 100), retN: n(v.retN, 0, 120), retU: v.retU === "m" ? "m" : "d" }; };
+  const o = (x, a, b) => (x === "" || x == null ? null : n(x, a, b));
+  return { mode: v.mode === "f2" ? "f2" : "days", days: n(v.days, 0, 365), adv: n(v.adv, 0, 100), advDate: d(v.advDate), advFrom: o(v.advFrom, 0, 100), advTo: o(v.advTo, 0, 100),
+    retShort: n(v.retShort ?? v.ret, 0, 100), retLong: n(v.retLong, 0, 100), retShortMode: v.retShortMode === "days" ? "days" : "with", retShortDays: n(v.retShortDays, 0, 3650),
+    retLongMode: v.retLongMode === "guar" ? "guar" : "months", retLongMonths: v.retLongMonths === "" || v.retLongMonths == null ? 24 : n(v.retLongMonths, 0, 240) }; };
 const cleanMachines = (v) => { const seen = new Set(); return (Array.isArray(v) ? v : []).map((x) => String(x ?? "").trim().slice(0, 120)).filter((x) => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase())).slice(0, 300).sort((a, b) => a.localeCompare(b, "ka")); };
 /* once: the predefined machinery list is dropped (projects keep only machines actually written or added by hand) */
 { const OLD = new Set(["ფრეზი", "ბობკატი", "წყლის მანქანა", "თვითმცლელი", "ექსკავატორი", "ზოლსაჭრელი", "უკუციცხვიანი დამტვირთველი", "ჰაიაპი", "ასფალტის ვიბროფილა", "გრეიდერი", "გრუნტის სატკეპნი", "სტაბილიზაციის დანადგარი", "ასფალტის დამგები კომპლექტი"]);
