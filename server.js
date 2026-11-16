@@ -101,16 +101,21 @@ const DEFAULT_LISTS = {
   costCats: ["შრომა", "მასალა", "ტექნიკა", "საწვავი", "ქვეკონტრაქტორი", "ტრანსპორტი", "სხვა"],
   fuelTypes: ["დიზელი", "ბენზინი", "გაზი", "სხვა"],
   positions: ["დღიური მუშა", "მობილური ჯგუფი", "სხვა"],
-  units: ["მ", "მ²", "მ³", "ტ", "ცალი", "სთ", "დღე", "ლიტრი", "კგ"],
-  unitsMat: ["მ", "მ²", "მ³", "ტ", "კგ", "ცალი", "ლიტრი", "კომპლ."],
-  unitsLab: ["კაც/დღე", "კაც/სთ", "დღე", "სთ"],
-  unitsEq: ["მან/სთ", "მან/დღე", "სთ", "დღე", "რეისი"],
+  units: ["მ", "მ²", "მ³", "ტ", "კგ", "ცალი", "ლიტრი", "კომპლ.", "კაც/დღე", "კაც/სთ", "მან/სთ", "მან/დღე", "სთ", "დღე", "რეისი"],
 };
 if (!db.prepare("SELECT 1 FROM config WHERE key='lists'").get())
   db.prepare("INSERT INTO config(key,data) VALUES('lists',?)").run(JSON.stringify(DEFAULT_LISTS));
+/* which units each resource / expense type offers: {unit: [types]} */
+const UNIT_TYPES = ["შრომა", "მასალა", "ტექნიკა", "საწვავი", "ქვეკონტრაქტორი", "ტრანსპორტი", "სხვა"];
+const DEFAULT_UNITMAP = (() => { const m = {}, mat = ["მ", "მ²", "მ³", "ტ", "კგ", "ცალი", "ლიტრი", "კომპლ."], lab = ["კაც/დღე", "კაც/სთ", "სთ", "დღე"], eq = ["მან/სთ", "მან/დღე", "სთ", "დღე", "რეისი"];
+  for (const u of DEFAULT_LISTS.units) m[u] = UNIT_TYPES.filter((t) => (t === "შრომა" && lab.includes(u)) || ((t === "ტექნიკა" || t === "ტრანსპორტი") && eq.includes(u)) || ((t === "მასალა" || t === "საწვავი") && mat.includes(u)) || t === "ქვეკონტრაქტორი" || t === "სხვა");
+  return m; })();
+const cleanUnitMap = (v, units) => { const m = {}; for (const u of units) { const t = v && Array.isArray(v[u]) ? v[u] : null; m[u] = t ? t.map(String).filter((x) => x).slice(0, 30) : UNIT_TYPES.slice(); } return m; };
 /* lists added later reach existing databases with their defaults */
 { const row = db.prepare("SELECT data FROM config WHERE key='lists'").get(), L = JSON.parse(row.data); let ch = false;
   for (const k of Object.keys(DEFAULT_LISTS)) if (!Array.isArray(L[k])) { L[k] = DEFAULT_LISTS[k]; ch = true; }
+  for (const k of ["unitsMat", "unitsLab", "unitsEq"]) if (L[k]) { delete L[k]; ch = true; }
+  if (!L.unitMap || typeof L.unitMap !== "object") { for (const u of DEFAULT_LISTS.units) if (!L.units.includes(u)) L.units.push(u); L.unitMap = cleanUnitMap(DEFAULT_UNITMAP, L.units); ch = true; }
   if (ch) db.prepare("UPDATE config SET data=? WHERE key='lists'").run(JSON.stringify(L)); }
 
 console.log("ADMIN_RESET=" + (process.env.ADMIN_RESET ? JSON.stringify(process.env.ADMIN_RESET) : "(არ არის)") + " ADMIN_PASSWORD=" + (process.env.ADMIN_PASSWORD ? "(მითითებულია)" : "(არ არის)"));
@@ -339,6 +344,7 @@ api.put("/config/lists", auth, admin, (req, res) => {
     const v = (req.body || {})[k];
     out[k] = Array.isArray(v) ? v.map((s) => String(s).trim()).filter(Boolean).slice(0, 300) : DEFAULT_LISTS[k];
   }
+  out.unitMap = cleanUnitMap((req.body || {}).unitMap, out.units);
   db.prepare("UPDATE config SET data=? WHERE key='lists'").run(JSON.stringify(out));
   res.json(out);
 });

@@ -2703,3 +2703,14 @@ a.rb-ro:hover{color:var(--accent)}
 .pl-t th.pl-sort:hover{color:var(--accent)}
 .pl-t th.pl-sort.on{color:#1f2a37}
 .pl-ar{font-size:.55rem;margin-left:4px;color:var(--accent)}
+/* units × types matrix */
+.um-h{margin:18px 0 4px;font-size:.92rem}
+.um-wrap{overflow-x:auto}
+.um-t{border-collapse:collapse;font-size:.78rem;width:auto}
+.um-t th,.um-t td{padding:3px 10px;border-bottom:1px solid #eef1f4}
+.um-t thead th{background:#eef2f6;color:#3b4656;font-size:.72rem;border-bottom:1px solid #d6dde5;white-space:nowrap}
+.um-t tbody th{text-align:left;font-weight:600;white-space:nowrap}
+.um-c{text-align:center}
+.um-c input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+.um-add form{display:flex;gap:8px;padding:6px 0}
+.um-add .inp{height:28px;width:180px;font-size:.76rem}
