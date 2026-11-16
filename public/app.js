@@ -806,6 +806,7 @@ const SECTIONS={
     {k:"code",l:"BoQ #",t:"code",w:"92px"},
     {k:"_nm",l:"სამუშაოს დასახელება",auto:autoItem("name"),w:"180px"},
     {k:"type",l:"ხარჯის ტიპი",t:"select",opts:listOpt("costCats"),w:"130px",structural:true},
+    {k:"machine",l:"ტექნიკა",t:"select",opts:listOpt("machines"),other:"machines",w:"170px",when:r=>r.type==="ტექნიკა"},
     {k:"desc",l:"ხარჯის აღწერა",t:"area",w:"200px"},
     {k:"unit",l:"განზ.",t:"select",opts:listOpt("units"),w:"80px"},
     {k:"qty",l:"რაოდ.",t:"num",w:"80px",recalc:true},
@@ -1119,7 +1120,15 @@ function renderRows(key,def,rows,ed){
     const needPrice=col.k==="price"&&S.rep&&S.rep.status==="submitted"&&(key!=="works"||row.code);
     const onIn=e=>{ if(needPrice) e.target.parentElement.classList.toggle("need",e.target.value==="");  row[col.k]=e.target.value; markDirty(key); if(col.recalc) refreshAmount(i); };
     let el;
-    if(col.t==="select"){ const opts=col.opts(); el=h("select",{id,onchange:e=>{onIn(e); if(col.structural) rerender();}},h("option",{value:""},"—"),opts.map(o=>h("option",{value:o},o)),val&&!opts.includes(val)?h("option",{value:val},val):null); el.value=val; }
+    if(col.t==="select"){ const opts=col.opts();
+      /* "other…": type a new value; on confirmation it joins the list for next time */
+      const onOther=async e=>{ if(e.target.value!=="__other"){ onIn(e); if(col.structural) rerender(); return; }
+        const v=(prompt(tr("ჩაწერეთ დასახელება"))||"").trim(); if(!v){ e.target.value=val; return; }
+        if(!opts.some(o=>o.toLowerCase()===v.toLowerCase())&&confirm(tr("ნამდვილად გსურთ სიაში დამატება?")+"\n„"+v+"“")){
+          try{ S.lists=await api("POST","/config/lists/"+col.other,{value:v}); }catch(ex){ toast(errMsg(ex)); } }
+        row[col.k]=v; markDirty(key); rerender(); };
+      el=h("select",{id,onchange:col.other?onOther:(e=>{onIn(e); if(col.structural) rerender();})},h("option",{value:""},"—"),opts.map(o=>h("option",{value:o},o)),val&&!opts.includes(val)?h("option",{value:val},val):null,
+        col.other?h("option",{value:"__other"},tr("სხვა…")):null); el.value=val; }
     else if(col.t==="area") el=h("textarea",{id,rows:1,oninput:onIn,value:val});
     else if(col.t==="code") el=h("input",{id,list:"boq-dl",class:"mono",value:val,autocomplete:"off",oninput:onIn,onchange:e=>{row.code=normCode(e.target.value);markDirty(key);rerender();}});
     else el=h("input",{id,type:col.t==="num"?"number":col.t==="date"?"date":col.t==="time"?"time":"text",step:col.t==="num"?"any":null,inputmode:col.t==="num"?"decimal":null,value:val,oninput:onIn});
@@ -3405,7 +3414,7 @@ function editBtn(u,field,label){
 /* ---------- SETTINGS ---------- */
 function renderSettings(){
   if(!S.admin) return renderMissing();
-  const names={weather:"ამინდი",costCats:"ხარჯის კატეგორია",fuelTypes:"საწვავის ტიპი",positions:"პერსონალის პოზიცია",units:"ერთეული (განზ.)"};
+  const names={weather:"ამინდი",costCats:"ხარჯის კატეგორია",machines:"ტექნიკა",fuelTypes:"საწვავის ტიპი",positions:"პერსონალის პოზიცია",units:"ერთეული (განზ.)"};
   const fields={};
   const grid=h("div",{class:"fgrid"},Object.keys(names).map(k=>{ const id=uid(); const ta=h("textarea",{id,rows:8,value:(S.lists[k]||[]).join("\n")}); fields[k]=ta; return h("div",{class:"field"},h("label",{for:id},names[k]),ta); }));
   return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"ჩამოსაშლელი სიები"),h("h1",null,"სიები"))),

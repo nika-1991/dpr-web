@@ -102,9 +102,15 @@ const DEFAULT_LISTS = {
   fuelTypes: ["დიზელი", "ბენზინი", "გაზი", "სხვა"],
   positions: ["დღიური მუშა", "მობილური ჯგუფი", "სხვა"],
   units: ["მ", "მ²", "მ³", "ტ", "ცალი", "სთ", "დღე", "ლიტრი", "კგ"],
+  machines: ["ფრეზი", "ბობკატი", "წყლის მანქანა", "თვითმცლელი", "ექსკავატორი", "ზოლსაჭრელი", "უკუციცხვიანი დამტვირთველი", "ჰაიაპი",
+    "ასფალტის ვიბროფილა", "გრეიდერი", "გრუნტის სატკეპნი", "სტაბილიზაციის დანადგარი", "ასფალტის დამგები კომპლექტი"],
 };
 if (!db.prepare("SELECT 1 FROM config WHERE key='lists'").get())
   db.prepare("INSERT INTO config(key,data) VALUES('lists',?)").run(JSON.stringify(DEFAULT_LISTS));
+/* lists added later reach existing databases with their defaults */
+{ const row = db.prepare("SELECT data FROM config WHERE key='lists'").get(), L = JSON.parse(row.data); let ch = false;
+  for (const k of Object.keys(DEFAULT_LISTS)) if (!Array.isArray(L[k])) { L[k] = DEFAULT_LISTS[k]; ch = true; }
+  if (ch) db.prepare("UPDATE config SET data=? WHERE key='lists'").run(JSON.stringify(L)); }
 
 console.log("ADMIN_RESET=" + (process.env.ADMIN_RESET ? JSON.stringify(process.env.ADMIN_RESET) : "(არ არის)") + " ADMIN_PASSWORD=" + (process.env.ADMIN_PASSWORD ? "(მითითებულია)" : "(არ არის)"));
 /* first administrator */
@@ -318,6 +324,14 @@ api.patch("/users/:id", auth, admin, async (req, res) => {
 api.get("/config/lists", auth, (req, res) => res.json(parse(db.prepare("SELECT data FROM config WHERE key='lists'").get())));
 api.get("/config/mail", auth, admin, (req, res) => res.json({ enabled: !!mailer }));
 api.get("/config/hse-default", auth, admin, (req, res) => res.json(DEFAULT_HSE));
+/* add one value to a list from a report ("other…"); anyone who fills reports may do it */
+api.post("/config/lists/:key", auth, (req, res) => {
+  const k = req.params.key; if (!["machines"].includes(k)) return res.status(400).json({ error: "სია ვერ მოიძებნა" });
+  const v = String(req.body?.value || "").trim().slice(0, 120); if (!v) return res.status(400).json({ error: "მნიშვნელობა ცარიელია" });
+  const L = parse(db.prepare("SELECT data FROM config WHERE key='lists'").get()); L[k] = Array.isArray(L[k]) ? L[k] : [];
+  if (!L[k].some((x) => x.toLowerCase() === v.toLowerCase())) L[k].push(v);
+  db.prepare("UPDATE config SET data=? WHERE key='lists'").run(JSON.stringify(L)); res.json(L);
+});
 api.put("/config/lists", auth, admin, (req, res) => {
   const out = {};
   for (const k of Object.keys(DEFAULT_LISTS)) {
