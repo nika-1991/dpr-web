@@ -718,6 +718,10 @@ const SECTION_KEYS=["conditions","issues","hse","works","expenses","personnel","
 function ctx(){ const idx=boqIndex(P()); return {idx,item:c=>c?idx.get(normCode(c)):null}; }
 function autoItem(field,missing="ვერ მოიძებნა"){ return (r,c)=>{ if(!r.code) return ""; const it=c.item(r.code); if(!it) return {warn:missing}; return it[field]??""; }; }
 const listOpt=k=>()=>S.lists[k]||[];
+/* a typed machine not yet in the list: ask, and on yes add it so it can be picked next time */
+async function offerMachine(v){ v=String(v||"").trim(); const L=(S.lists&&S.lists.machines)||[]; if(!v||L.some(o=>o.toLowerCase()===v.toLowerCase())) return;
+  if(!confirm(tr("ნამდვილად გსურთ სიაში დამატება?")+"\n„"+v+"“")) return;
+  try{ S.lists=await api("POST","/config/lists/machines",{value:v}); const dl=document.getElementById("g-machines"); if(dl) dl.append(h("option",{value:v})); toast(tr("სიას დაემატა")); }catch(e){ toast(errMsg(e)); } }
 /* small line icons (24x24, stroke) for section headers and fields */
 const ICONS={
   trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
@@ -1579,7 +1583,7 @@ function renderSchedule(p){
       h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
         h("select",{class:"g-chip "+c,disabled:!edit,"aria-label":"რესურსის ტიპი","data-f":ri+":t",onchange:e=>{ r.x.type=e.target.value; changed(); }},
           RES_TYPES.map(([t])=>{ const o=h("option",{value:t},t); if(t===r.x.type) o.selected=true; return o; })),
-        inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა",list:r.x.type==="ქვეკონტრაქტორი"?"g-subs":null,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
+        inp(r.x.name,v=>{ r.x.name=v; if(r.x.type==="ტექნიკა") offerMachine(v); changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა",list:r.x.type==="ქვეკონტრაქტორი"?"g-subs":r.x.type==="ტექნიკა"?"g-machines":null,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
         edit?h("button",{class:"g-del",type:"button",tabindex:"-1","aria-label":"რესურსის წაშლა",title:"წაშლა",onclick:()=>{ r.sr.res.splice(r.sr.res.indexOf(r.x),1); changed(); }},"✕"):null)),
       ...["vat","pit"].map((k,j)=>h("td",{class:"g-fz f"+(2+j)+" g-tax"},h("input",{type:"checkbox",checked:taxOf(r.x,k),disabled:!edit,"aria-label":(k==="vat"?"დღგ":"საშ.")+": "+(r.x.name||""),
         onchange:e=>{ r.x[k]=e.target.checked; saveSchedule(); }}))),
@@ -1670,6 +1674,7 @@ function renderSchedule(p){
   return h("div",{class:"sched"},top,
     rows.length?wrap:h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე.")),units,
     h("datalist",{id:"g-subs"},projSubs(p).map(x=>h("option",{value:x.name}))),
+    h("datalist",{id:"g-machines"},((S.lists&&S.lists.machines)||[]).map(x=>h("option",{value:x}))),
     S.gplan?renderPlanDialog(sc,positions,from,to):null);
 }
 /* "+ დაგეგმვა": spread a quantity evenly over a date range (optionally skipping weekends) */
@@ -1812,7 +1817,7 @@ function renderPlanDialog(sc,positions,from,to){
     res.map(x=>h("option",{value:x.id},tr(x.type)+" — "+(x.name||tr("დასახელება არაა")))),
     RES_TYPES.map(([t])=>h("option",{value:"new:"+t},tr("ახალი რესურსი")+": "+tr(t))));
   rSel.value=pick;
-  const nIn=pick.startsWith("new:")?h("input",{id:ids.n,class:"inp",placeholder:"მაგ. მუშა, ექსკავატორი, ბეტონი",list:pick==="new:ქვეკონტრაქტორი"?"g-subs":null}):null;
+  const nIn=pick.startsWith("new:")?h("input",{id:ids.n,class:"inp",placeholder:"მაგ. მუშა, ექსკავატორი, ბეტონი",list:pick==="new:ქვეკონტრაქტორი"?"g-subs":pick==="new:ტექნიკა"?"g-machines":null}):null;
   const aIn=h("input",{id:ids.a,type:"date",class:"inp",value:start});
   const bIn=h("input",{id:ids.b,type:"date",class:"inp",value:ds[ds.length-1]||addDays(start,13)});
   const qIn=h("input",{id:ids.q,class:"inp num",inputmode:"decimal",value:target&&target.qty?String(target.qty):""});
@@ -1826,6 +1831,7 @@ function renderPlanDialog(sc,positions,from,to){
   const ok=()=>{ const list=workDays(), q=num(qIn.value);
     if(!list.length){ toast("აირჩიეთ სწორი პერიოდი"); return; } if(!(q>0)){ toast("მიუთითეთ მოცულობა"); qIn.focus(); return; }
     let x=target;
+    if(!x&&pick==="new:ტექნიკა"&&nIn) offerMachine(nIn.value);
     if(!x){ x={id:Math.random().toString(36).slice(2,8),type:pick.slice(4),name:(nIn&&nIn.value.trim())||"",unit:"",qty:null,price:null,plan:{}}; res.push(x); (S.gshut||new Set()).delete(pos.code); }
     for(const d of Object.keys(x.plan)) if(d>=aIn.value&&d<=bIn.value) delete x.plan[d];
     const per=Math.round(q/list.length*100)/100;
