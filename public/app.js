@@ -2694,7 +2694,10 @@ function renderProjLists(p){
     const q=Object.values(x.plan||{}).reduce((a,v)=>a+num(v),0), t=T.get(k)||{n,qty:0,val:0,units:new Set(),pos:new Set(),days:new Set()};
     t.qty+=q; t.val+=q*num(x.price); if(x.unit) t.units.add(x.unit); t.pos.add(code); Object.keys(x.plan||{}).forEach(d=>{ if(num(x.plan[d])) t.days.add(d); }); T.set(k,t); }
   for(const n of (p.machines||[])){ const k=n.toLowerCase(); if(!T.has(k)) T.set(k,{n,qty:0,val:0,units:new Set(),pos:new Set(),days:new Set(),manual:true}); }
-  const L=[...T.values()].sort((a,b)=>a.n.localeCompare(b.n,"ka"));
+  /* sorted by name by default; a click on a heading sorts by that column, a second click reverses */
+  const so=S.plSort||(S.plSort={k:"n",d:1}), key={n:x=>x.n,qty:x=>x.qty,u:x=>[...x.units].join(","),days:x=>x.days.size,pos:x=>x.pos.size,val:x=>x.val};
+  const L=[...T.values()].sort((a,b)=>{ const A=key[so.k](a), B=key[so.k](b); const c=typeof A==="number"?A-B:String(A).localeCompare(String(B),"ka"); return c?c*so.d:a.n.localeCompare(b.n,"ka"); });
+  const th=(k,l,num)=>k?h("th",{class:"pl-sort"+(num?" num":"")+(so.k===k?" on":""),onclick:()=>{ S.plSort=so.k===k?{k,d:-so.d}:{k,d:k==="n"||k==="u"?1:-1}; render(); }},tr(l),so.k===k?h("span",{class:"pl-ar"},so.d>0?"▲":"▼"):null):h("th",null,l);
   const del=x=>saveProject(S.pid,{machines:(p.machines||[]).filter(y=>y.toLowerCase()!==x.n.toLowerCase())},tr("შენახულია")).then(render).catch(()=>{});
   let nv=null;
   const add=edit?h("form",{class:"pl-add",onsubmit:async e=>{ e.preventDefault(); const v=nv.value.trim(); if(!v) return; if(L.some(o=>o.n.toLowerCase()===v.toLowerCase())){ toast(tr("უკვე არის სიაში")); return; }
@@ -2703,7 +2706,7 @@ function renderProjLists(p){
   const f=v=>v?fmtNum(Math.round(v*100)/100):"—";
   const tot=L.reduce((a,x)=>a+x.val,0);
   return h("section",{class:"as-grp pl-box"},h("div",{class:"as-gt"},icon("digger"),h("span",null,tr("ტექნიკა")),h("small",{class:"muted"},tr("გეგმა-გრაფიკში დაგეგმილი ტექნიკა · ჩამოსაშლელ სიაში ამ სიიდან"))),
-    L.length?h("table",{class:"pl-t"},h("thead",null,h("tr",null,["#","ტექნიკა","რაოდ.","განზ.","დღე","პოზიცია","ღირებულება",""].map((t,i)=>h("th",{class:i>=2&&i!==3&&i<7?"num":null},tr(t))))),
+    L.length?h("table",{class:"pl-t"},h("thead",null,h("tr",null,th(null,"#"),th("n","ტექნიკა"),th("qty","რაოდ.",1),th("u","განზ."),th("days","დღე",1),th("pos","პოზიცია",1),th("val","ღირებულება",1),th(null,""))),
       h("tbody",null,L.map((x,i)=>h("tr",{class:x.manual?"pl-man":""},h("td",{class:"muted"},String(i+1)),h("td",null,x.n,x.manual?h("small",{class:"muted"}," · "+tr("ხელით")):null),h("td",{class:"num"},f(x.qty)),h("td",null,[...x.units].join(", ")||"—"),
         h("td",{class:"num"},x.days.size||"—"),h("td",{class:"num"},x.pos.size||"—"),h("td",{class:"num"},x.val?gel0(x.val):"—"),
         h("td",null,x.manual&&edit?h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?")+" „"+x.n+"“")) del(x); }},"✕"):null)))),

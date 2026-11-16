@@ -2699,3 +2699,7 @@ a.rb-ro:hover{color:var(--accent)}
 .pl-t tfoot th{border-top:1px solid #cbd5e1;border-bottom:0;color:#1f2a37;font-size:.74rem}
 .pl-t tr.pl-man td{color:#64748b}
 .pl-box .pl-add{margin-top:10px}
+.pl-t th.pl-sort{cursor:pointer;user-select:none;white-space:nowrap}
+.pl-t th.pl-sort:hover{color:var(--accent)}
+.pl-t th.pl-sort.on{color:#1f2a37}
+.pl-ar{font-size:.55rem;margin-left:4px;color:var(--accent)}
