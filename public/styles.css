@@ -2673,3 +2673,7 @@ a.rb-ro:hover{color:var(--accent)}
 .nu-act .btn{margin-right:6px}
 .users tr.nu-row .nu-in{border:1px solid #cfd7e0!important;background:#fff!important}
 .users tr.nu-row .nu-pw{width:62px;margin-left:4px}
+/* compact suggestion list */
+.sg-box{position:absolute;z-index:200;background:#fff;border:1px solid #cfd7e0;border-radius:6px;box-shadow:0 8px 20px -8px rgba(15,23,42,.35);max-height:260px;overflow-y:auto;padding:2px 0}
+.sg-i{padding:3px 10px;font-size:.76rem;line-height:1.35;cursor:pointer;white-space:nowrap;color:#1f2a37}
+.sg-i:hover,.sg-i.on{background:#e6f4f1;color:var(--accent)}

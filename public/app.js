@@ -718,6 +718,20 @@ const SECTION_KEYS=["conditions","issues","hse","works","expenses","personnel","
 function ctx(){ const idx=boqIndex(P()); return {idx,item:c=>c?idx.get(normCode(c)):null}; }
 function autoItem(field,missing="ვერ მოიძებნა"){ return (r,c)=>{ if(!r.code) return ""; const it=c.item(r.code); if(!it) return {warn:missing}; return it[field]??""; }; }
 const listOpt=k=>()=>S.lists[k]||[];
+/* compact suggestion list under an input (the browser's own datalist is too airy): shown on focus / typing, click or Enter picks */
+function suggest(el,getList){
+  let box=null, idx=-1;
+  const close=()=>{ if(box){ box.remove(); box=null; } idx=-1; };
+  const pick=v=>{ el.value=v; close(); el.dispatchEvent(new Event("change",{bubbles:true})); };
+  const open=()=>{ const q=el.value.trim().toLowerCase(), L=getList().filter(x=>!q||x.toLowerCase().includes(q)).slice(0,40); close(); if(!L.length) return;
+    const r=el.getBoundingClientRect(); box=h("div",{class:"sg-box",style:"left:"+(r.left+window.scrollX)+"px;top:"+(r.bottom+window.scrollY+2)+"px;min-width:"+r.width+"px"},
+      L.map(x=>h("div",{class:"sg-i",onmousedown:e=>{ e.preventDefault(); pick(x); }},x))); document.body.append(box); };
+  el.addEventListener("focus",open); el.addEventListener("input",open); el.addEventListener("blur",()=>setTimeout(close,120));
+  el.addEventListener("keydown",e=>{ if(!box) return; const it=[...box.children];
+    if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); idx=(idx+(e.key==="ArrowDown"?1:-1)+it.length)%it.length; it.forEach((n,i)=>n.classList.toggle("on",i===idx)); it[idx].scrollIntoView({block:"nearest"}); }
+    else if(e.key==="Enter"&&idx>=0){ e.preventDefault(); pick(it[idx].textContent); } else if(e.key==="Escape") close(); });
+  return el;
+}
 /* a typed machine not yet in the list: ask, and on yes add it so it can be picked next time */
 async function offerMachine(v){ v=String(v||"").trim(); const L=(S.lists&&S.lists.machines)||[]; if(!v||L.some(o=>o.toLowerCase()===v.toLowerCase())) return;
   if(!confirm(tr("ნამდვილად გსურთ სიაში დამატება?")+"\n„"+v+"“")) return;
@@ -1477,7 +1491,7 @@ function renderSchedule(p){
   const rebuild=()=>{ S.gscroll={x:wrap.scrollLeft,y:wrap.scrollTop}; render(); };
   const changed=()=>{ saveSchedule(); setTimeout(()=>{ const a=document.activeElement, key=a&&a.dataset?a.dataset.f:null; rebuild();
     if(key){ const n=document.querySelector('[data-f="'+key+'"]'); if(n) n.focus(); } },0); };
-  const inp=(val,on,attrs={})=>h("input",{class:"g-in",value:val??"",disabled:!edit,onchange:e=>on(e.target.value),...attrs});
+  const inp=(val,on,attrs={})=>{ const el=h("input",{class:"g-in",value:val??"",disabled:!edit,onchange:e=>on(e.target.value),...attrs}); if(attrs["data-mach"]&&edit) suggest(el,()=>(S.lists&&S.lists.machines)||[]); return el; };
   const numOrNull=v=>v.trim()===""?null:num(v);
 
   /* top: title and counts, period, zoom, today, plan */
@@ -1583,7 +1597,7 @@ function renderSchedule(p){
       h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
         h("select",{class:"g-chip "+c,disabled:!edit,"aria-label":"რესურსის ტიპი","data-f":ri+":t",onchange:e=>{ r.x.type=e.target.value; changed(); }},
           RES_TYPES.map(([t])=>{ const o=h("option",{value:t},t); if(t===r.x.type) o.selected=true; return o; })),
-        inp(r.x.name,v=>{ r.x.name=v; if(r.x.type==="ტექნიკა") offerMachine(v); changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა",list:r.x.type==="ქვეკონტრაქტორი"?"g-subs":r.x.type==="ტექნიკა"?"g-machines":null,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
+        inp(r.x.name,v=>{ r.x.name=v; if(r.x.type==="ტექნიკა") offerMachine(v); changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა",list:r.x.type==="ქვეკონტრაქტორი"?"g-subs":null,"data-mach":r.x.type==="ტექნიკა"?"1":null,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
         edit?h("button",{class:"g-del",type:"button",tabindex:"-1","aria-label":"რესურსის წაშლა",title:"წაშლა",onclick:()=>{ r.sr.res.splice(r.sr.res.indexOf(r.x),1); changed(); }},"✕"):null)),
       ...["vat","pit"].map((k,j)=>h("td",{class:"g-fz f"+(2+j)+" g-tax"},h("input",{type:"checkbox",checked:taxOf(r.x,k),disabled:!edit,"aria-label":(k==="vat"?"დღგ":"საშ.")+": "+(r.x.name||""),
         onchange:e=>{ r.x[k]=e.target.checked; saveSchedule(); }}))),
@@ -1817,7 +1831,8 @@ function renderPlanDialog(sc,positions,from,to){
     res.map(x=>h("option",{value:x.id},tr(x.type)+" — "+(x.name||tr("დასახელება არაა")))),
     RES_TYPES.map(([t])=>h("option",{value:"new:"+t},tr("ახალი რესურსი")+": "+tr(t))));
   rSel.value=pick;
-  const nIn=pick.startsWith("new:")?h("input",{id:ids.n,class:"inp",placeholder:"მაგ. მუშა, ექსკავატორი, ბეტონი",list:pick==="new:ქვეკონტრაქტორი"?"g-subs":pick==="new:ტექნიკა"?"g-machines":null}):null;
+  const nIn=pick.startsWith("new:")?h("input",{id:ids.n,class:"inp",placeholder:"მაგ. მუშა, ექსკავატორი, ბეტონი",list:pick==="new:ქვეკონტრაქტორი"?"g-subs":null}):null;
+  if(nIn&&pick==="new:ტექნიკა") suggest(nIn,()=>(S.lists&&S.lists.machines)||[]);
   const aIn=h("input",{id:ids.a,type:"date",class:"inp",value:start});
   const bIn=h("input",{id:ids.b,type:"date",class:"inp",value:ds[ds.length-1]||addDays(start,13)});
   const qIn=h("input",{id:ids.q,class:"inp num",inputmode:"decimal",value:target&&target.qty?String(target.qty):""});
