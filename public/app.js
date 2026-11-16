@@ -736,14 +736,18 @@ function suggest(el,getList){
 /* the open project's machinery list (its own copy; projects made before it existed start from the Settings list), A→Z */
 const sortKa=L=>[...L].sort((a,b)=>a.localeCompare(b,"ka"));
 /* learned from use: every machine written in this project's schedule or expenses, plus ones added on the list page */
-function projMachines(){ const p=P(), set=new Map(), add=v=>{ v=String(v||"").trim(); if(v&&!set.has(v.toLowerCase())) set.set(v.toLowerCase(),v); };
+function projMachines(){ if(S.pid&&S.schedPid!==S.pid&&!S.schedLoading) loadSchedule(S.pid);
+  return projMachines0(); }
+function projMachines0(){ const p=P(), set=new Map(), add=v=>{ v=String(v||"").trim(); if(v&&!set.has(v.toLowerCase())) set.set(v.toLowerCase(),v); };
   ((p&&p.machines)||[]).forEach(add);
   if(S.sched&&S.schedPid===S.pid) for(const r of Object.values(S.sched.rows||{})) for(const x of r.res||[]) if(x.type==="ტექნიკა") add(x.name);
   if(S.rep&&S.rep.projectId===S.pid) for(const x of S.rep.expenses||[]) if(x.type==="ტექნიკა") add(x.machine);
   return sortKa([...set.values()]); }
 /* a typed machine not yet in the list: ask, and on yes add it so it can be picked next time */
+/* a machine typed in a daily report that isn't in the project's list: ask, and on yes add it to the project's list */
 async function offerMachine(v){ v=String(v||"").trim(); if(!v||projMachines().some(o=>o.toLowerCase()===v.toLowerCase())) return;
-  try{ const r=await api("POST","/projects/"+encodeURIComponent(S.pid)+"/machines",{value:v}); const p=P(); if(p) p.machines=r.machines; }catch(e){} }
+  if(!confirm(tr("ნამდვილად გსურთ სიაში დამატება?")+"\n„"+v+"“")) return;
+  try{ const r=await api("POST","/projects/"+encodeURIComponent(S.pid)+"/machines",{value:v}); const p=P(); if(p) p.machines=r.machines; toast(tr("პროექტის სიას დაემატა")); }catch(e){ toast(errMsg(e)); } }
 /* small line icons (24x24, stroke) for section headers and fields */
 const ICONS={
   trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
@@ -1419,7 +1423,7 @@ async function loadSchedule(pid){
   if(S.schedLoading===pid) return; S.schedLoading=pid;
   try{ S.sched=await api("GET","/projects/"+encodeURIComponent(pid)+"/schedule"); S.schedPid=pid; S.gsel=null; S.gscroll=null; }
   catch(e){ toast("გეგმა-გრაფიკი ვერ ჩაიტვირთა: "+errMsg(e)); }
-  S.schedLoading=null; if(S.view==="project"&&["schedule","exec","pl","cf","assume","othercost","plists"].includes(S.tab)&&!typing()) render();
+  S.schedLoading=null; if(((S.view==="project"&&["schedule","exec","pl","cf","assume","othercost","plists"].includes(S.tab))||S.view==="report")&&!typing()) render();
 }
 function saveSchedule(){
   clearTimeout(S.schedTimer); const pid=S.schedPid; schedStatus("ინახება…");
