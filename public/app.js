@@ -721,7 +721,7 @@ function autoItem(field,missing="ვერ მოიძებნა"){ return (r
 const listOpt=k=>()=>S.lists[k]||[];
 /* units that make sense for a resource / expense type (the full list for the rest) */
 function unitsFor(type){ const L=S.lists||{}, all=L.units||[], M=L.unitMap; if(!M||!type) return all;
-  const t=type==="ტრანსპორტი"||type==="ტექნიკა"||type==="შრომა"||type==="მასალა"||type==="საწვავი"||type==="ქვეკონტრაქტორი"?type:"სხვა";
+  const known=/^(fuel|pos):/.test(type)||(L.costCats||[]).includes(type), t=known?type:"სხვა";
   const r=all.filter(u=>!M[u]||M[u].includes(t)); return r.length?r:all; }
 /* compact suggestion list under an input (the browser's own datalist is too airy): shown on focus / typing, click or Enter picks */
 function suggest(el,getList){
@@ -866,8 +866,8 @@ const SECTIONS={
     {k:"plate",l:"ავტომობილის ნომერი",t:"text",w:"110px"},
     {k:"comment",l:"შენიშვნა",t:"area",w:"170px"}]},
   fuel:{title:"მიღებული საწვავი",en:"Fuel Received at Site",add:"+ საწვავი",cols:[
-    {k:"name",l:"დასახელება",t:"select",opts:listOpt("fuelTypes"),w:"140px"},
-    {k:"unit",l:"განზ.",t:"select",opts:()=>unitsFor("მასალა"),w:"80px"},
+    {k:"name",l:"დასახელება",t:"select",opts:listOpt("fuelTypes"),w:"140px",structural:true},
+    {k:"unit",l:"განზ.",t:"select",opts:r=>r&&r.name?unitsFor("fuel:"+r.name):unitsFor("საწვავი"),w:"80px"},
     {k:"qty",l:"რაოდენობა",t:"num",w:"90px",sum:true},
     {k:"driver",l:"მძღოლი, საკონტაქტო",t:"text",w:"190px"},
     {k:"plate",l:"ავტომობილის ნომერი",t:"text",w:"110px"},
@@ -3481,18 +3481,20 @@ function renderSettings(){
   const fields={};
   const grid=h("div",{class:"fgrid"},Object.keys(names).map(k=>{ const id=uid(); const ta=h("textarea",{id,rows:8,value:(S.lists[k]||[]).join("\n")}); fields[k]=ta; return h("div",{class:"field"},h("label",{for:id},names[k]),ta); }));
   /* units: one row per unit, one column per resource / expense type; ticked = offered for that type */
-  const TYPES=["შრომა","მასალა","ტექნიკა","საწვავი","ქვეკონტრაქტორი","ტრანსპორტი","სხვა"];
+  const G=[["ხარჯის კატეგორია",(S.lists.costCats||[]).map(x=>[x,x])],["საწვავის ტიპი",(S.lists.fuelTypes||[]).map(x=>["fuel:"+x,x])],["პერსონალის პოზიცია",(S.lists.positions||[]).map(x=>["pos:"+x,x])]].filter(g=>g[1].length);
+  const TYPES=G.flatMap(g=>g[1].map(c=>c[0]));
   const U=S.uEdit||(S.uEdit={units:[...(S.lists.units||[])],map:JSON.parse(JSON.stringify(S.lists.unitMap||{}))});
-  const has=(u,t)=>!U.map[u]||U.map[u].includes(t);
+  const has=(u,t)=>!U.map[u]?!/^(fuel|pos):/.test(t):U.map[u].includes(t);
   const tog=(u,t,on)=>{ const cur=U.map[u]?[...U.map[u]]:[...TYPES]; U.map[u]=on?[...new Set([...cur,t])]:cur.filter(x=>x!==t); };
   let nu=null;
+  /* rows: the list items (grouped by list); columns: the units */
   const umat=h("div",{class:"um-wrap"},h("table",{class:"um-t"},
-    h("thead",null,h("tr",null,h("th",null,tr("ერთეული (განზ.)")),TYPES.map(t=>h("th",{class:"um-c"},tr(t))),h("th"))),
-    h("tbody",null,U.units.map((u,i)=>h("tr",null,h("th",{scope:"row"},u),
-      TYPES.map(t=>h("td",{class:"um-c"},h("input",{type:"checkbox",checked:has(u,t),"aria-label":u+" — "+t,onchange:e=>tog(u,t,e.target.checked)}))),
-      h("td",null,h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ U.units.splice(i,1); delete U.map[u]; render(); }},"✕")))),
-      h("tr",{class:"um-add"},h("td",{colspan:String(TYPES.length+2)},h("form",{onsubmit:e=>{ e.preventDefault(); const v=nu.value.trim(); if(!v||U.units.includes(v)) return; U.units.push(v); U.map[v]=[...TYPES]; render(); }},
-        nu=h("input",{class:"inp",placeholder:tr("ახალი ერთეული"),"aria-label":tr("ახალი ერთეული")}),h("button",{class:"btn sm",type:"submit"},"+ ",tr("დამატება"))))))));
+    h("thead",null,h("tr",null,h("th",null,""),U.units.map((u,i)=>h("th",{class:"um-c um-u"},h("span",null,u),
+      h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა")+" "+u,title:tr("წაშლა"),onclick:()=>{ if(!confirm(tr("წავშალო?")+" „"+u+"“")) return; U.units.splice(i,1); delete U.map[u]; render(); }},"✕"))))),
+    h("tbody",null,G.flatMap(([l,cs])=>[h("tr",{class:"um-gr"},h("th",{colspan:String(U.units.length+1)},tr(l))),
+      ...cs.map(([t,lab])=>h("tr",null,h("th",{scope:"row"},tr(lab)),U.units.map(u=>h("td",{class:"um-c"},h("input",{type:"checkbox",checked:has(u,t),"aria-label":lab+" — "+u,onchange:e=>tog(u,t,e.target.checked)})))))]))),
+    h("form",{class:"um-add",onsubmit:e=>{ e.preventDefault(); const v=nu.value.trim(); if(!v||U.units.includes(v)) return; U.units.push(v); U.map[v]=TYPES.filter(t=>!/^(fuel|pos):/.test(t)); render(); }},
+      nu=h("input",{class:"inp",placeholder:tr("ახალი ერთეული"),"aria-label":tr("ახალი ერთეული")}),h("button",{class:"btn sm",type:"submit"},"+ ",tr("დამატება"))));
   const saveAll=async()=>{ const data={}; for(const k in fields) data[k]=fields[k].value.split("\n").map(s=>s.trim()).filter(Boolean);
     data.units=U.units; data.unitMap=U.map;
     try{ S.lists=await api("PUT","/config/lists",data); S.uEdit=null; toast("სიები შენახულია"); render(); }catch(e){ toast("ვერ შეინახა: "+errMsg(e)); } };
