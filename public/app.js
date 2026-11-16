@@ -587,13 +587,13 @@ function renderProjectForm(pid){
 /* ---------- PROJECT ---------- */
 /* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
 const tabIcon=k=>{ const n=TAB_ICONS[k]||""; return n.startsWith("txt:")?h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)):icon(n); };
-const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["ზოგადი ინფო",["info","boq","team"]],["სიები",["plists"]]];
+const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["ზოგადი ინფო",["info","boq","team"]],["სიები",["plists","psubs"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
 const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"],["assume","დაშვებები"]];
-const TAB_ICONS={plists:"digger",assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"receipt",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
+const TAB_ICONS={plists:"digger",psubs:"brief",assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"receipt",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
-  const tabs=[["plists","პროექტის სიები: ტექნიკა"],["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?FIN_TABS:[])];
+  const tabs=[["plists","პროექტის სიები: ტექნიკა"],["psubs","პროექტის სიები: ქვეკონტრაქტორები"],["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?FIN_TABS:[])];
   if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
   /* tabs grouped into sections; inside a section only icons, the name shows on hover */
   const tabName=new Map(tabs);
@@ -612,7 +612,7 @@ function renderProject(){
       if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
       try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},icon(p.archived?"refresh":"checkc")))):null;
   /* section row as compact radio lists (icon + short name); four or more go into two columns */
-  const SHORT={plists:"ტექნიკა",schedule:"გეგმა-გრაფიკი",exec:"შესრულების გეგმა",reports:"ანგარიშები",progress:"პროგრესი",pl:"P&L",cf:"CF",othercost:"სხვა ხარჯები",assume:"დაშვებები",info:"მონაცემები",boq:"BoQ",team:"გუნდი"};
+  const SHORT={plists:"ტექნიკა",psubs:"ქვეკონტრაქტორი",schedule:"გეგმა-გრაფიკი",exec:"შესრულების გეგმა",reports:"ანგარიშები",progress:"პროგრესი",pl:"P&L",cf:"CF",othercost:"სხვა ხარჯები",assume:"დაშვებები",info:"მონაცემები",boq:"BoQ",team:"გუნდი"};
   const tabRo=k=>h("button",{type:"button",role:"tab",class:"rb-ro tro"+(S.tab===k?" on":""),"aria-selected":String(S.tab===k),title:tr(tabName.get(k)),
     onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},h("span",{class:"rb-dot"}),tabIcon(k),h("span",null,tr(SHORT[k]||tabName.get(k))));
   const tabBar=h("div",{class:"tabs tgroups trad",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
@@ -629,6 +629,7 @@ function renderProject(){
   else if(S.tab==="cf"&&canReview(p)) body=renderCF(p);
   else if(S.tab==="othercost"&&canReview(p)) body=renderOtherCost(p);
   else if(S.tab==="plists") body=renderProjLists(p);
+  else if(S.tab==="psubs") body=renderProjSubs(p);
   else if(TAB_ICONS[S.tab]&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=h("div",{class:"empty"},tabIcon(S.tab),h("p",null,h("b",null,tr(FIN_TABS.find(([k])=>k===S.tab)[1]))),h("p",{class:"muted"},"გვერდი მზადდება."));
   else body=renderInfo(p);
   /* codes and name beside the tabs; the row stays put (and frozen under the top bar) on every tab */
@@ -754,6 +755,7 @@ async function offerMachine(v){ v=String(v||"").trim(); if(!v||projMachines().so
   try{ const r=await api("POST","/projects/"+encodeURIComponent(S.pid)+"/machines",{value:v}); const p=P(); if(p) p.machines=r.machines; toast(tr("პროექტის სიას დაემატა")); }catch(e){ toast(errMsg(e)); } }
 /* small line icons (24x24, stroke) for section headers and fields */
 const ICONS={
+  brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/>',
   trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
   olist:'<path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 5l1.5-1V9M3.5 9h3"/><path d="M3.5 14.5a1.4 1.4 0 0 1 2.6.6c0 1-2.6 2-2.6 3.4h2.8"/>',
   coins:'<circle cx="9" cy="9" r="6"/><path d="M15.5 9.6a6 6 0 1 1-6 8.9"/><path d="M8 7.5l1.5-1V12"/>',
@@ -1427,7 +1429,7 @@ async function loadSchedule(pid){
   if(S.schedLoading===pid) return; S.schedLoading=pid;
   try{ S.sched=await api("GET","/projects/"+encodeURIComponent(pid)+"/schedule"); S.schedPid=pid; S.gsel=null; S.gscroll=null; }
   catch(e){ toast("გეგმა-გრაფიკი ვერ ჩაიტვირთა: "+errMsg(e)); }
-  S.schedLoading=null; if(((S.view==="project"&&["schedule","exec","pl","cf","assume","othercost","plists"].includes(S.tab))||S.view==="report")&&!typing()) render();
+  S.schedLoading=null; if(((S.view==="project"&&["schedule","exec","pl","cf","assume","othercost","plists","psubs"].includes(S.tab))||S.view==="report")&&!typing()) render();
 }
 function saveSchedule(){
   clearTimeout(S.schedTimer); const pid=S.schedPid; schedStatus("ინახება…");
@@ -2716,6 +2718,34 @@ function renderProjLists(p){
         h("td",null,x.manual&&edit?h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?")+" „"+x.n+"“")) del(x); }},"✕"):null)))),
       tot?h("tfoot",null,h("tr",null,h("th",{colspan:"6"},tr("სულ")),h("th",{class:"num"},gel0(tot)),h("th"))):null)
     :h("p",{class:"muted small"},tr("გეგმა-გრაფიკში ტექნიკა ჯერ არ არის დაგეგმილი.")),add);
+}
+/* the project's subcontractors: those planned in the schedule (totalled) plus those entered by hand / in the project data */
+function renderProjSubs(p){
+  if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
+  const edit=canReview(p)&&!p.archived, T=new Map(), mine=projSubs(p);
+  for(const [code,r] of Object.entries(S.sched.rows||{})) for(const x of r.res||[]){ if(x.type!=="ქვეკონტრაქტორი") continue; const n=String(x.name||"").trim()||tr("დასახელება არაა"), k=n.toLowerCase();
+    const q=Object.values(x.plan||{}).reduce((a,v)=>a+num(v),0), t=T.get(k)||{n,qty:0,val:0,units:new Set(),pos:new Set(),days:new Set()};
+    t.qty+=q; t.val+=q*num(x.price); if(x.unit) t.units.add(x.unit); t.pos.add(code); Object.keys(x.plan||{}).forEach(d=>{ if(num(x.plan[d])) t.days.add(d); }); T.set(k,t); }
+  for(const o of mine){ const k=o.name.toLowerCase(), t=T.get(k); if(t){ t.contact=o.contact; t.own=true; } else T.set(k,{n:o.name,contact:o.contact,qty:0,val:0,units:new Set(),pos:new Set(),days:new Set(),manual:true,own:true}); }
+  const so=S.psSort||(S.psSort={k:"n",d:1}), key={n:x=>x.n,c:x=>x.contact||"",qty:x=>x.qty,u:x=>[...x.units].join(","),days:x=>x.days.size,pos:x=>x.pos.size,val:x=>x.val};
+  const L=[...T.values()].sort((a,b)=>{ const A=key[so.k](a), B=key[so.k](b); const c=typeof A==="number"?A-B:String(A).localeCompare(String(B),"ka"); return c?c*so.d:a.n.localeCompare(b.n,"ka"); });
+  const th=(k,l,nm)=>k?h("th",{class:"pl-sort"+(nm?" num":"")+(so.k===k?" on":""),onclick:()=>{ S.psSort=so.k===k?{k,d:-so.d}:{k,d:["n","u","c"].includes(k)?1:-1}; render(); }},tr(l),so.k===k?h("span",{class:"pl-ar"},so.d>0?"▲":"▼"):null):h("th",null,l);
+  /* the list lives in the project data (subs), so the general-info card shows the same names */
+  const put=subs=>saveProject(S.pid,{subs,participants:{...(p.participants||{}),subcontractors:subs.map(x=>x.name+(x.contact?" — "+x.contact:"")).join("; ")}},tr("შენახულია")).then(render).catch(()=>{});
+  const cur=()=>mine.map(x=>({id:x.id&&!String(x.id).startsWith("o")?x.id:Math.random().toString(36).slice(2,8),name:x.name,contact:x.contact||""}));
+  let nv=null, nc=null;
+  const add=edit?h("form",{class:"pl-add",onsubmit:e=>{ e.preventDefault(); const v=nv.value.trim(); if(!v) return; if(mine.some(o=>o.name.toLowerCase()===v.toLowerCase())){ toast(tr("უკვე არის სიაში")); return; }
+      put([...cur(),{id:Math.random().toString(36).slice(2,8),name:v,contact:nc.value.trim()}]); }},
+    nv=h("input",{class:"inp",placeholder:tr("ახალი ქვეკონტრაქტორი"),"aria-label":tr("ახალი ქვეკონტრაქტორი")}),
+    nc=h("input",{class:"inp",placeholder:tr("საკონტაქტო"),"aria-label":tr("საკონტაქტო")}),h("button",{class:"btn sm primary",type:"submit"},"+ ",tr("დამატება"))):null;
+  const f=v=>v?fmtNum(Math.round(v*100)/100):"—", tot=L.reduce((a,x)=>a+x.val,0);
+  return h("section",{class:"as-grp pl-box"},h("div",{class:"as-gt"},icon("brief"),h("span",null,tr("ქვეკონტრაქტორები")),h("small",{class:"muted"},tr("გეგმა-გრაფიკში დაგეგმილი და პროექტის მონაცემებში შეყვანილი"))),
+    L.length?h("table",{class:"pl-t"},h("thead",null,h("tr",null,th(null,"#"),th("n","ქვეკონტრაქტორი"),th("c","საკონტაქტო"),th("qty","რაოდ.",1),th("u","განზ."),th("days","დღე",1),th("pos","პოზიცია",1),th("val","ღირებულება",1),th(null,""))),
+      h("tbody",null,L.map((x,i)=>h("tr",{class:x.manual?"pl-man":""},h("td",{class:"muted"},String(i+1)),h("td",null,x.n),h("td",null,x.contact||"—"),h("td",{class:"num"},f(x.qty)),h("td",null,[...x.units].join(", ")||"—"),
+        h("td",{class:"num"},x.days.size||"—"),h("td",{class:"num"},x.pos.size||"—"),h("td",{class:"num"},x.val?gel0(x.val):"—"),
+        h("td",null,x.own&&edit?h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?")+" „"+x.n+"“")) put(cur().filter(y=>y.name.toLowerCase()!==x.n.toLowerCase())); }},"✕"):null)))),
+      tot?h("tfoot",null,h("tr",null,h("th",{colspan:"7"},tr("სულ")),h("th",{class:"num"},gel0(tot)),h("th"))):null)
+    :h("p",{class:"muted small"},tr("ქვეკონტრაქტორი ჯერ არ არის.")),add);
 }
 /* special items editor: name · description · income/cost · amount · P&L line · CF line · one date or spread between two */
 function renderSpec(p,fin,edit){
