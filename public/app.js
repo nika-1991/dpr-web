@@ -3477,31 +3477,36 @@ function editBtn(u,field,label){
 /* ---------- SETTINGS ---------- */
 function renderSettings(){
   if(!S.admin) return renderMissing();
-  const names={weather:"ამინდი",costCats:"ხარჯის კატეგორია",fuelTypes:"საწვავის ტიპი",positions:"პერსონალის პოზიცია"};
-  const fields={};
-  const grid=h("div",{class:"fgrid"},Object.keys(names).map(k=>{ const id=uid(); const ta=h("textarea",{id,rows:8,value:(S.lists[k]||[]).join("\n")}); fields[k]=ta; return h("div",{class:"field"},h("label",{for:id},names[k]),ta); }));
-  /* units: one row per unit, one column per resource / expense type; ticked = offered for that type */
-  const G=[["ხარჯის კატეგორია",(S.lists.costCats||[]).map(x=>[x,x])],["საწვავის ტიპი",(S.lists.fuelTypes||[]).map(x=>["fuel:"+x,x])],["პერსონალის პოზიცია",(S.lists.positions||[]).map(x=>["pos:"+x,x])]].filter(g=>g[1].length);
-  const TYPES=G.flatMap(g=>g[1].map(c=>c[0]));
-  const U=S.uEdit||(S.uEdit={units:[...(S.lists.units||[])],map:JSON.parse(JSON.stringify(S.lists.unitMap||{}))});
+  /* one working copy of the lists; units across, list items down (grouped by list); weather on the right */
+  const U=S.uEdit||(S.uEdit={units:[...(S.lists.units||[])],map:JSON.parse(JSON.stringify(S.lists.unitMap||{})),
+    costCats:[...(S.lists.costCats||[])],fuelTypes:[...(S.lists.fuelTypes||[])],positions:[...(S.lists.positions||[])],weather:[...(S.lists.weather||[])]});
+  const G=[["costCats","ხარჯის კატეგორია",""],["fuelTypes","საწვავის ტიპი","fuel:"],["positions","პერსონალის პოზიცია","pos:"]];
+  const TYPES=G.flatMap(([k,,pre])=>U[k].map(x=>pre+x));
   const has=(u,t)=>!U.map[u]?!/^(fuel|pos):/.test(t):U.map[u].includes(t);
-  const tog=(u,t,on)=>{ const cur=U.map[u]?[...U.map[u]]:[...TYPES]; U.map[u]=on?[...new Set([...cur,t])]:cur.filter(x=>x!==t); };
+  const tog=(u,t,on)=>{ const cur=U.map[u]?[...U.map[u]]:TYPES.filter(x=>!/^(fuel|pos):/.test(x)); U.map[u]=on?[...new Set([...cur,t])]:cur.filter(x=>x!==t); };
+  const N=U.units.length+2;
+  const addRow=(k)=>{ let inp=null; const form=h("form",{class:"um-new",onsubmit:e=>{ e.preventDefault(); const v=inp.value.trim(); if(!v||U[k].includes(v)) return;
+      const L=U[k], at=L.length&&/^სხვა$/.test(L[L.length-1])?L.length-1:L.length; L.splice(at,0,v); S.uAdd=null; render(); }},
+      inp=h("input",{class:"inp",placeholder:tr("ახალი დასახელება"),"aria-label":tr("ახალი დასახელება")}),h("button",{class:"btn sm",type:"submit"},tr("დამატება")),h("button",{class:"btn sm ghost",type:"button",onclick:()=>{ S.uAdd=null; render(); }},"✕"));
+    setTimeout(()=>inp.focus(),0); return h("tr",{class:"um-addrow"},h("td",{colspan:String(N)},form)); };
+  const plus=k=>h("tr",{class:"um-plus"},h("td",{colspan:String(N)},h("button",{type:"button",class:"um-pb",title:tr("დამატება"),"aria-label":tr("დამატება"),onclick:()=>{ S.uAdd=k; render(); }},"+")));
+  const groupRows=([k,l,pre])=>{ const L=U[k], rows=[h("tr",{class:"um-gr"},h("th",{colspan:String(N)},tr(l)))];
+    L.forEach((x,i)=>{ if(i===L.length-1) rows.push(S.uAdd===k?addRow(k):plus(k));
+      rows.push(h("tr",null,h("th",{scope:"row"},h("span",null,tr(x)),h("button",{class:"sp-x um-del",type:"button","aria-label":tr("წაშლა")+" "+x,onclick:()=>{ if(!confirm(tr("წავშალო?")+" „"+x+"“")) return; L.splice(i,1); render(); }},"✕")),
+        U.units.map(u=>h("td",{class:"um-c"},h("input",{type:"checkbox",checked:has(u,pre+x),"aria-label":x+" — "+u,onchange:e=>tog(u,pre+x,e.target.checked)}))),h("td"))); });
+    if(!L.length) rows.push(S.uAdd===k?addRow(k):plus(k)); return rows; };
   let nu=null;
-  /* rows: the list items (grouped by list); columns: the units */
   const umat=h("div",{class:"um-wrap"},h("table",{class:"um-t"},
     h("thead",null,h("tr",null,h("th",null,""),U.units.map((u,i)=>h("th",{class:"um-c um-u"},h("span",null,u),
-      h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა")+" "+u,title:tr("წაშლა"),onclick:()=>{ if(!confirm(tr("წავშალო?")+" „"+u+"“")) return; U.units.splice(i,1); delete U.map[u]; render(); }},"✕"))))),
-    h("tbody",null,G.flatMap(([l,cs])=>[h("tr",{class:"um-gr"},h("th",{colspan:String(U.units.length+1)},tr(l))),
-      ...cs.map(([t,lab])=>h("tr",null,h("th",{scope:"row"},tr(lab)),U.units.map(u=>h("td",{class:"um-c"},h("input",{type:"checkbox",checked:has(u,t),"aria-label":lab+" — "+u,onchange:e=>tog(u,t,e.target.checked)})))))]))),
-    h("form",{class:"um-add",onsubmit:e=>{ e.preventDefault(); const v=nu.value.trim(); if(!v||U.units.includes(v)) return; U.units.push(v); U.map[v]=TYPES.filter(t=>!/^(fuel|pos):/.test(t)); render(); }},
-      nu=h("input",{class:"inp",placeholder:tr("ახალი ერთეული"),"aria-label":tr("ახალი ერთეული")}),h("button",{class:"btn sm",type:"submit"},"+ ",tr("დამატება"))));
-  const saveAll=async()=>{ const data={}; for(const k in fields) data[k]=fields[k].value.split("\n").map(s=>s.trim()).filter(Boolean);
-    data.units=U.units; data.unitMap=U.map;
+      h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა")+" "+u,title:tr("წაშლა"),onclick:()=>{ if(!confirm(tr("წავშალო?")+" „"+u+"“")) return; U.units.splice(i,1); delete U.map[u]; render(); }},"✕"))),
+      h("th",{class:"um-c"},h("form",{class:"um-unew",onsubmit:e=>{ e.preventDefault(); const v=nu.value.trim(); if(!v||U.units.includes(v)) return; U.units.push(v); U.map[v]=[]; render(); }},
+        nu=h("input",{class:"inp",placeholder:"+ "+tr("ერთეული"),"aria-label":tr("ახალი ერთეული")}))))),
+    h("tbody",null,G.flatMap(groupRows))));
+  const wta=h("textarea",{class:"inp um-wx",rows:12,value:U.weather.join("\n"),oninput:e=>{ U.weather=e.target.value.split("\n").map(x=>x.trim()).filter(Boolean); }});
+  const saveAll=async()=>{ const data={costCats:U.costCats,fuelTypes:U.fuelTypes,positions:U.positions,weather:U.weather,units:U.units,unitMap:U.map};
     try{ S.lists=await api("PUT","/config/lists",data); S.uEdit=null; toast("სიები შენახულია"); render(); }catch(e){ toast("ვერ შეინახა: "+errMsg(e)); } };
-  return [h("div",{class:"head"},h("div",null,h("div",{class:"eyebrow"},"ჩამოსაშლელი სიები"),h("h1",null,"სიები"))),
-    h("section",{class:"panel"},h("div",{class:"panel-h"},h("h2",null,"ანგარიშის სიები"),h("button",{class:"btn primary",type:"button",onclick:saveAll},"შენახვა")),
-      h("div",{class:"panel-b"},h("p",{class:"small muted",style:"margin-top:0"},"თითო მნიშვნელობა თითო სტრიქონზე. სიები ყველა პროექტის ანგარიშში გამოიყენება."),grid,
-        h("h3",{class:"um-h"},tr("ერთეულები ტიპების მიხედვით")),h("p",{class:"small muted",style:"margin:0 0 6px"},tr("მონიშნეთ, რომელ ტიპზე გამოჩნდეს ერთეული გეგმა-გრაფიკსა და ხარჯებში.")),umat))];
+  return h("section",{class:"panel um-panel"},h("div",{class:"panel-h"},h("h2",null,tr("ჩამოსაშლელი სიები")),h("button",{class:"btn primary",type:"button",onclick:saveAll},tr("შენახვა"))),
+    h("div",{class:"panel-b um-two"},umat,h("div",{class:"field um-wf"},h("label",null,tr("ამინდი")),wta)));
 }
 
 /* ---------- EXCEL EXPORT ---------- */

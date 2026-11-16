@@ -2732,3 +2732,18 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .um-t tr.um-gr th{background:none;padding:12px 10px 3px!important;border-bottom:1px solid #e3e8ee!important}
 .um-t tbody tr.um-gr:first-child th{padding-top:4px!important}
 .um-t thead th{border-bottom:1px solid #d6dde5!important}
+/* settings lists: table on the left, weather on the right */
+.um-panel{width:fit-content;max-width:100%}
+.um-two{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.um-wf{width:220px}
+.um-wx{width:100%;font-size:.76rem;line-height:1.5}
+.um-t tbody th{position:relative;white-space:nowrap;padding-right:24px!important}
+.um-del{position:absolute;right:2px;top:50%;transform:translateY(-50%);opacity:0;font-size:.62rem}
+.um-t tbody tr:hover .um-del{opacity:1}
+.um-plus td{padding:0 0 0 16px!important;height:14px}
+.um-pb{width:18px;height:16px;border:1px dashed #b6c0cc;border-radius:4px;background:#fff;color:#64748b;font-size:.8rem;line-height:1;padding:0;cursor:pointer}
+.um-pb:hover{border-color:var(--accent);color:var(--accent)}
+.um-addrow td{padding:2px 0 2px 16px!important}
+.um-new{display:flex;gap:6px;align-items:center}
+.um-new .inp{height:24px;width:170px;font-size:.74rem;padding:0 6px}
+.um-unew .inp{height:22px;width:78px;font-size:.68rem;padding:0 6px}
