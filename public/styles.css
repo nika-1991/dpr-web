@@ -2809,3 +2809,9 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .tabs.tgroups.trad .rb-ro .ico.ti-anAdvIn,.tabs.tgroups.trad .rb-ro .ico.ti-anRetIn,.tabs.tgroups.trad .rb-ro.on .ico.ti-anAdvIn,.tabs.tgroups.trad .rb-ro.on .ico.ti-anRetIn,.as-gt .ico.ti-anAdvIn,.as-gt .ico.ti-anRetIn{color:#16a34a!important}
 .tabs.tgroups.trad .rb-ro .ico.ti-anAdvOut,.tabs.tgroups.trad .rb-ro .ico.ti-anRetOut,.tabs.tgroups.trad .rb-ro.on .ico.ti-anAdvOut,.tabs.tgroups.trad .rb-ro.on .ico.ti-anRetOut,.as-gt .ico.ti-anAdvOut,.as-gt .ico.ti-anRetOut{color:#dc2626!important}
 .tabs.tgroups.trad .tgrp{padding:0 13px!important}.tabs.tgroups.trad{flex-wrap:nowrap!important}
+/* project reports list: compact rows */
+.rep-tab .rlist-t th,.rep-tab .rlist-t td{padding:4px 10px!important;font-size:.76rem!important;line-height:1.25}
+.rep-tab .rlist-t td.rn{font-size:.76rem!important}
+.rep-tab .rlist-t .chip,.rep-tab .rlist-t [class*="chip"]{padding:1px 8px!important;font-size:.7rem!important;line-height:1.4}
+.rep-tab .rlist-t .rep-add{width:24px!important;height:24px!important;min-height:0!important}
+.rep-tab .rlist-t thead th{height:auto!important}
