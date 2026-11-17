@@ -2637,13 +2637,16 @@ function renderBalance(p,key){
 /* one analysis page: two parts one under the other, each with its heading */
 function anBoth(a,b,t1,t2,i1,i2){ const hd=(t,k)=>h("h3",{class:"an-h"},tabIcon(k),h("span",null,tr(t)));
   return h("div",{class:"an-both"},h("section",null,hd(t1,i1),a),h("section",null,hd(t2,i2),b)); }
+/* a small progress ring (0–1) */
+function anRing(v){ const sp=document.createElement("span"); sp.className="an-ring"; sp.setAttribute("aria-hidden","true"); const c=2*Math.PI*7, k=Math.max(0,Math.min(1,v));
+  sp.innerHTML='<svg viewBox="0 0 18 18" width="16" height="16"><circle cx="9" cy="9" r="7" fill="none" stroke="#e2e8f0" stroke-width="2.5"/><circle cx="9" cy="9" r="7" fill="none" stroke="#5f7f92" stroke-width="2.5" stroke-dasharray="'+(c*k).toFixed(2)+' '+c.toFixed(2)+'" transform="rotate(-90 9 9)" stroke-linecap="round"/></svg>'; return sp; }
 function anTerms(title,items){ return h("section",{class:"an-card"},h("div",{class:"an-ct"},tr(title)),h("table",{class:"an-kv"},h("tbody",null,items.filter(Boolean).map(([l,v,cls])=>h("tr",null,h("th",null,tr(l)),h("td",{class:"num"+(cls?" "+cls:"")},v)))))); }
 const anPct=v=>v==null||v===""?"—":fmtNum(Math.round(num(v)*100)/100)+"%";
 const anMoney=v=>Math.abs(v)<0.5?"—":(v<0?"−":"")+fmtNum(Math.round(Math.abs(v)));
 /* groups: optional [[title, column count], …] shown as a heading row over the columns; each group starts with a divider */
 function anTable(head,rows,foot,groups){
-  const starts=new Set(); if(groups){ let k=0; groups.forEach(([,n])=>{ starts.add(k); k+=n; }); }
-  const sep=i=>groups&&i&&starts.has(i)?" an-sep":"";
+  const starts=new Set(), gOf=[]; if(groups){ let k=0; groups.forEach(([,n],gi)=>{ starts.add(k); for(let j=0;j<n;j++) gOf[k+j]=gi; k+=n; }); }
+  const sep=i=>groups?(i&&starts.has(i)?" an-sep":"")+" an-c"+(gOf[i]??0):"";
   rows=rows.map(r=>({...r,cells:r.cells.map(([v,c],i)=>[v,(c||"")+sep(i)])})); if(foot) foot=foot.map(([v,c],i)=>[v,(c||"")+sep(i)]);
   return h("div",{class:"pl-wrap an-wrap"},h("table",{class:"pl-table f2-table an-t"+(groups?" an-g":"")},
     h("thead",null,groups?h("tr",{class:"an-gr"},groups.map(([t,n],gi)=>h("th",{colspan:String(n),class:"an-gh an-gh"+gi+(gi?" an-sep":"")},tr(t)))):null,
@@ -2662,8 +2665,9 @@ function renderAdvIn(p){
   const vat=anTerms("ავანსის დღგ",[["ავანსის აღება",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anMoney(A)],["დღგ-ს გადახდის თარიღი",avIn?fmtDate(avIn.date):"—"],["დღგ-ს თანხა",anMoney(avIn?avIn.v:-A*r/(1+r)),"neg"]]);
   let left=A, rec=0, avr=0;
   const rows=R.map(x=>{ left+=x.adv; rec+=-x.adv; avr+=x.avr||0; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.ex),td(x.vat),td(x.cum),
-    [x.pct!=null?fmtNum(Math.round(x.pct*1000)/10)+"%":"—","num"],td(x.ret),td(x.adv,"an-hl"),td(left,"an-bal"),td(x.pay,"f2-pay"),
-    [x.avr?fmtDate(x.vatDate):"—","mono"],td(x.avr||0,"an-hl")]}; });
+    [x.pct!=null?h("span",{class:"an-pc"},fmtNum(Math.round(x.pct*1000)/10)+"%",anRing(x.pct)):"—","num"],[h("span",null,anMoney(x.ret),x.ret<-0.5?h("span",{class:"an-dn","aria-hidden":"true"},"↓"):null),"num"+(x.ret<-0.5?" neg":"")],
+    td(x.adv,"an-hl"),td(left,"an-bal"),td(x.pay,"f2-pay"),
+    [x.avr?h("span",{class:"an-dt"},icon("calendar"),fmtDate(x.vatDate)):"—","mono"],td(x.avr||0,"an-hl")]}; });
   const T=k=>R.reduce((a,x)=>a+(x[k]||0),0);
   const table=R.length?anTable([["ფორმა 2-ის თარიღი"],["თანხა"],["შესრულება დღგ-ს გარეშე"],["გადასახდელი დღგ"],["ჯამური შესრულება"],
       ["შესრულება %"],["ხარისხის დაკავება"],["ავანსიდან დაკავება","an-hl"],["დარჩენილი ავანსი","an-bal"],["ჩასარიცხი თანხა"],

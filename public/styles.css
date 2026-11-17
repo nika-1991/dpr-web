@@ -2851,3 +2851,29 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .an-t.an-g th.an-gh1{background:#e0f2fe!important;color:#075985}
 .an-t.an-g th.an-gh2{background:#fef3c7!important;color:#92400e}
 .an-t.an-g .an-sep{border-left:2px solid #94a3b8!important}
+/* sectioned table, panel style: dark teal / slate / gold sections */
+.an-wrap:has(.an-g){border-radius:14px!important;overflow:hidden;box-shadow:0 10px 28px -12px rgba(15,23,42,.28),0 0 0 1px #e2e8f0!important;background:#fff}
+.an-t.an-g{border-collapse:separate;border-spacing:0}
+.an-t.an-g thead th{color:#fff!important;border-bottom:0!important;font-weight:700}
+.an-t.an-g tr.an-gr th{font-size:.78rem;padding:8px!important}
+.an-t.an-g tr.an-gr th.an-gh0{background:#1f5c58!important;color:#fff!important}
+.an-t.an-g tr.an-gr th.an-gh1{background:#7896a8!important;color:#fff!important}
+.an-t.an-g tr.an-gr th.an-gh2{background:#a38d4c!important;color:#fff!important}
+.an-t.an-g thead tr+tr th.an-c0{background:#2b6b66!important}
+.an-t.an-g thead tr+tr th.an-c1{background:#6b8a9d!important}
+.an-t.an-g thead tr+tr th.an-c2{background:#977f3f!important}
+.an-t.an-g thead tr+tr th{border-right:1px solid rgba(255,255,255,.18)!important;padding:8px 10px!important}
+.an-t.an-g tbody td{background:#fff!important;padding:12px 12px!important;border-bottom:1px solid #e9eef3}
+.an-t.an-g tbody td.an-c2{background:#f7f2e2!important}
+.an-t.an-g tbody td.an-hl:not(.an-c2),.an-t.an-g tbody td.an-bal{background:#fff!important}
+.an-t.an-g tbody td.an-bal{font-weight:700}
+.an-t.an-g tfoot td{background:#1f4f4c!important;color:#fff!important;font-weight:800;padding:10px 12px!important;border:0!important}
+.an-t.an-g tfoot td.an-c2{background:#a38d4c!important}
+.an-t.an-g tfoot td.neg{color:#fff!important}
+.an-t.an-g .an-sep{border-left:0!important}
+.an-t.an-g tbody td.an-sep,.an-t.an-g tfoot td.an-sep{box-shadow:inset 1px 0 0 #d6dde5}
+.an-pc{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
+.an-ring{display:inline-flex}
+.an-dn{margin-left:4px;color:#dc2626;font-weight:700}
+.an-dt{display:inline-flex;align-items:center;gap:5px}
+.an-dt .ico{width:14px;height:14px;color:#a38d4c}
