@@ -2877,3 +2877,4 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .an-dn{margin-left:4px;color:#dc2626;font-weight:700}
 .an-dt{display:inline-flex;align-items:center;gap:5px}
 .an-dt .ico{width:14px;height:14px;color:#a38d4c}
+.an-t thead th.an-l{text-align:left!important}

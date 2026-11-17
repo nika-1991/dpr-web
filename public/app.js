@@ -2665,13 +2665,13 @@ function renderAdvIn(p){
   const vat=anTerms("ავანსის დღგ",[["ავანსის აღება",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anMoney(A)],["დღგ-ს გადახდის თარიღი",avIn?fmtDate(avIn.date):"—"],["დღგ-ს თანხა",anMoney(avIn?avIn.v:-A*r/(1+r)),"neg"]]);
   let left=A, rec=0, avr=0;
   const rows=R.map(x=>{ left+=x.adv; rec+=-x.adv; avr+=x.avr||0; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.ex),td(x.vat),td(x.cum),
-    [x.pct!=null?h("span",{class:"an-pc"},fmtNum(Math.round(x.pct*1000)/10)+"%",anRing(x.pct)):"—","num"],[h("span",null,anMoney(x.ret),x.ret<-0.5?h("span",{class:"an-dn","aria-hidden":"true"},"↓"):null),"num"+(x.ret<-0.5?" neg":"")],
+    [x.pct!=null?h("span",{class:"an-pc"},fmtNum(Math.round(x.pct*1000)/10)+"%",anRing(x.pct)):"—","num"],td(x.ret),
     td(x.adv,"an-hl"),td(left,"an-bal"),td(x.pay,"f2-pay"),
-    [x.avr?h("span",{class:"an-dt"},icon("calendar"),fmtDate(x.vatDate)):"—","mono"],td(x.avr||0,"an-hl")]}; });
+    [x.avr?fmtDate(x.vatDate):"—","mono"],td(x.avr||0,"an-hl")]}; });
   const T=k=>R.reduce((a,x)=>a+(x[k]||0),0);
-  const table=R.length?anTable([["ფორმა 2-ის თარიღი"],["თანხა"],["შესრულება დღგ-ს გარეშე"],["გადასახდელი დღგ"],["ჯამური შესრულება"],
+  const table=R.length?anTable([["ფორმა 2-ის თარიღი"],["თანხა"],["დღგ-ს გარეშე"],["გადასახდელი დღგ"],["ჯამური შესრულება"],
       ["შესრულება %"],["ხარისხის დაკავება"],["ავანსიდან დაკავება","an-hl"],["დარჩენილი ავანსი","an-bal"],["ჩასარიცხი თანხა"],
-      ["ამობრუნების თარიღი"],["ავანსის დღგ ამოტრიალება","an-hl"]],rows,
+      ["თარიღი","an-l"],["თანხა","an-hl"]],rows,
     [["სულ","pl-c0"],td(T("v")),td(T("ex")),td(T("vat")),["",""],["",""],td(T("ret")),td(T("adv"),"an-hl"),td(left,"an-bal"),td(T("pay"),"f2-pay"),["",""],td(avr,"an-hl")],
     [["ფორმა 2-ის მონაცემები",5],["კალკულაცია",5],["ავანსის დღგ-ს ამობრუნება",2]])
     :h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
