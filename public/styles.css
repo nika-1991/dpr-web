@@ -2798,3 +2798,8 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .g-unit .g-in.g-un{padding:0 2px!important;width:100%;min-width:0;text-overflow:clip;font-size:.74rem}
 .g-unit .g-in.g-un::-webkit-calendar-picker-indicator{display:none!important;opacity:0;width:0;margin:0;padding:0}
 .g-unit .g-in.g-un::-webkit-list-button{display:none!important}
+/* project analysis: balances */
+.bl-box{margin-bottom:12px;width:fit-content;max-width:100%}
+.bl-h small{margin-left:8px}
+.bl-k{margin-top:8px}
+.bl-wrap{width:fit-content;max-width:100%}.bl-wrap .pl-table td,.bl-wrap .pl-table th.num{min-width:72px}
