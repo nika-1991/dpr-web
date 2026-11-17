@@ -587,7 +587,7 @@ function renderProjectForm(pid){
 /* ---------- PROJECT ---------- */
 /* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
 const tabIcon=k=>{ const n=TAB_ICONS[k]||""; if(n.startsWith("txt:")) return h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)); const el=icon(n); el.classList.add("ti-"+k); return el; };
-const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["ავანსი",["anAdvIn","anAdvOut"]],["დაკავება",["anRetIn","anRetOut"]],["ზოგადი ინფო",["info","boq","team"]],["რესურსები",["plab","pmat","plists","psubs"]]];
+const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["რესურსები",["plab","pmat","plists","psubs"]],["ავანსი",["anAdvIn","anAdvOut"]],["დაკავება",["anRetIn","anRetOut"]],["ზოგადი ინფო",["info","boq","team"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
 const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"],["assume","დაშვებები"]];
 /* analysis tabs (admins and reviewers): balances over time, from the cash flow */
