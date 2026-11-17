@@ -587,12 +587,12 @@ function renderProjectForm(pid){
 /* ---------- PROJECT ---------- */
 /* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
 const tabIcon=k=>{ const n=TAB_ICONS[k]||""; if(n.startsWith("txt:")) return h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)); const el=icon(n); el.classList.add("ti-"+k); return el; };
-const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["რესურსები",["plab","pmat","plists","psubs"]],["ანალიზი",["anIn","anOut"]],["ზოგადი ინფო",["info","boq","team"]]];
+const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["რესურსები",["plab","pmat","plists","psubs"]],["ავანსი",["anAdvIn","anAdvOut"]],["დაკავება",["anRetIn","anRetOut"]],["ზოგადი ინფო",["info","boq","team"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
 const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"],["assume","დაშვებები"]];
 /* analysis tabs (admins and reviewers): balances over time, from the cash flow */
-const AN_TABS=[["anIn","მიღებული ავანსი და დაკავება — მოთხოვნა"],["anOut","გადახდილი ავანსი და დაკავება — ვალდებულება"]];
-const TAB_ICONS={plab:"helmet",pmat:"materials",anIn:"down",anOut:"upo",anAdvIn:"down",anAdvOut:"upo",anRetIn:"lock",anRetOut:"lock",plists:"digger",psubs:"brief",assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"receipt",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
+const AN_TABS=[["anAdvIn","მიღებული ავანსი"],["anAdvOut","გაცემული ავანსი"],["anRetIn","დაკავება — მოთხოვნა"],["anRetOut","დაკავება — ვალდებულება"]];
+const TAB_ICONS={plab:"helmet",pmat:"materials",anAdvIn:"down",anAdvOut:"upo",anRetIn:"lock",anRetOut:"lock",plists:"digger",psubs:"brief",assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"receipt",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
   const tabs=[["plab","რესურსები: შრომა"],["pmat","რესურსები: მასალა"],["plists","რესურსები: ტექნიკა"],["psubs","რესურსები: ქვეკონტრაქტორები"],["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?[...FIN_TABS,...AN_TABS]:[])];
@@ -614,7 +614,7 @@ function renderProject(){
       if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
       try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},icon(p.archived?"refresh":"checkc")))):null;
   /* section row as compact radio lists (icon + short name); four or more go into two columns */
-  const SHORT={anIn:"მიღებული",anOut:"გადახდილი",plab:"შრომა",pmat:"მასალა",plists:"ტექნიკა",psubs:"ქვეკონტრაქტორი",schedule:"გეგმა-გრაფიკი",exec:"შესრულების გეგმა",reports:"ანგარიშები",progress:"პროგრესი",pl:"P&L",cf:"CF",othercost:"სხვა ხარჯები",assume:"დაშვებები",info:"მონაცემები",boq:"BoQ",team:"გუნდი"};
+  const SHORT={anAdvIn:"მიღებული",anAdvOut:"გაცემული",anRetIn:"მოთხოვნა",anRetOut:"ვალდებულება",plab:"შრომა",pmat:"მასალა",plists:"ტექნიკა",psubs:"ქვეკონტრაქტორი",schedule:"გეგმა-გრაფიკი",exec:"შესრულების გეგმა",reports:"ანგარიშები",progress:"პროგრესი",pl:"P&L",cf:"CF",othercost:"სხვა ხარჯები",assume:"დაშვებები",info:"მონაცემები",boq:"BoQ",team:"გუნდი"};
   const tabRo=k=>h("button",{type:"button",role:"tab",class:"rb-ro tro"+(S.tab===k?" on":""),"aria-selected":String(S.tab===k),title:tr(tabName.get(k)),
     onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},h("span",{class:"rb-dot"}),tabIcon(k),h("span",null,tr(SHORT[k]||tabName.get(k))));
   const tabBar=h("div",{class:"tabs tgroups trad",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
@@ -630,8 +630,9 @@ function renderProject(){
   else if(S.tab==="assume"&&canReview(p)) body=renderAssume(p);
   else if(S.tab==="cf"&&canReview(p)) body=renderCF(p);
   else if(S.tab==="othercost"&&canReview(p)) body=renderOtherCost(p);
-  else if(S.tab==="anIn"&&canReview(p)) body=anBoth(renderAdvIn(p),renderRetIn(p),"მიღებული ავანსი","დაკავება — მოთხოვნა","anAdvIn","anRetIn");
-  else if(S.tab==="anOut"&&canReview(p)) body=anBoth(renderBalance(p,"anAdvOut"),renderBalance(p,"anRetOut"),"გადახდილი ავანსი","დაკავება — ვალდებულება","anAdvOut","anRetOut");
+  else if(S.tab==="anAdvIn"&&canReview(p)) body=renderAdvIn(p);
+  else if(S.tab==="anRetIn"&&canReview(p)) body=renderRetIn(p);
+  else if(AN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=renderBalance(p,S.tab);
   else if(S.tab==="plists") body=renderProjLists(p);
   else if(S.tab==="plab") body=renderProjLists(p,"შრომა");
   else if(S.tab==="pmat") body=renderProjLists(p,"მასალა");
@@ -1438,7 +1439,7 @@ async function loadSchedule(pid){
   if(S.schedLoading===pid) return; S.schedLoading=pid;
   try{ S.sched=await api("GET","/projects/"+encodeURIComponent(pid)+"/schedule"); S.schedPid=pid; S.gsel=null; S.gscroll=null; }
   catch(e){ toast("გეგმა-გრაფიკი ვერ ჩაიტვირთა: "+errMsg(e)); }
-  S.schedLoading=null; if(((S.view==="project"&&["schedule","exec","pl","cf","assume","othercost","plists","psubs","plab","pmat","anIn","anOut"].includes(S.tab))||S.view==="report")&&!typing()) render();
+  S.schedLoading=null; if(((S.view==="project"&&["schedule","exec","pl","cf","assume","othercost","plists","psubs","plab","pmat","anAdvIn","anAdvOut","anRetIn","anRetOut"].includes(S.tab))||S.view==="report")&&!typing()) render();
 }
 function saveSchedule(){
   clearTimeout(S.schedTimer); const pid=S.schedPid; schedStatus("ინახება…");
