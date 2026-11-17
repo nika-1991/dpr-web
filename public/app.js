@@ -587,15 +587,15 @@ function renderProjectForm(pid){
 /* ---------- PROJECT ---------- */
 /* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
 const tabIcon=k=>{ const n=TAB_ICONS[k]||""; if(n.startsWith("txt:")) return h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)); const el=icon(n); el.classList.add("ti-"+k); return el; };
-const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["ანალიზი",["anAdvIn","anAdvOut","anRetIn","anRetOut"]],["ზოგადი ინფო",["info","boq","team"]],["სიები",["plists","psubs"]]];
+const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["ავანსი",["anAdvIn","anAdvOut"]],["დაკავება",["anRetIn","anRetOut"]],["ზოგადი ინფო",["info","boq","team"]],["რესურსები",["plab","pmat","plists","psubs"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
 const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"],["assume","დაშვებები"]];
 /* analysis tabs (admins and reviewers): balances over time, from the cash flow */
 const AN_TABS=[["anAdvIn","მიღებული ავანსი"],["anAdvOut","გაცემული ავანსი"],["anRetIn","დაკავება — მოთხოვნა"],["anRetOut","დაკავება — ვალდებულება"]];
-const TAB_ICONS={anAdvIn:"down",anAdvOut:"upo",anRetIn:"lock",anRetOut:"lock",plists:"digger",psubs:"brief",assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"receipt",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
+const TAB_ICONS={plab:"helmet",pmat:"materials",anAdvIn:"down",anAdvOut:"upo",anRetIn:"lock",anRetOut:"lock",plists:"digger",psubs:"brief",assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"receipt",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
-  const tabs=[["plists","პროექტის სიები: ტექნიკა"],["psubs","პროექტის სიები: ქვეკონტრაქტორები"],["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?[...FIN_TABS,...AN_TABS]:[])];
+  const tabs=[["plab","რესურსები: შრომა"],["pmat","რესურსები: მასალა"],["plists","რესურსები: ტექნიკა"],["psubs","რესურსები: ქვეკონტრაქტორები"],["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?[...FIN_TABS,...AN_TABS]:[])];
   if(!tabs.some(([k])=>k===S.tab)) S.tab="reports";
   /* tabs grouped into sections; inside a section only icons, the name shows on hover */
   const tabName=new Map(tabs);
@@ -614,7 +614,7 @@ function renderProject(){
       if(!confirm(tr(p.archived?"პროექტი ისევ აქტიური გახდეს?":"მოვნიშნო პროექტი დასრულებულად? ის „დასრულებულ“ პროექტებში გადავა, ახალი ანგარიში აღარ შეიქმნება."))) return;
       try{ await saveProject(S.pid,{archived:!p.archived},p.archived?"პროექტი ისევ აქტიურია":"პროექტი დასრულებულად მოინიშნა"); render(); }catch(e){} }},icon(p.archived?"refresh":"checkc")))):null;
   /* section row as compact radio lists (icon + short name); four or more go into two columns */
-  const SHORT={anAdvIn:"მიღ. ავანსი",anAdvOut:"გაც. ავანსი",anRetIn:"დაკავება მოთხ.",anRetOut:"დაკავება ვალდ.",plists:"ტექნიკა",psubs:"ქვეკონტრაქტორი",schedule:"გეგმა-გრაფიკი",exec:"შესრულების გეგმა",reports:"ანგარიშები",progress:"პროგრესი",pl:"P&L",cf:"CF",othercost:"სხვა ხარჯები",assume:"დაშვებები",info:"მონაცემები",boq:"BoQ",team:"გუნდი"};
+  const SHORT={anAdvIn:"მიღებული",anAdvOut:"გაცემული",anRetIn:"მოთხოვნა",anRetOut:"ვალდებულება",plab:"შრომა",pmat:"მასალა",plists:"ტექნიკა",psubs:"ქვეკონტრაქტორი",schedule:"გეგმა-გრაფიკი",exec:"შესრულების გეგმა",reports:"ანგარიშები",progress:"პროგრესი",pl:"P&L",cf:"CF",othercost:"სხვა ხარჯები",assume:"დაშვებები",info:"მონაცემები",boq:"BoQ",team:"გუნდი"};
   const tabRo=k=>h("button",{type:"button",role:"tab",class:"rb-ro tro"+(S.tab===k?" on":""),"aria-selected":String(S.tab===k),title:tr(tabName.get(k)),
     onclick:()=>{S.tab=k;S.creating=null;S.editInfo=false;pushNav();render();}},h("span",{class:"rb-dot"}),tabIcon(k),h("span",null,tr(SHORT[k]||tabName.get(k))));
   const tabBar=h("div",{class:"tabs tgroups trad",role:"tablist"},TAB_GROUPS.map(([l,ks])=>{ const b=ks.filter(k=>tabName.has(k));
@@ -632,6 +632,8 @@ function renderProject(){
   else if(S.tab==="othercost"&&canReview(p)) body=renderOtherCost(p);
   else if(AN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=renderBalance(p,S.tab);
   else if(S.tab==="plists") body=renderProjLists(p);
+  else if(S.tab==="plab") body=renderProjLists(p,"შრომა");
+  else if(S.tab==="pmat") body=renderProjLists(p,"მასალა");
   else if(S.tab==="psubs") body=renderProjSubs(p);
   else if(TAB_ICONS[S.tab]&&FIN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=h("div",{class:"empty"},tabIcon(S.tab),h("p",null,h("b",null,tr(FIN_TABS.find(([k])=>k===S.tab)[1]))),h("p",{class:"muted"},"გვერდი მზადდება."));
   else body=renderInfo(p);
@@ -790,6 +792,7 @@ const ICONS={
   chevron:'<path d="m6 15 6-6 6 6"/>',
   add:'<path d="M12 5v14M5 12h14"/>',
   digger:'<path d="M2 18h11"/><circle cx="4.5" cy="18" r="2"/><circle cx="10.5" cy="18" r="2"/><path d="M3 15V11h6l2 4"/><path d="M9 11V8h3"/><path d="M12 8l5-4 4 5-2 2-3-2"/>',
+  helmet:'<path d="M3 18h18"/><path d="M5 18v-3a7 7 0 0 1 14 0v3"/><path d="M10 8.5V6h4v2.5"/>',
   upo:'<path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/>',
   down:'<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
@@ -1434,7 +1437,7 @@ async function loadSchedule(pid){
   if(S.schedLoading===pid) return; S.schedLoading=pid;
   try{ S.sched=await api("GET","/projects/"+encodeURIComponent(pid)+"/schedule"); S.schedPid=pid; S.gsel=null; S.gscroll=null; }
   catch(e){ toast("გეგმა-გრაფიკი ვერ ჩაიტვირთა: "+errMsg(e)); }
-  S.schedLoading=null; if(((S.view==="project"&&["schedule","exec","pl","cf","assume","othercost","plists","psubs","anAdvIn","anAdvOut","anRetIn","anRetOut"].includes(S.tab))||S.view==="report")&&!typing()) render();
+  S.schedLoading=null; if(((S.view==="project"&&["schedule","exec","pl","cf","assume","othercost","plists","psubs","plab","pmat","anAdvIn","anAdvOut","anRetIn","anRetOut"].includes(S.tab))||S.view==="report")&&!typing()) render();
 }
 function saveSchedule(){
   clearTimeout(S.schedTimer); const pid=S.schedPid; schedStatus("ინახება…");
@@ -2751,31 +2754,32 @@ function renderAssume(p){
 }
 /* the project's own lists (for now: machinery), alphabetical; admins and reviewers edit them */
 /* the project's machinery: everything planned in the schedule, totalled per machine (qty, positions, value), plus any added by hand */
-function renderProjLists(p){
+function renderProjLists(p,TY="ტექნიკა"){
+  const MACH=TY==="ტექნიკა", LBL={"შრომა":["შრომა","პოზიცია / რესურსი","helmet"],"მასალა":["მასალა","მასალა","materials"],"ტექნიკა":["ტექნიკა","ტექნიკა","digger"]}[TY];
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   const edit=canReview(p)&&!p.archived, T=new Map();
-  for(const [code,r] of Object.entries(S.sched.rows||{})) for(const x of r.res||[]){ if(x.type!=="ტექნიკა") continue; const n=String(x.name||"").trim()||tr("დასახელება არაა"), k=n.toLowerCase();
+  for(const [code,r] of Object.entries(S.sched.rows||{})) for(const x of r.res||[]){ if(x.type!==TY) continue; const n=String(x.name||"").trim()||tr("დასახელება არაა"), k=n.toLowerCase();
     const q=Object.values(x.plan||{}).reduce((a,v)=>a+num(v),0), t=T.get(k)||{n,qty:0,val:0,units:new Set(),pos:new Set(),days:new Set()};
     t.qty+=q; t.val+=q*num(x.price); if(x.unit) t.units.add(x.unit); t.pos.add(code); Object.keys(x.plan||{}).forEach(d=>{ if(num(x.plan[d])) t.days.add(d); }); T.set(k,t); }
-  for(const n of (p.machines||[])){ const k=n.toLowerCase(); if(!T.has(k)) T.set(k,{n,qty:0,val:0,units:new Set(),pos:new Set(),days:new Set(),manual:true}); }
+  if(MACH) for(const n of (p.machines||[])){ const k=n.toLowerCase(); if(!T.has(k)) T.set(k,{n,qty:0,val:0,units:new Set(),pos:new Set(),days:new Set(),manual:true}); }
   /* sorted by name by default; a click on a heading sorts by that column, a second click reverses */
-  const so=S.plSort||(S.plSort={k:"n",d:1}), key={n:x=>x.n,qty:x=>x.qty,u:x=>[...x.units].join(","),days:x=>x.days.size,pos:x=>x.pos.size,val:x=>x.val};
+  const so=(S.plSortT||(S.plSortT={}))[TY]||(S.plSortT[TY]={k:"n",d:1}), key={n:x=>x.n,qty:x=>x.qty,u:x=>[...x.units].join(","),days:x=>x.days.size,pos:x=>x.pos.size,val:x=>x.val};
   const L=[...T.values()].sort((a,b)=>{ const A=key[so.k](a), B=key[so.k](b); const c=typeof A==="number"?A-B:String(A).localeCompare(String(B),"ka"); return c?c*so.d:a.n.localeCompare(b.n,"ka"); });
-  const th=(k,l,num)=>k?h("th",{class:"pl-sort"+(num?" num":"")+(so.k===k?" on":""),onclick:()=>{ S.plSort=so.k===k?{k,d:-so.d}:{k,d:k==="n"||k==="u"?1:-1}; render(); }},tr(l),so.k===k?h("span",{class:"pl-ar"},so.d>0?"▲":"▼"):null):h("th",null,l);
+  const th=(k,l,num)=>k?h("th",{class:"pl-sort"+(num?" num":"")+(so.k===k?" on":""),onclick:()=>{ S.plSortT[TY]=so.k===k?{k,d:-so.d}:{k,d:k==="n"||k==="u"?1:-1}; render(); }},tr(l),so.k===k?h("span",{class:"pl-ar"},so.d>0?"▲":"▼"):null):h("th",null,l);
   const del=x=>saveProject(S.pid,{machines:(p.machines||[]).filter(y=>y.toLowerCase()!==x.n.toLowerCase())},tr("შენახულია")).then(render).catch(()=>{});
   let nv=null;
-  const add=edit?h("form",{class:"pl-add",onsubmit:async e=>{ e.preventDefault(); const v=nv.value.trim(); if(!v) return; if(L.some(o=>o.n.toLowerCase()===v.toLowerCase())){ toast(tr("უკვე არის სიაში")); return; }
+  const add=edit&&MACH?h("form",{class:"pl-add",onsubmit:async e=>{ e.preventDefault(); const v=nv.value.trim(); if(!v) return; if(L.some(o=>o.n.toLowerCase()===v.toLowerCase())){ toast(tr("უკვე არის სიაში")); return; }
       try{ await saveProject(S.pid,{machines:[...(p.machines||[]),v]},tr("შენახულია")); render(); }catch(e){} }},
     nv=h("input",{class:"inp",placeholder:tr("ახალი ტექნიკა"),"aria-label":tr("ახალი ტექნიკა")}),h("button",{class:"btn sm primary",type:"submit"},"+ ",tr("დამატება"))):null;
   const f=v=>v?fmtNum(Math.round(v*100)/100):"—";
   const tot=L.reduce((a,x)=>a+x.val,0);
-  return h("section",{class:"as-grp pl-box"},h("div",{class:"as-gt"},icon("digger"),h("span",null,tr("ტექნიკა")),h("small",{class:"muted"},tr("გეგმა-გრაფიკში დაგეგმილი ტექნიკა · ჩამოსაშლელ სიაში ამ სიიდან"))),
-    L.length?h("table",{class:"pl-t"},h("thead",null,h("tr",null,th(null,"#"),th("n","ტექნიკა"),th("qty","რაოდ.",1),th("u","განზ."),th("days","დღე",1),th("pos","პოზიცია",1),th("val","ღირებულება",1),th(null,""))),
+  return h("section",{class:"as-grp pl-box"},h("div",{class:"as-gt"},icon(LBL[2]),h("span",null,tr(LBL[0])),h("small",{class:"muted"},tr(MACH?"გეგმა-გრაფიკში დაგეგმილი ტექნიკა · ჩამოსაშლელ სიაში ამ სიიდან":"გეგმა-გრაფიკში დაგეგმილი, ჯამურად"))),
+    L.length?h("table",{class:"pl-t"},h("thead",null,h("tr",null,th(null,"#"),th("n",LBL[1]),th("qty","რაოდ.",1),th("u","განზ."),th("days","დღე",1),th("pos","პოზიცია",1),th("val","ღირებულება",1),th(null,""))),
       h("tbody",null,L.map((x,i)=>h("tr",{class:x.manual?"pl-man":""},h("td",{class:"muted"},String(i+1)),h("td",null,x.n,x.manual?h("small",{class:"muted"}," · "+tr("ხელით")):null),h("td",{class:"num"},f(x.qty)),h("td",null,[...x.units].join(", ")||"—"),
         h("td",{class:"num"},x.days.size||"—"),h("td",{class:"num"},x.pos.size||"—"),h("td",{class:"num"},x.val?gel0(x.val):"—"),
         h("td",null,x.manual&&edit?h("button",{class:"sp-x",type:"button","aria-label":tr("წაშლა"),onclick:()=>{ if(confirm(tr("წავშალო?")+" „"+x.n+"“")) del(x); }},"✕"):null)))),
       tot?h("tfoot",null,h("tr",null,h("th",{colspan:"6"},tr("სულ")),h("th",{class:"num"},gel0(tot)),h("th"))):null)
-    :h("p",{class:"muted small"},tr("გეგმა-გრაფიკში ტექნიკა ჯერ არ არის დაგეგმილი.")),add);
+    :h("p",{class:"muted small"},tr(MACH?"გეგმა-გრაფიკში ტექნიკა ჯერ არ არის დაგეგმილი.":"გეგმა-გრაფიკში ჯერ არაფერია დაგეგმილი.")),add);
 }
 /* the project's subcontractors: those planned in the schedule (totalled) plus those entered by hand / in the project data */
 const subPayLabel=sp=>{ if(!sp) return tr("მიუთითეთ პირობა");
