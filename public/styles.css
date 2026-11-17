@@ -2878,3 +2878,18 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .an-dt{display:inline-flex;align-items:center;gap:5px}
 .an-dt .ico{width:14px;height:14px;color:#a38d4c}
 .an-t thead th.an-l{text-align:left!important}
+/* analysis: terms in a left panel, compact table */
+.an-page.an-side{flex-direction:row;align-items:flex-start;gap:16px}
+.an-left{flex:0 0 250px;display:flex;flex-direction:column;gap:10px;position:sticky;top:8px}
+.an-left .an-card{min-width:0;padding:8px 10px}
+.an-left .an-ct{font-size:.7rem}
+.an-left .an-kv th{font-size:.66rem;padding:2px 8px 2px 0}
+.an-left .an-kv td{font-size:.68rem;padding:2px 0;white-space:normal}
+.an-side>.an-wrap,.an-side>p{flex:0 1 auto;min-width:0}
+.an-t.an-g tr.an-gr th{font-size:.68rem!important;padding:5px 8px!important}
+.an-t.an-g thead tr+tr th{font-size:.64rem!important;padding:5px 8px!important}
+.an-t.an-g tbody td{font-size:.7rem!important;padding:4px 8px!important}
+.an-t.an-g tfoot td{font-size:.7rem!important;padding:5px 8px!important}
+.an-t:not(.an-g) th{font-size:.64rem!important;padding:5px 8px!important}
+.an-t:not(.an-g) td{font-size:.7rem!important;padding:4px 8px!important}
+.an-ring svg{width:12px;height:12px}

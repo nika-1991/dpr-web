@@ -2676,7 +2676,7 @@ function renderAdvIn(p){
     [["ფორმა 2-ის მონაცემები",5],["კალკულაცია",5],["ავანსის დღგ-ს ამობრუნება",2]])
     :h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
   const k=(l,v,c)=>h("div",{class:"cf-kpi"+(c?" "+c:"")},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
-  return h("div",{class:"an-page"},h("div",{class:"an-top"},terms,vat,h("div",{class:"cf-kpis an-k"},k("მიღებული ავანსი",A),k("გაქვითული",rec),k("დარჩენილი ავანსი",left,left>0.5?"neg":""),k("ავანსის დღგ — ნეტო",-(A*r/(1+r))+avr,"neg"))),table);
+  return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms,vat),table);
 }
 /* retention held by the client: the terms, every form 2's short- and long-term part, and when each comes back */
 function renderRetIn(p){
@@ -2694,7 +2694,7 @@ function renderRetIn(p){
   const table=R.length?anTable([["თარიღი"],["ფორმა 2-ის თანხა"],["ჯამური შესრულება"],["შესრულება %"],["მოკლევადიანი","an-hl"],["გრძელვადიანი","an-hl"],["სულ დაკავება"],["ჩარიცხვის თარიღი"],["დაკავების ნაშთი","an-bal"]],rows,
     [["სულ","pl-c0"],td(R.reduce((a,x)=>a+x.v,0)),["",""],["",""],td(S1,"an-hl"),td(S2,"an-hl"),td(S1+S2),["",""],td(bal,"an-bal")]):h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
   const k=(l,v,c)=>h("div",{class:"cf-kpi"+(c?" "+c:"")},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
-  return h("div",{class:"an-page"},h("div",{class:"an-top"},terms,h("div",{class:"cf-kpis an-k"},k("მოკლევადიანი",S1),k("გრძელვადიანი",S2),k("დაბრუნებული",rel.reduce((a,x)=>a+x.v,0)),k("მისაღები ნაშთი",bal,bal>0.5?"pos":""))),table);
+  return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms),table);
 }
 /* form 2 settlement: each interim certificate with progress, retention, advance recovery and what is paid when */
 function renderForm2(rows){
