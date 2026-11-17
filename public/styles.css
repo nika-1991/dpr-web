@@ -2845,3 +2845,9 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .an-both>section+section{border-top:1px solid #e2e8f0;padding-top:18px}
 .an-both .bl-h>.ico,.an-both .bl-h>span{display:none}
 .an-both .bl-h small{margin-left:0}
+/* advance table in sections */
+.an-t.an-g tr.an-gr th{text-align:center!important;font-size:.72rem;font-weight:800;letter-spacing:.02em;padding:6px 8px!important;border-bottom:1px solid #cbd5e1;max-width:none;white-space:nowrap!important}
+.an-t.an-g th.an-gh0{background:#eef2f6!important;color:#334155}
+.an-t.an-g th.an-gh1{background:#e0f2fe!important;color:#075985}
+.an-t.an-g th.an-gh2{background:#fef3c7!important;color:#92400e}
+.an-t.an-g .an-sep{border-left:2px solid #94a3b8!important}

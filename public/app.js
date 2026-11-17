@@ -2640,9 +2640,14 @@ function anBoth(a,b,t1,t2,i1,i2){ const hd=(t,k)=>h("h3",{class:"an-h"},tabIcon(
 function anTerms(title,items){ return h("section",{class:"an-card"},h("div",{class:"an-ct"},tr(title)),h("table",{class:"an-kv"},h("tbody",null,items.filter(Boolean).map(([l,v,cls])=>h("tr",null,h("th",null,tr(l)),h("td",{class:"num"+(cls?" "+cls:"")},v)))))); }
 const anPct=v=>v==null||v===""?"—":fmtNum(Math.round(num(v)*100)/100)+"%";
 const anMoney=v=>Math.abs(v)<0.5?"—":(v<0?"−":"")+fmtNum(Math.round(Math.abs(v)));
-function anTable(head,rows,foot){
-  return h("div",{class:"pl-wrap an-wrap"},h("table",{class:"pl-table f2-table an-t"},
-    h("thead",null,h("tr",null,head.map(([l,c],i)=>h("th",{class:(i<2?"pl-c0":"num")+(c?" "+c:"")},tr(l))))),
+/* groups: optional [[title, column count], …] shown as a heading row over the columns; each group starts with a divider */
+function anTable(head,rows,foot,groups){
+  const starts=new Set(); if(groups){ let k=0; groups.forEach(([,n])=>{ starts.add(k); k+=n; }); }
+  const sep=i=>groups&&i&&starts.has(i)?" an-sep":"";
+  rows=rows.map(r=>({...r,cells:r.cells.map(([v,c],i)=>[v,(c||"")+sep(i)])})); if(foot) foot=foot.map(([v,c],i)=>[v,(c||"")+sep(i)]);
+  return h("div",{class:"pl-wrap an-wrap"},h("table",{class:"pl-table f2-table an-t"+(groups?" an-g":"")},
+    h("thead",null,groups?h("tr",{class:"an-gr"},groups.map(([t,n],gi)=>h("th",{colspan:String(n),class:"an-gh an-gh"+gi+(gi?" an-sep":"")},tr(t)))):null,
+      h("tr",null,head.map(([l,c],i)=>h("th",{class:(i<2?"pl-c0":"num")+(c?" "+c:"")+sep(i)},tr(l))))),
     h("tbody",null,rows.map(r=>h("tr",{class:r.cls||""},r.cells.map(([v,c])=>h("td",{class:c||""},v))))),
     foot?h("tfoot",null,h("tr",{class:"pl-net"},foot.map(([v,c])=>h("td",{class:c||""},v)))):null));
 }
@@ -2656,12 +2661,15 @@ function renderAdvIn(p){
     ["ავანს. დაკავების მინ. %",anPct(p.advFrom!=null?p.advFrom:0)],["ავანს. დაკავების მაქს. %",anPct(p.advTo!=null?p.advTo:100)],["ხარისხის დაკავება",anPct(num(p.retShort)+num(p.retLong)||f.ret)]]);
   const vat=anTerms("ავანსის დღგ",[["ავანსის აღება",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anMoney(A)],["დღგ-ს გადახდის თარიღი",avIn?fmtDate(avIn.date):"—"],["დღგ-ს თანხა",anMoney(avIn?avIn.v:-A*r/(1+r)),"neg"]]);
   let left=A, rec=0, avr=0;
-  const rows=R.map(x=>{ left+=x.adv; rec+=-x.adv; avr+=x.avr||0; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.ex),td(x.vat),td(x.cum),[x.pct!=null?fmtNum(Math.round(x.pct*1000)/10)+"%":"—","num"],td(x.ret),td(x.adv,"an-hl"),td(x.pay,"f2-pay"),
-    [x.avr?fmtDate(x.vatDate):"—","mono"],td(x.avr||0,"an-hl"),td(left,"an-bal")]}; });
+  const rows=R.map(x=>{ left+=x.adv; rec+=-x.adv; avr+=x.avr||0; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.ex),td(x.vat),td(x.cum),
+    [x.pct!=null?fmtNum(Math.round(x.pct*1000)/10)+"%":"—","num"],td(x.ret),td(x.adv,"an-hl"),td(left,"an-bal"),td(x.pay,"f2-pay"),
+    [x.avr?fmtDate(x.vatDate):"—","mono"],td(x.avr||0,"an-hl")]}; });
   const T=k=>R.reduce((a,x)=>a+(x[k]||0),0);
-  const table=R.length?anTable([["ფორმა 2-ის თარიღი"],["თანხა"],["შესრულება დღგ-ს გარეშე"],["გადასახდელი დღგ"],["ჯამური შესრულება"],["შესრულება %"],["ხარისხის დაკავება"],["ავანსიდან დაკავება","an-hl"],["ჩასარიცხი თანხა"],
-      ["ავანსის დღგ-ს ამობრუნების თარიღი"],["ავანსის დღგ ამოტრიალება","an-hl"],["დარჩენილი ავანსი","an-bal"]],rows,
-    [["სულ","pl-c0"],td(T("v")),td(T("ex")),td(T("vat")),["",""],["",""],td(T("ret")),td(T("adv"),"an-hl"),td(T("pay"),"f2-pay"),["",""],td(avr,"an-hl"),td(left,"an-bal")])
+  const table=R.length?anTable([["ფორმა 2-ის თარიღი"],["თანხა"],["შესრულება დღგ-ს გარეშე"],["გადასახდელი დღგ"],["ჯამური შესრულება"],
+      ["შესრულება %"],["ხარისხის დაკავება"],["ავანსიდან დაკავება","an-hl"],["დარჩენილი ავანსი","an-bal"],["ჩასარიცხი თანხა"],
+      ["ამობრუნების თარიღი"],["ავანსის დღგ ამოტრიალება","an-hl"]],rows,
+    [["სულ","pl-c0"],td(T("v")),td(T("ex")),td(T("vat")),["",""],["",""],td(T("ret")),td(T("adv"),"an-hl"),td(left,"an-bal"),td(T("pay"),"f2-pay"),["",""],td(avr,"an-hl")],
+    [["ფორმა 2-ის მონაცემები",5],["კალკულაცია",5],["ავანსის დღგ-ს ამობრუნება",2]])
     :h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
   const k=(l,v,c)=>h("div",{class:"cf-kpi"+(c?" "+c:"")},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
   return h("div",{class:"an-page"},h("div",{class:"an-top"},terms,vat,h("div",{class:"cf-kpis an-k"},k("მიღებული ავანსი",A),k("გაქვითული",rec),k("დარჩენილი ავანსი",left,left>0.5?"neg":""),k("ავანსის დღგ — ნეტო",-(A*r/(1+r))+avr,"neg"))),table);
