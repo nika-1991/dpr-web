@@ -2646,7 +2646,7 @@ function anBoth(a,b,t1,t2,i1,i2){ const hd=(t,k)=>h("h3",{class:"an-h"},tabIcon(
 function anRing(v){ const sp=document.createElement("span"); sp.className="an-ring"; sp.setAttribute("aria-hidden","true"); const c=2*Math.PI*7, k=Math.max(0,Math.min(1,v));
   sp.innerHTML='<svg viewBox="0 0 18 18" width="16" height="16"><circle cx="9" cy="9" r="7" fill="none" stroke="#e2e8f0" stroke-width="2.5"/><circle cx="9" cy="9" r="7" fill="none" stroke="#5f7f92" stroke-width="2.5" stroke-dasharray="'+(c*k).toFixed(2)+' '+c.toFixed(2)+'" transform="rotate(-90 9 9)" stroke-linecap="round"/></svg>'; return sp; }
 /* items: [label, value, class] or "gap" for a little space between groups */
-function anTerms(title,items){ return h("section",{class:"an-card"},title?h("div",{class:"an-ct"},tr(title)):null,h("table",{class:"an-kv"},h("tbody",null,items.filter(Boolean).map(it=>it==="gap"?h("tr",{class:"an-gap"},h("td",{colspan:"2"})):h("tr",null,h("th",null,tr(it[0])),h("td",{class:"num"+(it[2]?" "+it[2]:"")},it[1])))))); }
+function anTerms(title,items){ return h("section",{class:"an-card"},title?h("div",{class:"an-ct"},tr(title)):null,h("table",{class:"an-kv"},h("tbody",null,items.filter(Boolean).map(it=>it==="gap"?h("tr",{class:"an-gap"},h("td",{colspan:"2"})):it.h?h("tr",{class:"an-sub"},h("th",{colspan:"2"},tr(it.h))):h("tr",null,h("th",null,tr(it[0])),h("td",{class:"num"+(it[2]?" "+it[2]:"")},it[1])))))); }
 const anPct=v=>v==null||v===""?"—":fmtNum(Math.round(num(v)*100)/100)+"%";
 const anMoney=v=>Math.abs(v)<0.5?"—":(v<0?"−":"")+fmtNum(Math.round(Math.abs(v)));
 /* groups: optional [[title, column count], …] shown as a heading row over the columns; each group starts with a divider */
@@ -2695,7 +2695,7 @@ function renderRetIn(p){
   const lTxt=p.retLongMode==="guar"?tr("მოკლევადიანთან ერთად (გარანტიით)"):(p.retLongMonths??24)+" "+tr("თვე ბოლო ჩარიცხვიდან");
   /* returns in the order they were put: short-term first (if any), then long-term */
   const rel=D.flows.filter(x=>x.row==="retRel");
-  const terms=anTerms("დაკავების პირობები",[["ხელშეკრ. თანხა",anMoney(D.CV)],"gap",["მოკლევადიანი დაკავება",anPct(rs)],["მოკლევადიანის დაბრუნება",sTxt],"gap",["გრძელვადიანი დაკავება",anPct(rl)],["გრძელვადიანის დაბრუნება",lTxt]]);
+  const terms=anTerms("დაკავების პირობები",[["ხელშეკრ. თანხა",anMoney(D.CV)],"gap",{h:"მოკლევადიანი"},["დაკავება",anPct(rs)],["ჩარიცხვა",sTxt],"gap",{h:"გრძელვადიანი"},["დაკავება",anPct(rl)],["ჩარიცხვა",lTxt]]);
   const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
   let bS=0, bL=0, S1=0, S2=0;
   /* the retention is held from the payment of each form 2, on the day that payment comes in */
