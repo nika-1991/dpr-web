@@ -792,7 +792,7 @@ const ICONS={
   chevron:'<path d="m6 15 6-6 6 6"/>',
   add:'<path d="M12 5v14M5 12h14"/>',
   digger:'<path d="M2 18h11"/><circle cx="4.5" cy="18" r="2"/><circle cx="10.5" cy="18" r="2"/><path d="M3 15V11h6l2 4"/><path d="M9 11V8h3"/><path d="M12 8l5-4 4 5-2 2-3-2"/>',
-  helmet:'<path d="M2.5 18.5h19"/><path d="M4.5 18.5V16a7.5 7.5 0 0 1 15 0v2.5"/><path d="M9.5 9V6.8a1.2 1.2 0 0 1 1.2-1.2h2.6a1.2 1.2 0 0 1 1.2 1.2V9"/><path d="M12 5.6V12"/>',
+  helmet:'<defs><mask id="hh-m"><rect width="24" height="24" fill="#fff"/><path d="M9.2 5.6c2.6 2.4 3.8 5.7 3.9 9.6" stroke="#000" stroke-width="1.7" fill="none"/></mask></defs><path mask="url(#hh-m)" fill="currentColor" stroke="none" d="M3 16C3 9.5 7 4.5 12 4.5s9 5 9 11.5z"/><path fill="currentColor" stroke="none" d="M1.5 17h19c1.5 0 2.5.6 2.5 1.6v.6H2.8a1.3 1.3 0 0 1-1.3-1.3z"/>',
   upo:'<path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/>',
   down:'<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
