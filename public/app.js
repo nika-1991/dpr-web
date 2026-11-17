@@ -2693,14 +2693,23 @@ function renderRetIn(p){
   const rs=hasRet?num(p.retShort):num(f.ret), rl=hasRet?num(p.retLong):0;
   const sTxt=p.retShortMode==="days"?tr("ბოლო ჩარიცხვიდან")+" "+num(p.retShortDays)+" "+tr("დღეში"):tr("ბოლო ჩარიცხვასთან ერთად");
   const lTxt=p.retLongMode==="guar"?tr("მოკლევადიანთან ერთად (გარანტიით)"):(p.retLongMonths??24)+" "+tr("თვე ბოლო ჩარიცხვიდან");
-  const rel=D.flows.filter(x=>x.row==="retRel").sort((a,b)=>a.date.localeCompare(b.date));
-  const terms=anTerms("დაკავების პირობები",[["ხელშეკრ. თანხა",anMoney(D.CV)],["მოკლევადიანი დაკავება",anPct(rs)],["გრძელვადიანი დაკავება",anPct(rl)],["მოკლევადიანის დაბრუნება",sTxt],["გრძელვადიანის დაბრუნება",lTxt]]);
+  /* returns in the order they were put: short-term first (if any), then long-term */
+  const rel=D.flows.filter(x=>x.row==="retRel");
+  const terms=anTerms("დაკავების პირობები",[["ხელშეკრ. თანხა",anMoney(D.CV)],"gap",["მოკლევადიანი დაკავება",anPct(rs)],["მოკლევადიანის დაბრუნება",sTxt],"gap",["გრძელვადიანი დაკავება",anPct(rl)],["გრძელვადიანის დაბრუნება",lTxt]]);
   const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
-  let bal=0, S1=0, S2=0;
-  const rows=R.map(x=>{ const a=x.v*rs/100, b=x.v*rl/100; S1+=a; S2+=b; bal+=a+b; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.cum),[x.pct!=null?fmtNum(Math.round(x.pct*1000)/10)+"%":"—","num"],td(a,"an-hl"),td(b,"an-hl"),td(a+b),[fmtDate(x.payDate),"mono"],td(bal,"an-bal")]}; });
-  rel.forEach((x,i)=>{ bal-=x.v; rows.push({cls:"an-rel",cells:[[fmtDate(x.date),"mono"],[tr(rel.length>1?(i===0?"მოკლევადიანის დაბრუნება":"გრძელვადიანის დაბრუნება"):"დაკავების დაბრუნება"),"an-rl"],["",""],["",""],["",""],["",""],td(-x.v),[fmtDate(x.date),"mono"],td(bal,"an-bal")]}); });
-  const table=R.length?anTable([["თარიღი"],["ფორმა 2-ის თანხა"],["ჯამური შესრულება"],["შესრულება %"],["მოკლევადიანი","an-hl"],["გრძელვადიანი","an-hl"],["სულ დაკავება"],["ჩარიცხვის თარიღი"],["დაკავების ნაშთი","an-bal"]],rows,
-    [["სულ","pl-c0"],td(R.reduce((a,x)=>a+x.v,0)),["",""],["",""],td(S1,"an-hl"),td(S2,"an-hl"),td(S1+S2),["",""],td(bal,"an-bal")]):h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
+  let bS=0, bL=0, S1=0, S2=0;
+  /* the retention is held from the payment of each form 2, on the day that payment comes in */
+  const rows=R.map(x=>{ const a=x.v*rs/100, b=x.v*rl/100; S1+=a; S2+=b; bS+=a; bL+=b;
+    return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.cum),[x.pct!=null?h("span",{class:"an-pc"},fmtNum(Math.round(x.pct*1000)/10)+"%",anRing(x.pct)):"—","num"],
+      [fmtDate(x.payDate),"mono"],td(a),td(b),td(a+b),td(bS,"an-bal"),td(bL,"an-bal")]}; });
+  const relS=S1>0.5?rel[0]:null, relL=rel.find(x=>x!==relS)||null;
+  [[relS,"მოკლევადიანის დაბრუნება","s"],[relL,"გრძელვადიანის დაბრუნება","l"]].filter(([x])=>x).sort((a,b)=>a[0].date.localeCompare(b[0].date)).forEach(([x,l,k])=>{
+    if(k==="s") bS-=x.v; else bL-=x.v;
+    rows.push({cls:"an-rel",cells:[[fmtDate(x.date),"mono"],[tr(l),"an-rl"],["",""],["",""],[fmtDate(x.date),"mono"],k==="s"?td(-x.v):["",""],k==="l"?td(-x.v):["",""],td(-x.v),td(bS,"an-bal"),td(bL,"an-bal")]}); });
+  const table=R.length?anTable([["ფორმა 2-ის თარიღი"],["ფორმა 2-ის თანხა"],["ჯამური შესრულება"],["შესრულება %"],
+      ["დაკავების თარიღი","an-l"],["მოკლევადიანი"],["გრძელვადიანი"],["სულ"],["მოკლევადიანი","an-bal"],["გრძელვადიანი","an-bal"]],rows,
+    [["სულ","pl-c0"],td(R.reduce((a,x)=>a+x.v,0)),["",""],["",""],["",""],td(S1),td(S2),td(S1+S2),td(bS,"an-bal"),td(bL,"an-bal")],
+    [["ფორმა 2-ის მონაცემები",4],["დაკავება",4],["ნაშთი",2]]):h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
   const k=(l,v,c)=>h("div",{class:"cf-kpi"+(c?" "+c:"")},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
   return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms),table);
 }
