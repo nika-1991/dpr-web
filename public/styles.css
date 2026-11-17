@@ -2784,3 +2784,13 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .ps-box{max-width:none;width:fit-content}
 .sb-f .inp{height:26px!important}
 .sb-grp input.inp{height:26px!important;min-height:26px;box-sizing:border-box;padding-top:0;padding-bottom:0}
+/* loan card: colour as a stripe on the left (bank colour), light summary on the right */
+.ln-card.lc{border-left:5px solid var(--ln-c,#1e6b8c)!important;border-radius:8px!important;background:#fff}
+.lc-sum{background:#f4f6f8!important;color:#1e293b!important;border-left:1px solid #e2e8f0}
+.lc-kv span{color:#64748b!important}
+.lc-kv b{color:#1e293b!important}
+.lc-kv.tot span,.lc-kv.tot b{color:#0f172a!important}
+.lc-hr{border-top-color:#e2e8f0!important}
+.lc-x:hover{color:#b91c1c!important;background:#fee2e2!important}
+.lc-pill{background:#fff;border:1px solid #e2e8f0}
+.lc-pill:hover{background:#eef2f6}
