@@ -586,13 +586,13 @@ function renderProjectForm(pid){
 
 /* ---------- PROJECT ---------- */
 /* a tab icon is either a drawn icon or a short text badge (P&L, CF) */
-const tabIcon=k=>{ const n=TAB_ICONS[k]||""; return n.startsWith("txt:")?h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)):icon(n); };
+const tabIcon=k=>{ const n=TAB_ICONS[k]||""; if(n.startsWith("txt:")) return h("span",{class:"ico tico"+(n==="txt:≈"?" est":""),"aria-hidden":"true"},n.slice(4)); const el=icon(n); el.classList.add("ti-"+k); return el; };
 const TAB_GROUPS=[["დაგეგმვა",["schedule","exec"]],["შესრულება",["reports","progress"]],["ფინანსები",["pl","cf","othercost","assume"]],["ანალიზი",["anAdvIn","anAdvOut","anRetIn","anRetOut"]],["ზოგადი ინფო",["info","boq","team"]],["სიები",["plists","psubs"]]];
 /* finance tabs (admins and reviewers); pages are empty for now */
 const FIN_TABS=[["pl","მოგება-ზარალი (P&L)"],["cf","ფულადი ნაკადები (CF)"],["othercost","სხვა ხარჯები"],["assume","დაშვებები"]];
 /* analysis tabs (admins and reviewers): balances over time, from the cash flow */
 const AN_TABS=[["anAdvIn","მიღებული ავანსი"],["anAdvOut","გაცემული ავანსი"],["anRetIn","დაკავება — მოთხოვნა"],["anRetOut","დაკავება — ვალდებულება"]];
-const TAB_ICONS={anAdvIn:"down",anAdvOut:"coins",anRetIn:"pause",anRetOut:"conditions",plists:"digger",psubs:"brief",assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"receipt",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
+const TAB_ICONS={anAdvIn:"down",anAdvOut:"upo",anRetIn:"lock",anRetOut:"lock",plists:"digger",psubs:"brief",assume:"txt:≈",pl:"txt:P&L",cf:"txt:CF",othercost:"receipt",reports:"report",progress:"trend",boq:"olist",schedule:"calendar",exec:"target",info:"info",team:"personnel"};
 function renderProject(){
   const p=P();
   const tabs=[["plists","პროექტის სიები: ტექნიკა"],["psubs","პროექტის სიები: ქვეკონტრაქტორები"],["reports","ანგარიშები"],["progress","პროგრესი"],["boq","ხარჯთაღრიცხვა (BoQ)"],["schedule","გეგმა-გრაფიკი"],["exec","შესრულების გეგმა"],["info","პროექტის მონაცემები"],...(S.admin?[["team","გუნდი"]]:[]),...(canReview(p)?[...FIN_TABS,...AN_TABS]:[])];
@@ -790,6 +790,8 @@ const ICONS={
   chevron:'<path d="m6 15 6-6 6 6"/>',
   add:'<path d="M12 5v14M5 12h14"/>',
   digger:'<path d="M2 18h11"/><circle cx="4.5" cy="18" r="2"/><circle cx="10.5" cy="18" r="2"/><path d="M3 15V11h6l2 4"/><path d="M9 11V8h3"/><path d="M12 8l5-4 4 5-2 2-3-2"/>',
+  upo:'<path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/>',
   down:'<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
   pen:'<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/>',
   receipt:'<path d="M5 3h14v18l-2.3-1.5L14.3 21 12 19.5 9.7 21l-2.4-1.5L5 21z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
