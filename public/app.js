@@ -2666,7 +2666,7 @@ function renderAdvIn(p){
   const terms=anTerms("ხელშეკრულების პირობები",[["ხელშეკრ. თანხა",anMoney(CV)],["ავანსის თარიღი",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anPct(ap)+" — "+anMoney(A),"an-b"],
     ["ავანსის გაქვითვა",anPct(p.advFrom!=null?p.advFrom:0)+" — "+anPct(p.advTo!=null?p.advTo:100)],"gap",
     ["დღგ-ს გადახდა",avIn?fmtDate(avIn.date):"—"],["დღგ-ს თანხა",anMoney(avIn?avIn.v:-A*r/(1+r)),"neg"],"gap",
-    ["ხარისხის დაკავება",rL?anPct(rS)+" + "+anPct(rL):anPct(rS)]]);
+    ["ხარისხის დაკავება",anPct(rS)+" + "+anPct(rL)]]);
   let left=A, rec=0, avr=0;
   const rows=R.map(x=>{ left+=x.adv; rec+=-x.adv; avr+=x.avr||0; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.ex),td(x.vat),td(x.cum),
     [x.pct!=null?h("span",{class:"an-pc"},fmtNum(Math.round(x.pct*1000)/10)+"%",anRing(x.pct)):"—","num"],td(-x.v*rS/100),td(-x.v*rL/100),
