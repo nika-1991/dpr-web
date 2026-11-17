@@ -633,6 +633,7 @@ function renderProject(){
   else if(S.tab==="anAdvIn"&&canReview(p)) body=renderAdvIn(p);
   else if(S.tab==="anRetIn"&&canReview(p)) body=renderRetIn(p);
   else if(S.tab==="anAdvOut"&&canReview(p)) body=renderAdvOut(p);
+  else if(S.tab==="anRetOut"&&canReview(p)) body=renderRetOut(p);
   else if(AN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=renderBalance(p,S.tab);
   else if(S.tab==="plists") body=renderProjLists(p);
   else if(S.tab==="plab") body=renderProjLists(p,"შრომა");
@@ -2735,6 +2736,30 @@ function renderAdvOut(p){
       return {cells:[[byM?MN[+k.slice(5)-1].slice(0,3)+". "+k.slice(0,4):fmtDate(k),"mono"],td(g.v),td(g.cum),[h("span",{class:"an-pc"},fmtNum(Math.round(g.cum/x.TV*1000)/10)+"%",anRing(g.cum/x.TV)),"num"],td(s),td(l),td(ded,"an-hl"),td(pay,"f2-pay"),td(left,"an-bal")]}; });
     const table=anTable([[byM?"გადახდის თვე":"გადახდის თარიღი"],["შესრულება"],["ჯამური შესრულება"],["შესრულება %"],["დაკავება მოკლ."],["დაკავება გრძელ."],["ავანსიდან დაკავება","an-hl"],["გადასახდელი თანხა"],["დარჩენილი ავანსი","an-bal"]],rows,
       [["სულ","pl-c0"],td(T.v),["",""],["",""],td(T.s),td(T.l),td(T.ded,"an-hl"),td(T.pay,"f2-pay"),td(left,"an-bal")],[["შესრულების მონაცემები",4],["კალკულაცია",5]]);
+    return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms),table); }));
+}
+/* retention we hold from subcontractors: one block per subcontractor — its terms on the left, its payments and the returns on the right */
+function renderRetOut(p){
+  const w=anNeedSched(); if(w) return w;
+  const D=cfData(p), L=D.subs.filter(x=>num(x.sp.retShort)+num(x.sp.retLong)>0).sort((a,b)=>a.n.localeCompare(b.n,"ka")), MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
+  if(!L.length) return h("div",{class:"empty"},h("p",{class:"muted"},tr("ქვეკონტრაქტორებზე დაკავება ჯერ არ არის: მიუთითეთ რესურსები → ქვეკონტრაქტორი → ანაზღაურება.")));
+  const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
+  const byM=S.aoView==="m";
+  const sw=h("div",{class:"vswitch pl-sw an-sw",role:"group","aria-label":tr("ჭრილი")},[["d","თარიღებით"],["m","თვეებით"]].map(([k,l])=>
+    h("button",{type:"button","aria-pressed":String((byM?"m":"d")===k),class:"vbtn vtxt"+((byM?"m":"d")===k?" on":""),onclick:()=>{ S.aoView=k; render(); }},tr(l))));
+  return h("div",{class:"an-both"},sw,L.map(x=>{ const sp=x.sp, rS=num(sp.retShort), rL=num(sp.retLong);
+    const sTxt=sp.retShortMode==="days"?tr("ბოლო გადახდიდან")+" "+fmtNum(num(sp.retShortDays))+" "+tr("დღეში"):tr("ბოლო გადახდასთან ერთად");
+    const lTxt=sp.retLongMode==="guar"?tr("მოკლევადიანთან ერთად (გარანტიით)"):fmtNum(sp.retLongMonths??24)+" "+tr("თვე ბოლო გადახდიდან");
+    const terms=anTerms(x.n,[["გეგმიური ღირებულება",anMoney(x.TV)],"gap",{h:"მოკლევადიანი"},["დაკავება",anPct(rS)],["ჩარიცხვა",sTxt],"gap",{h:"გრძელვადიანი"},["დაკავება",anPct(rL)],["ჩარიცხვა",lTxt]]);
+    const G=new Map(); for(const it of x.items){ const k=byM?it.pd.slice(0,7):it.pd, g=G.get(k)||G.set(k,{v:0,cum:0}).get(k); g.v+=it.v; g.cum=Math.max(g.cum,it.cum); }
+    let bS=0, bL=0;
+    const rows=[...G.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,g])=>{ const a=g.v*rS/100, b=g.v*rL/100; bS+=a; bL+=b;
+      return {cells:[[byM?MN[+k.slice(5)-1].slice(0,3)+". "+k.slice(0,4):fmtDate(k),"mono"],td(g.v),td(g.cum),[h("span",{class:"an-pc"},fmtNum(Math.round(g.cum/x.TV*1000)/10)+"%",anRing(g.cum/x.TV)),"num"],td(a),td(b),td(a+b)]}; });
+    [[x.hs,x.rd.s,"მოკლევადიანის დაბრუნება","s"],[x.hl,x.rd.l,"გრძელვადიანის დაბრუნება","l"]].filter(([v])=>v>0.5).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([v,d,l,k])=>{
+      if(k==="s") bS-=v; else bL-=v;
+      rows.push({cls:"an-rel",cells:[[fmtDate(d),"mono"],[tr(l),"an-rl"],["",""],["",""],k==="s"?td(-v):["",""],k==="l"?td(-v):["",""],td(-v)]}); });
+    const table=anTable([[byM?"გადახდის თვე":"გადახდის თარიღი"],["შესრულება"],["ჯამური შესრულება"],["შესრულება %"],["მოკლევადიანი"],["გრძელვადიანი"],["სულ"]],rows,
+      [["სულ","pl-c0"],td(x.TV),["",""],["",""],td(bS,"an-bal"),td(bL,"an-bal"),td(bS+bL,"an-bal")],[["შესრულების მონაცემები",4],["დაკავება",3]]);
     return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms),table); }));
 }
 /* form 2 settlement: each interim certificate with progress, retention, advance recovery and what is paid when */
