@@ -2552,7 +2552,8 @@ function renderCF(p){
   const openBal=((cfFin(S.sched).show||{}).open||{}).cf===false?0:num(cfFin(S.sched).open), cum=[], opening=[]; net.reduce((a,v,i)=>{ opening[i]=a; return (cum[i]=a+v); },openBal);
   const tot=a=>a.reduce((x,y)=>x+y,0);
   const cell=(v,cls)=>h("td",{class:"num"+(v<0?" neg":"")+(cls?" "+cls:"")},Math.abs(v)<0.5?"—":fmtNum(Math.round(v)));
-  const row=(label,vals,cls,extra,noTot)=>h("tr",{class:cls||""},h("th",{scope:"row"},extra||null,label),vals.map(v=>cell(v)),noTot?h("td",{class:"num pl-tot"},""):cell(tot(vals),"pl-tot"));
+  /* noTot: a balance row; its total column shows the given value (opening = first, closing = last) */
+  const row=(label,vals,cls,extra,noTot)=>h("tr",{class:cls||""},h("th",{scope:"row"},extra||null,label),vals.map(v=>cell(v)),noTot===true?h("td",{class:"num pl-tot"},""):noTot!=null&&noTot!==false?cell(noTot,"pl-tot"):cell(tot(vals),"pl-tot"));
   const opt=(k,label,cls)=>rows[k]&&tot(rows[k].map(Math.abs))>0.5?row(label,rows[k],cls):null;
   const sec=t=>h("tr",{class:"pl-sec"},h("th",{colspan:String(N+2)},t));
   const fold=(k,label)=>{ const L=subs[k]||new Map(), isOpen=open.has(k);
@@ -2580,9 +2581,9 @@ function renderCF(p){
     rows.ov?fold("ov","არაპირდაპირი ხარჯები (მომდევნო თვეში)"):row("არაპირდაპირი ხარჯები",z()),
     rows.specOut?fold("specOut","სხვა გადახდა"):null,
     opt("vat","დღგ-ს გადახდა / დაბრუნება"),opt("cont","გაუთვალისწინებელი ხარჯი"),opt("mob","მობილიზაცია / დემობილიზაცია"),
-    row("საწყისი ნაშთი",opening,"pl-sum cf-cum",null,true),
+    row("საწყისი ნაშთი",opening,"pl-sum cf-cum",null,openBal),
     row("წმინდა ნაკადი",net,"pl-net"),
-    row("საბოლოო ნაშთი",cum,"pl-sum cf-cum",null,true)];
+    row("საბოლოო ნაშთი",cum,"pl-sum cf-cum",null,cum.length?cum[cum.length-1]:openBal)];
   return [head,kpis,h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table"},
     h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),cols.map(k=>h("th",{class:"num"},label(k))),h("th",{class:"num pl-tot"},"სულ"))),
     h("tbody",null,body)),"cf."+zoom))];
@@ -3037,14 +3038,14 @@ function renderCoCF(){
     net=sum([net,cTot]); openBal=num(co.fin.open);
   }
   const close=[], opening=[]; net.reduce((a,v,i)=>{ opening[i]=a; return (close[i]=a+v); },openBal);
-  rows.push({k:"gap",l:""}); rows.push({k:"item",l:"საწყისი ნაშთი",v:opening,noTot:true}); rows.push({k:"net",l:"წმინდა ნაკადი",v:net}); rows.push({k:"gross",l:"საბოლოო ნაშთი",v:close,noTot:true});
+  rows.push({k:"gap",l:""}); rows.push({k:"item",l:"საწყისი ნაშთი",v:opening,bal:opening.length?opening[0]:0}); rows.push({k:"net",l:"წმინდა ნაკადი",v:net}); rows.push({k:"gross",l:"საბოლოო ნაშთი",v:close,bal:close.length?close[close.length-1]:0});
   const MN=LANG==="en"?MONTHS_EN:MONTHS_KA, lab=m=>MN[+m.slice(5)-1].slice(0,3)+". "+m.slice(0,4);
   const td=(v,cls)=>h("td",{class:"num"+(v<-0.5?" neg":"")+(cls?" "+cls:"")},plMoney(v)), nC=M.length+2;
   const body=rows.map(r=>{
     if(r.k==="gap") return h("tr",{class:"pr-gap"},h("td",{colspan:String(nC)}));
     if(r.k==="sec") return h("tr",{class:"co-sec"},h("th",{colspan:String(nC)},tr(r.l)));
     const tg=r.fold?h("button",{class:"pl-tg",type:"button","aria-expanded":String(open.has(r.key)),"aria-label":(open.has(r.key)?"აკეცვა":"გაშლა")+": "+r.l,onclick:()=>{ open.has(r.key)?open.delete(r.key):open.add(r.key); render(); }},open.has(r.key)?"▾":"▸"):null;
-    return h("tr",{class:"pr-"+r.k},h("th",{scope:"row"},tg,tr(r.l)),r.v.map(v=>td(v)),r.noTot?h("td",{class:"num pr-t"}):td(tot(r.v),"pr-t")); });
+    return h("tr",{class:"pr-"+r.k},h("th",{scope:"row"},tg,tr(r.l)),r.v.map(v=>td(v)),r.bal!=null?td(r.bal,"pr-t"):r.noTot?h("td",{class:"num pr-t"}):td(tot(r.v),"pr-t")); });
   let minV=Infinity, minAt=null; close.forEach((v,i)=>{ if(v<minV){ minV=v; minAt=M[i]; } });
   const table=h("table",{class:"pl-table pr-table co-table"},h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"მუხლი"),M.map(m=>h("th",{class:"num"},lab(m))),h("th",{class:"num pr-t"},"სულ"))),h("tbody",null,body));
   const openIn=allIn?h("label",{class:"co-openin"},h("span",null,tr("კომპანიის საწყისი ნაშთი")),h("input",{class:"inp num",inputmode:"decimal",value:String(co.fin.open??0),disabled:!S.admin,"aria-label":tr("კომპანიის საწყისი ნაშთი"),
