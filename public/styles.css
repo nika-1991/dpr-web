@@ -2794,3 +2794,7 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .lc-x:hover{color:#b91c1c!important;background:#fee2e2!important}
 .lc-pill{background:#fff;border:1px solid #e2e8f0}
 .lc-pill:hover{background:#eef2f6}
+/* schedule: unit field uses the whole cell (no datalist arrow, no side padding) */
+.g-unit .g-in.g-un{padding:0 2px!important;width:100%;min-width:0;text-overflow:clip;font-size:.74rem}
+.g-unit .g-in.g-un::-webkit-calendar-picker-indicator{display:none!important;opacity:0;width:0;margin:0;padding:0}
+.g-unit .g-in.g-un::-webkit-list-button{display:none!important}
