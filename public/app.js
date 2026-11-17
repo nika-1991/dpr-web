@@ -2424,6 +2424,9 @@ function cfData(p,sc=S.sched){
   const win=CV&&(p.advFrom!=null||p.advTo!=null)?{a:num(p.advFrom)/100*CV,b:(p.advTo!=null?num(p.advTo):100)/100*CV}:null;
   const advDay=p.advanceDate||p.contractDate;
   if(A&&advDay) put("advIn",advDay,A);
+  /* VAT on the advance: paid with the VAT of the month it comes in, and turned back (credited) as it is recovered from each form 2 */
+  const vDay=num(f.vatDay)||15;
+  if(A&&advDay&&r) put("advVat",nextMonthDay(advDay.slice(0,7)+"-01",vDay),-A*r/(1+r));
   /* cash cover: that % of the advance is blocked in the bank (against the advance guarantee) when the advance comes in,
      and released bit by bit as the advance is recovered from the payments */
   const covPct=num(p.cashCover);
@@ -2439,7 +2442,9 @@ function cfData(p,sc=S.sched){
     const adv=win&&win.b>win.a?-A*Math.max(0,Math.min(cumInv,win.b)-Math.max(c0,win.a))/(win.b-win.a):-v*advPct/100;
     const ret=-v*retPct/100, cover=Math.abs(adv)*covPct/100; retHeld.s+=v*num(p.retShort)/100; retHeld.l+=v*num(p.retLong)/100;
     put("works",pay,v); put("advDed",pay,adv); put("ret",pay,ret); put("cover",pay,cover);
-    f2rows.push({date:d,v,ex:v/(1+r),vat:v*r/(1+r),cum:cumInv,pct:CV?cumInv/CV:null,ret,adv,pay:v+ret+adv,payDate:pay,vatDate:nextMonthDay(d.slice(0,7)+"-01",num(f.vatDay)||15)});
+    const vDate=nextMonthDay(d.slice(0,7)+"-01",num(f.vatDay)||15), avr=-adv*r/(1+r);
+    if(avr&&advDay) put("advVat",vDate,avr);
+    f2rows.push({date:d,v,ex:v/(1+r),vat:v*r/(1+r),cum:cumInv,pct:CV?cumInv/CV:null,ret,adv,pay:v+ret+adv,payDate:pay,vatDate:vDate,avr});
     const hold=-(v+adv+ret+cover)*num(f.hold)/100; put("hold",pay,hold); holds.push({date:pay,v:-hold});
     put("cont",pay,-v*num(f.cont)/100); put("mob",pay,-v*num(f.mob)/100); });
   if(hasRet){ const last=invs.length?invs[invs.length-1][0]:null;
@@ -2493,7 +2498,7 @@ function cfData(p,sc=S.sched){
     const end=[...flows.map(x=>x.date)].sort().pop(); let m=monthEnd(holds[0].date);
     while(m<=monthEnd(end)){ for(const h of holds) if(h.date<=m&&!h.done){ bal+=h.v; h.done=1; } const v=Math.min(bal,num(f.holdRel)); if(v>0){ put("holdRel",m,v); bal-=v; } m=monthEnd(nextMonthDay(m,1)); if(++hi>240) break; } }
   /* assumption lines switched off for the cash flow */
-  { const off=k=>((f.show||{})[k]||{}).cf===false, KEY={cont:"cont",mob:"mob",ov:"ind",advIn:"adv",advDed:"adv",cover:"cover",ret:"ret",retRel:"ret",vat:"vat"};
+  { const off=k=>((f.show||{})[k]||{}).cf===false, KEY={cont:"cont",mob:"mob",ov:"ind",advIn:"adv",advDed:"adv",cover:"cover",ret:"ret",retRel:"ret",vat:"vat",advVat:"vat"};
     for(let i=flows.length-1;i>=0;i--){ const k=KEY[flows[i].row]; if(k&&off(k)) flows.splice(i,1); } }
   /* special items on their CF line */
   for(const x of f.spec||[]){ if(x.on===false||x.cf==="none"||!x.cf) continue; const sg=x.dir==="in"?1:-1;
@@ -2555,7 +2560,7 @@ function renderCF(p){
   const ruleKeys=Object.keys(rows).filter(k=>k.startsWith("rule:"));
   const recFromWorks=sum(["works","advDed","ret","retRel"]), recTot=sum(["advIn","works","advDed","ret","retRel","cover","specIn",...ruleKeys]);
   const SUBK=["subAdv","subAdvDed","subRet","subRetRel"];
-  const payCost=sum([...costKeys,...SUBK]), net=sum(["advIn","works","advDed","ret","retRel","cover","specIn",...ruleKeys,...costKeys,...SUBK,"ov","vat","cont","mob","specOut"]);
+  const payCost=sum([...costKeys,...SUBK]), net=sum(["advIn","works","advDed","ret","retRel","cover","specIn",...ruleKeys,...costKeys,...SUBK,"ov","vat","advVat","cont","mob","specOut"]);
   /* balances: opening (from the assumptions) + the period's flow = closing */
   const openBal=((cfFin(S.sched).show||{}).open||{}).cf===false?0:num(cfFin(S.sched).open), cum=[], opening=[]; net.reduce((a,v,i)=>{ opening[i]=a; return (cum[i]=a+v); },openBal);
   const tot=a=>a.reduce((x,y)=>x+y,0);
@@ -2588,7 +2593,7 @@ function renderCF(p){
     row("სულ გადახდა — ხარჯები",payCost,"pl-sum"),
     rows.ov?fold("ov","არაპირდაპირი ხარჯები (მომდევნო თვეში)"):row("არაპირდაპირი ხარჯები",z()),
     rows.specOut?fold("specOut","სხვა გადახდა"):null,
-    opt("vat","დღგ-ს გადახდა / დაბრუნება"),opt("cont","გაუთვალისწინებელი ხარჯი"),opt("mob","მობილიზაცია / დემობილიზაცია"),
+    opt("vat","დღგ-ს გადახდა / დაბრუნება"),opt("advVat","ავანსის დღგ (გადახდა / ამოტრიალება)"),opt("cont","გაუთვალისწინებელი ხარჯი"),opt("mob","მობილიზაცია / დემობილიზაცია"),
     row("საწყისი ნაშთი",opening,"pl-sum cf-cum",null,openBal),
     row("წმინდა ნაკადი",net,"pl-net"),
     row("საბოლოო ნაშთი",cum,"pl-sum cf-cum",null,cum.length?cum[cum.length-1]:openBal)];
@@ -2632,12 +2637,12 @@ function renderForm2(rows){
   const f=v=>Math.abs(v)<0.5?"—":(v<0?"−":"")+fmtNum(Math.round(Math.abs(v)));
   const td=(v,cls)=>h("td",{class:"num"+(v<-0.5?" neg":"")+(cls?" "+cls:"")},f(v));
   const T=k=>rows.reduce((a,r)=>a+r[k],0);
-  const head=["#","ფორმა 2-ის თარიღი","შესრულება (დღგ-ით)","დღგ-ს გარეშე","დღგ","დაგროვილი","შესრულება %","ხარისხის დაკავება","ავანსის გაქვითვა","ჩასარიცხი","ანაზღაურების თარიღი","დღგ-ს გადახდა"];
+  const head=["#","ფორმა 2-ის თარიღი","შესრულება (დღგ-ით)","დღგ-ს გარეშე","დღგ","დაგროვილი","შესრულება %","ხარისხის დაკავება","ავანსის გაქვითვა","ჩასარიცხი","ანაზღაურების თარიღი","დღგ-ს გადახდა","ავანსის დღგ ამოტრიალება"];
   return h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table f2-table"},
     h("thead",null,h("tr",null,head.map((l,i)=>h("th",{class:i<2?"pl-c0":"num"},l)))),
     h("tbody",null,rows.map((r,i)=>h("tr",null,h("td",{class:"mono"},String(i+1)),h("td",null,fmtDate(r.date)),td(r.v),td(r.ex),td(r.vat),td(r.cum),
-        h("td",{class:"num"},r.pct!=null?fmtNum(Math.round(r.pct*1000)/10)+"%":"—"),td(r.ret),td(r.adv),td(r.pay,"f2-pay"),h("td",null,fmtDate(r.payDate)),h("td",null,fmtDate(r.vatDate)))),
-      h("tr",{class:"pl-net"},h("th",{colspan:"2"},"სულ"),td(T("v")),td(T("ex")),td(T("vat")),h("td"),h("td"),td(T("ret")),td(T("adv")),td(T("pay"),"f2-pay"),h("td"),h("td")))),"f2"));
+        h("td",{class:"num"},r.pct!=null?fmtNum(Math.round(r.pct*1000)/10)+"%":"—"),td(r.ret),td(r.adv),td(r.pay,"f2-pay"),h("td",null,fmtDate(r.payDate)),h("td",null,fmtDate(r.vatDate)),td(r.avr||0))),
+      h("tr",{class:"pl-net"},h("th",{colspan:"2"},"სულ"),td(T("v")),td(T("ex")),td(T("vat")),h("td"),h("td"),td(T("ret")),td(T("adv")),td(T("pay"),"f2-pay"),h("td"),h("td"),td(rows.reduce((a,r)=>a+(r.avr||0),0))))),"f2"));
 }
 /* sidebar on the finance tabs: the assumptions behind the open page, editable in place */
 /* indirect costs grouped (by group, else by name): monthly total — one figure or a min–max range over the project's months —
@@ -3049,7 +3054,7 @@ function renderCoCF(){
   const b1=block("cost","პირდაპირი ხარჯების გადახდა",["cost"]);
   const b2=block("ov","პროექტების ზედნადები ხარჯები",["ov"]);
   const b3=block("cm","გაუთვალისწინებელი / მობილიზაცია",["cont","mob"]);
-  const b4=block("vat","დღგ-ს გადახდა / დაბრუნება",["vat"]);
+  const b4=block("vat","დღგ-ს გადახდა / დაბრუნება",["vat","advVat"]);
   const rout=sum([b1,b2,b3,b4]); rows.push({k:"cost",l:"სულ გადახდა პროექტებზე",v:rout});
   let net=sum([rin,rout]); rows.push({k:"gross",l:"პროექტების წმინდა ნაკადი",v:net});
   let openBal=per.reduce((a,x)=>a+x.open,0);
