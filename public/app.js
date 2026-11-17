@@ -630,6 +630,8 @@ function renderProject(){
   else if(S.tab==="assume"&&canReview(p)) body=renderAssume(p);
   else if(S.tab==="cf"&&canReview(p)) body=renderCF(p);
   else if(S.tab==="othercost"&&canReview(p)) body=renderOtherCost(p);
+  else if(S.tab==="anAdvIn"&&canReview(p)) body=renderAdvIn(p);
+  else if(S.tab==="anRetIn"&&canReview(p)) body=renderRetIn(p);
   else if(AN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=renderBalance(p,S.tab);
   else if(S.tab==="plists") body=renderProjLists(p);
   else if(S.tab==="plab") body=renderProjLists(p,"შრომა");
@@ -2630,6 +2632,55 @@ function renderBalance(p,key){
   const kpi=(l,v)=>h("div",{class:"cf-kpi"},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
   return [h("section",{class:"as-grp bl-box"},head,h("div",{class:"cf-kpis bl-k"},kpi(C.li+" — სულ",tot(inc)),kpi(C.ld+" — სულ",-tot(dec)),kpi("მაქსიმალური ნაშთი",mx),kpi("ნაშთი ბოლოს",close[N-1]))),
     h("div",{class:"pl-wrap bl-wrap"},h("table",{class:"pl-table"},h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),cols.map(k=>h("th",{class:"num"},MN[+k.slice(5)-1].slice(0,3)+". "+k.slice(2,4))),h("th",{class:"num pl-tot"},tr("სულ")))),h("tbody",null,body)))];
+}
+/* received advance, the way it is worked out on paper: the contract terms, the VAT on the advance, and every form 2 with
+   its retention, advance recovery, what comes in and the advance VAT turned back; the advance still to recover on the right */
+function anTerms(title,items){ return h("section",{class:"an-card"},h("div",{class:"an-ct"},tr(title)),h("table",{class:"an-kv"},h("tbody",null,items.filter(Boolean).map(([l,v,cls])=>h("tr",null,h("th",null,tr(l)),h("td",{class:"num"+(cls?" "+cls:"")},v)))))); }
+const anPct=v=>v==null||v===""?"—":fmtNum(Math.round(num(v)*100)/100)+"%";
+const anMoney=v=>Math.abs(v)<0.5?"—":(v<0?"−":"")+fmtNum(Math.round(Math.abs(v)));
+function anTable(head,rows,foot){
+  return h("div",{class:"pl-wrap an-wrap"},h("table",{class:"pl-table f2-table an-t"},
+    h("thead",null,h("tr",null,head.map(([l,c],i)=>h("th",{class:(i<2?"pl-c0":"num")+(c?" "+c:"")},tr(l))))),
+    h("tbody",null,rows.map(r=>h("tr",{class:r.cls||""},r.cells.map(([v,c])=>h("td",{class:c||""},v))))),
+    foot?h("tfoot",null,h("tr",{class:"pl-net"},foot.map(([v,c])=>h("td",{class:c||""},v)))):null));
+}
+function anNeedSched(){ if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); } return null; }
+function renderAdvIn(p){
+  const w=anNeedSched(); if(w) return w;
+  const f=cfFin(S.sched), r=num(f.vat)/100, D=cfData(p), R=D.f2rows, CV=D.CV, A=D.A;
+  const advDay=p.advanceDate||p.contractDate, avIn=D.flows.find(x=>x.row==="advVat"&&x.v<0);
+  const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
+  const terms=anTerms("ხელშეკრულების პირობები",[["ხელშეკრ. თანხა",anMoney(CV)],["ავანსის %",anPct(p.advancePct!=null?p.advancePct:f.adv)],["საავანსო თანხა",anMoney(A),"an-b"],
+    ["ავანს. დაკავების მინ. %",anPct(p.advFrom!=null?p.advFrom:0)],["ავანს. დაკავების მაქს. %",anPct(p.advTo!=null?p.advTo:100)],["ხარისხის დაკავება",anPct(num(p.retShort)+num(p.retLong)||f.ret)]]);
+  const vat=anTerms("ავანსის დღგ",[["ავანსის აღება",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anMoney(A)],["დღგ-ს გადახდის თარიღი",avIn?fmtDate(avIn.date):"—"],["დღგ-ს თანხა",anMoney(avIn?avIn.v:-A*r/(1+r)),"neg"]]);
+  let left=A, rec=0, avr=0;
+  const rows=R.map(x=>{ left+=x.adv; rec+=-x.adv; avr+=x.avr||0; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.ex),td(x.vat),td(x.cum),[x.pct!=null?fmtNum(Math.round(x.pct*1000)/10)+"%":"—","num"],td(x.ret),td(x.adv,"an-hl"),td(x.pay,"f2-pay"),
+    [x.avr?fmtDate(x.vatDate):"—","mono"],td(x.avr||0,"an-hl"),td(left,"an-bal")]}; });
+  const T=k=>R.reduce((a,x)=>a+(x[k]||0),0);
+  const table=R.length?anTable([["ფორმა 2-ის თარიღი"],["თანხა"],["შესრულება დღგ-ს გარეშე"],["გადასახდელი დღგ"],["ჯამური შესრულება"],["შესრულება %"],["ხარისხის დაკავება"],["ავანსიდან დაკავება","an-hl"],["ჩასარიცხი თანხა"],
+      ["ავანსის დღგ-ს ამობრუნების თარიღი"],["ავანსის დღგ ამოტრიალება","an-hl"],["დარჩენილი ავანსი","an-bal"]],rows,
+    [["სულ","pl-c0"],td(T("v")),td(T("ex")),td(T("vat")),["",""],["",""],td(T("ret")),td(T("adv"),"an-hl"),td(T("pay"),"f2-pay"),["",""],td(avr,"an-hl"),td(left,"an-bal")])
+    :h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
+  const k=(l,v,c)=>h("div",{class:"cf-kpi"+(c?" "+c:"")},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
+  return h("div",{class:"an-page"},h("div",{class:"an-top"},terms,vat,h("div",{class:"cf-kpis an-k"},k("მიღებული ავანსი",A),k("გაქვითული",rec),k("დარჩენილი ავანსი",left,left>0.5?"neg":""),k("ავანსის დღგ — ნეტო",-(A*r/(1+r))+avr,"neg"))),table);
+}
+/* retention held by the client: the terms, every form 2's short- and long-term part, and when each comes back */
+function renderRetIn(p){
+  const w=anNeedSched(); if(w) return w;
+  const f=cfFin(S.sched), D=cfData(p), R=D.f2rows, hasRet=p.retShort!=null||p.retLong!=null;
+  const rs=hasRet?num(p.retShort):num(f.ret), rl=hasRet?num(p.retLong):0;
+  const sTxt=p.retShortMode==="days"?tr("ბოლო ჩარიცხვიდან")+" "+num(p.retShortDays)+" "+tr("დღეში"):tr("ბოლო ჩარიცხვასთან ერთად");
+  const lTxt=p.retLongMode==="guar"?tr("მოკლევადიანთან ერთად (გარანტიით)"):(p.retLongMonths??24)+" "+tr("თვე ბოლო ჩარიცხვიდან");
+  const rel=D.flows.filter(x=>x.row==="retRel").sort((a,b)=>a.date.localeCompare(b.date));
+  const terms=anTerms("დაკავების პირობები",[["ხელშეკრ. თანხა",anMoney(D.CV)],["მოკლევადიანი დაკავება",anPct(rs)],["გრძელვადიანი დაკავება",anPct(rl)],["მოკლევადიანის დაბრუნება",sTxt],["გრძელვადიანის დაბრუნება",lTxt]]);
+  const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
+  let bal=0, S1=0, S2=0;
+  const rows=R.map(x=>{ const a=x.v*rs/100, b=x.v*rl/100; S1+=a; S2+=b; bal+=a+b; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.cum),[x.pct!=null?fmtNum(Math.round(x.pct*1000)/10)+"%":"—","num"],td(a,"an-hl"),td(b,"an-hl"),td(a+b),[fmtDate(x.payDate),"mono"],td(bal,"an-bal")]}; });
+  rel.forEach((x,i)=>{ bal-=x.v; rows.push({cls:"an-rel",cells:[[fmtDate(x.date),"mono"],[tr(rel.length>1?(i===0?"მოკლევადიანის დაბრუნება":"გრძელვადიანის დაბრუნება"):"დაკავების დაბრუნება"),"an-rl"],["",""],["",""],["",""],["",""],td(-x.v),[fmtDate(x.date),"mono"],td(bal,"an-bal")]}); });
+  const table=R.length?anTable([["თარიღი"],["ფორმა 2-ის თანხა"],["ჯამური შესრულება"],["შესრულება %"],["მოკლევადიანი","an-hl"],["გრძელვადიანი","an-hl"],["სულ დაკავება"],["ჩარიცხვის თარიღი"],["დაკავების ნაშთი","an-bal"]],rows,
+    [["სულ","pl-c0"],td(R.reduce((a,x)=>a+x.v,0)),["",""],["",""],td(S1,"an-hl"),td(S2,"an-hl"),td(S1+S2),["",""],td(bal,"an-bal")]):h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
+  const k=(l,v,c)=>h("div",{class:"cf-kpi"+(c?" "+c:"")},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
+  return h("div",{class:"an-page"},h("div",{class:"an-top"},terms,h("div",{class:"cf-kpis an-k"},k("მოკლევადიანი",S1),k("გრძელვადიანი",S2),k("დაბრუნებული",rel.reduce((a,x)=>a+x.v,0)),k("მისაღები ნაშთი",bal,bal>0.5?"pos":""))),table);
 }
 /* form 2 settlement: each interim certificate with progress, retention, advance recovery and what is paid when */
 function renderForm2(rows){

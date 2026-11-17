@@ -2818,3 +2818,24 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 /* loan card: the bank-colour stripe stays the same on hover, a bit thicker */
 .ln-card.lc,.ln-card.lc:hover{border-left:7px solid var(--ln-c,#1e6b8c)!important}
 .ln-card.lc:hover{border-top-color:#cbd5e1!important;border-right-color:#cbd5e1!important;border-bottom-color:#cbd5e1!important}
+/* received advance / retention receivable pages */
+.an-page{display:flex;flex-direction:column;gap:14px}
+.an-top{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.an-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;min-width:250px}
+.an-ct{font-size:.74rem;font-weight:800;color:#1f2a37;margin-bottom:6px}
+.an-kv{border-collapse:collapse;width:100%}
+.an-kv th{font-size:.72rem;font-weight:500;color:#64748b;text-align:left;padding:3px 14px 3px 0;white-space:nowrap}
+.an-kv td{font-size:.76rem;font-weight:600;color:#1e293b;text-align:right;padding:3px 0;white-space:nowrap;font-variant-numeric:tabular-nums}
+.an-kv tr+tr th,.an-kv tr+tr td{border-top:1px solid #f1f5f9}
+.an-kv td.an-b{font-weight:800}.an-kv td.neg{color:#b91c1c}
+.an-k{flex:1;min-width:300px;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.an-wrap{width:fit-content;max-width:100%}
+.an-t th{white-space:normal!important;max-width:120px;line-height:1.2;vertical-align:bottom}
+.an-t td{font-size:.76rem}
+.an-t td.mono{font-variant-numeric:tabular-nums}
+.an-t .an-hl{background:#f0f9ff}
+.an-t thead th.an-hl{background:#e0f2fe!important}
+.an-t .an-bal{font-weight:700;background:#f8fafc}
+.an-t tr.an-rel td{background:#f0fdf4}
+.an-t td.an-rl{color:#15803d;font-weight:600;text-align:left}
+.an-k{flex:0 1 520px!important}
