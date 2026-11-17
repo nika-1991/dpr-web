@@ -2640,7 +2640,8 @@ function anBoth(a,b,t1,t2,i1,i2){ const hd=(t,k)=>h("h3",{class:"an-h"},tabIcon(
 /* a small progress ring (0–1) */
 function anRing(v){ const sp=document.createElement("span"); sp.className="an-ring"; sp.setAttribute("aria-hidden","true"); const c=2*Math.PI*7, k=Math.max(0,Math.min(1,v));
   sp.innerHTML='<svg viewBox="0 0 18 18" width="16" height="16"><circle cx="9" cy="9" r="7" fill="none" stroke="#e2e8f0" stroke-width="2.5"/><circle cx="9" cy="9" r="7" fill="none" stroke="#5f7f92" stroke-width="2.5" stroke-dasharray="'+(c*k).toFixed(2)+' '+c.toFixed(2)+'" transform="rotate(-90 9 9)" stroke-linecap="round"/></svg>'; return sp; }
-function anTerms(title,items){ return h("section",{class:"an-card"},h("div",{class:"an-ct"},tr(title)),h("table",{class:"an-kv"},h("tbody",null,items.filter(Boolean).map(([l,v,cls])=>h("tr",null,h("th",null,tr(l)),h("td",{class:"num"+(cls?" "+cls:"")},v)))))); }
+/* items: [label, value, class] or "gap" for a little space between groups */
+function anTerms(title,items){ return h("section",{class:"an-card"},title?h("div",{class:"an-ct"},tr(title)):null,h("table",{class:"an-kv"},h("tbody",null,items.filter(Boolean).map(it=>it==="gap"?h("tr",{class:"an-gap"},h("td",{colspan:"2"})):h("tr",null,h("th",null,tr(it[0])),h("td",{class:"num"+(it[2]?" "+it[2]:"")},it[1])))))); }
 const anPct=v=>v==null||v===""?"—":fmtNum(Math.round(num(v)*100)/100)+"%";
 const anMoney=v=>Math.abs(v)<0.5?"—":(v<0?"−":"")+fmtNum(Math.round(Math.abs(v)));
 /* groups: optional [[title, column count], …] shown as a heading row over the columns; each group starts with a divider */
@@ -2660,9 +2661,11 @@ function renderAdvIn(p){
   const f=cfFin(S.sched), r=num(f.vat)/100, D=cfData(p), R=D.f2rows, CV=D.CV, A=D.A;
   const advDay=p.advanceDate||p.contractDate, avIn=D.flows.find(x=>x.row==="advVat"&&x.v<0);
   const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
-  const terms=anTerms("ხელშეკრულების პირობები",[["ხელშეკრ. თანხა",anMoney(CV)],["ავანსის %",anPct(p.advancePct!=null?p.advancePct:f.adv)],["საავანსო თანხა",anMoney(A),"an-b"],
-    ["ავანს. დაკავების მინ. %",anPct(p.advFrom!=null?p.advFrom:0)],["ავანს. დაკავების მაქს. %",anPct(p.advTo!=null?p.advTo:100)],["ხარისხის დაკავება",anPct(num(p.retShort)+num(p.retLong)||f.ret)]]);
-  const vat=anTerms("ავანსის დღგ",[["ავანსის აღება",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anMoney(A)],["დღგ-ს გადახდის თარიღი",avIn?fmtDate(avIn.date):"—"],["დღგ-ს თანხა",anMoney(avIn?avIn.v:-A*r/(1+r)),"neg"]]);
+  const ap=p.advancePct!=null?p.advancePct:f.adv, hasR=p.retShort!=null||p.retLong!=null, rS=hasR?num(p.retShort):num(f.ret), rL=hasR?num(p.retLong):0;
+  const terms=anTerms("ხელშეკრულების პირობები",[["ხელშეკრ. თანხა",anMoney(CV)],["ავანსის თარიღი",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anPct(ap)+" — "+anMoney(A),"an-b"],
+    ["ავანსის გაქვითვა",anPct(p.advFrom!=null?p.advFrom:0)+" — "+anPct(p.advTo!=null?p.advTo:100)],"gap",
+    ["დღგ-ს გადახდა",avIn?fmtDate(avIn.date):"—"],["დღგ-ს თანხა",anMoney(avIn?avIn.v:-A*r/(1+r)),"neg"],"gap",
+    ["ხარისხის დაკავება",rL?anPct(rS)+" + "+anPct(rL):anPct(rS)]]);
   let left=A, rec=0, avr=0;
   const rows=R.map(x=>{ left+=x.adv; rec+=-x.adv; avr+=x.avr||0; return {cells:[[fmtDate(x.date),"mono"],td(x.v),td(x.ex),td(x.vat),td(x.cum),
     [x.pct!=null?h("span",{class:"an-pc"},fmtNum(Math.round(x.pct*1000)/10)+"%",anRing(x.pct)):"—","num"],td(x.ret),
@@ -2676,7 +2679,7 @@ function renderAdvIn(p){
     [["ფორმა 2-ის მონაცემები",5],["კალკულაცია",5],["ავანსის დღგ-ს ამობრუნება",2]])
     :h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
   const k=(l,v,c)=>h("div",{class:"cf-kpi"+(c?" "+c:"")},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
-  return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms,vat),table);
+  return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms),table);
 }
 /* retention held by the client: the terms, every form 2's short- and long-term part, and when each comes back */
 function renderRetIn(p){
