@@ -2710,17 +2710,21 @@ function renderAdvOut(p){
   const D=cfData(p), L=D.subs.filter(x=>x.A>0.5).sort((a,b)=>a.n.localeCompare(b.n,"ka")), MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
   if(!L.length) return h("div",{class:"empty"},h("p",{class:"muted"},tr("ქვეკონტრაქტორებზე ავანსი ჯერ არ არის: მიუთითეთ რესურსები → ქვეკონტრაქტორი → ანაზღაურება.")));
   const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
-  return h("div",{class:"an-both"},L.map(x=>{ const sp=x.sp, rS=num(sp.retShort), rL=num(sp.retLong);
+  /* by payment date (default) or totalled by month */
+  const byM=S.aoView==="m";
+  const sw=h("div",{class:"vswitch pl-sw an-sw",role:"group","aria-label":tr("ჭრილი")},[["d","თარიღებით"],["m","თვეებით"]].map(([k,l])=>
+    h("button",{type:"button","aria-pressed":String((byM?"m":"d")===k),class:"vbtn vtxt"+((byM?"m":"d")===k?" on":""),onclick:()=>{ S.aoView=k; render(); }},tr(l))));
+  return h("div",{class:"an-both"},sw,L.map(x=>{ const sp=x.sp, rS=num(sp.retShort), rL=num(sp.retLong);
     const rule=sp.mode==="f2"?tr("ფორმა 2-ზე მიბმული")+(num(sp.days)?" + "+fmtNum(num(sp.days))+" "+tr("დღე"):""):tr("შესრულებიდან")+" "+fmtNum(num(sp.days))+" "+tr("დღეში");
     const terms=anTerms(x.n,[["გეგმიური ღირებულება",anMoney(x.TV)],["ავანსის თარიღი",fmtDate(x.advDay)],["ავანსის თანხა",anPct(sp.adv)+" — "+anMoney(x.A),"an-b an-r2"],
       ["ავანსის გაქვითვა",anPct(sp.advFrom!=null?sp.advFrom:0)+" — "+anPct(sp.advTo!=null?sp.advTo:100)],"gap",["გადახდა",rule],"gap",["ხარისხის დაკავება",anPct(rS)+" + "+anPct(rL)]]);
     /* one row per payment date */
-    const G=new Map(); for(const it of x.items){ const k=it.pd, g=G.get(k)||G.set(k,{v:0,ded:0,cum:0,last:it.pd}).get(k); g.v+=it.v; g.ded+=it.ded||0; g.cum=Math.max(g.cum,it.cum); if(it.pd>g.last) g.last=it.pd; }
+    const G=new Map(); for(const it of x.items){ const k=byM?it.pd.slice(0,7):it.pd, g=G.get(k)||G.set(k,{v:0,ded:0,cum:0,last:it.pd}).get(k); g.v+=it.v; g.ded+=it.ded||0; g.cum=Math.max(g.cum,it.cum); if(it.pd>g.last) g.last=it.pd; }
     let left=x.A; const T={v:0,s:0,l:0,ded:0,pay:0};
     const rows=[...G.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,g])=>{ const s=-g.v*rS/100, l=-g.v*rL/100, ded=-g.ded, pay=g.v+s+l+ded; left+=ded;
       T.v+=g.v; T.s+=s; T.l+=l; T.ded+=ded; T.pay+=pay;
-      return {cells:[[fmtDate(k),"mono"],td(g.v),td(g.cum),[h("span",{class:"an-pc"},fmtNum(Math.round(g.cum/x.TV*1000)/10)+"%",anRing(g.cum/x.TV)),"num"],td(s),td(l),td(ded,"an-hl"),td(pay,"f2-pay"),td(left,"an-bal")]}; });
-    const table=anTable([["გადახდის თარიღი"],["შესრულება"],["ჯამური შესრულება"],["შესრულება %"],["დაკავება მოკლ."],["დაკავება გრძელ."],["ავანსიდან დაკავება","an-hl"],["გადასახდელი თანხა"],["დარჩენილი ავანსი","an-bal"]],rows,
+      return {cells:[[byM?MN[+k.slice(5)-1].slice(0,3)+". "+k.slice(0,4):fmtDate(k),"mono"],td(g.v),td(g.cum),[h("span",{class:"an-pc"},fmtNum(Math.round(g.cum/x.TV*1000)/10)+"%",anRing(g.cum/x.TV)),"num"],td(s),td(l),td(ded,"an-hl"),td(pay,"f2-pay"),td(left,"an-bal")]}; });
+    const table=anTable([[byM?"გადახდის თვე":"გადახდის თარიღი"],["შესრულება"],["ჯამური შესრულება"],["შესრულება %"],["დაკავება მოკლ."],["დაკავება გრძელ."],["ავანსიდან დაკავება","an-hl"],["გადასახდელი თანხა"],["დარჩენილი ავანსი","an-bal"]],rows,
       [["სულ","pl-c0"],td(T.v),["",""],["",""],td(T.s),td(T.l),td(T.ded,"an-hl"),td(T.pay,"f2-pay"),td(left,"an-bal")],[["შესრულების მონაცემები",4],["კალკულაცია",5]]);
     return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms),table); }));
 }
