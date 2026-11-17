@@ -2663,7 +2663,7 @@ function renderAdvIn(p){
   const advDay=p.advanceDate||p.contractDate, avIn=D.flows.find(x=>x.row==="advVat"&&x.v<0);
   const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
   const ap=p.advancePct!=null?p.advancePct:f.adv, hasR=p.retShort!=null||p.retLong!=null, rS=hasR?num(p.retShort):num(f.ret), rL=hasR?num(p.retLong):0;
-  const terms=anTerms("ხელშეკრულების პირობები",[["ხელშეკრ. თანხა",anMoney(CV)],["ავანსის თარიღი",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anPct(ap)+" — "+anMoney(A),"an-b"],
+  const terms=anTerms("ხელშეკრულების პირობები",[["ხელშეკრ. თანხა",anMoney(CV)],["ავანსის თარიღი",advDay?fmtDate(advDay):"—"],["ავანსის თანხა",anPct(ap)+" — "+anMoney(A),"an-b an-g2"],
     ["ავანსის გაქვითვა",anPct(p.advFrom!=null?p.advFrom:0)+" — "+anPct(p.advTo!=null?p.advTo:100)],"gap",
     ["დღგ-ს გადახდა",avIn?fmtDate(avIn.date):"—"],["დღგ-ს თანხა",anMoney(avIn?avIn.v:-A*r/(1+r)),"neg"],"gap",
     ["ხარისხის დაკავება",anPct(rS)+" + "+anPct(rL)]]);
