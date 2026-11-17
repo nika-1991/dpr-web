@@ -632,6 +632,7 @@ function renderProject(){
   else if(S.tab==="othercost"&&canReview(p)) body=renderOtherCost(p);
   else if(S.tab==="anAdvIn"&&canReview(p)) body=renderAdvIn(p);
   else if(S.tab==="anRetIn"&&canReview(p)) body=renderRetIn(p);
+  else if(S.tab==="anAdvOut"&&canReview(p)) body=renderAdvOut(p);
   else if(AN_TABS.some(([k])=>k===S.tab)&&canReview(p)) body=renderBalance(p,S.tab);
   else if(S.tab==="plists") body=renderProjLists(p);
   else if(S.tab==="plab") body=renderProjLists(p,"შრომა");
@@ -2478,15 +2479,18 @@ function cfData(p,sc=S.sched){
         put(line,pd,-v,x.name||tr(x.type)); if(acc) acc.items.push({d,pd,v}); } } }
   /* per subcontractor: advance (paid on its date, recovered between the start % and end % of its progress, pro rata),
      short- and long-term retention held from every payment and returned like ours */
+  const subsOut=[];
   for(const a of SA.values()){ const sp=a.sp, it=a.items.sort((x,y)=>x.d.localeCompare(y.d)); if(!it.length) continue;
     const TV=it.reduce((s,x)=>s+x.v,0), A=TV*num(sp.adv)/100, rs=num(sp.retShort), rl=num(sp.retLong);
     const wa=(sp.advFrom!=null?num(sp.advFrom):0)/100*TV, wb=(sp.advTo!=null?num(sp.advTo):100)/100*TV;
     let cum=0, last=it[0].pd, hs=0, hl=0;
     if(A) put("subAdv",sp.advDate||it[0].d,-A,a.n);
     for(const x of it){ const c0=cum; cum+=x.v; if(x.pd>last) last=x.pd;
-      if(A){ const ded=wb>wa?A*Math.max(0,Math.min(cum,wb)-Math.max(c0,wa))/(wb-wa):(c0<wa&&cum>=wa?A:0); if(ded) put("subAdvDed",x.pd,ded,a.n); }
-      if(rs||rl){ put("subRet",x.pd,x.v*(rs+rl)/100,a.n); hs+=x.v*rs/100; hl+=x.v*rl/100; } }
-    const rd=retDates(sp,last); if(hs) put("subRetRel",rd.s,-hs,a.n); if(hl) put("subRetRel",rd.l,-hl,a.n); }
+      let ded=0; if(A){ ded=wb>wa?A*Math.max(0,Math.min(cum,wb)-Math.max(c0,wa))/(wb-wa):(c0<wa&&cum>=wa?A:0); if(ded) put("subAdvDed",x.pd,ded,a.n); }
+      if(rs||rl){ put("subRet",x.pd,x.v*(rs+rl)/100,a.n); hs+=x.v*rs/100; hl+=x.v*rl/100; }
+      x.ded=ded; x.cum=cum; }
+    const rd=retDates(sp,last); if(hs) put("subRetRel",rd.s,-hs,a.n); if(hl) put("subRetRel",rd.l,-hl,a.n);
+    subsOut.push({n:a.n,sp,TV,A,items:it,advDay:sp.advDate||it[0].d,rd,hs,hl}); }
   /* overheads: the month's amount, paid on a day of the next month */
   const lo0=[p.startDate,...flows.map(x=>x.date)].filter(Boolean).sort()[0];
   const hi0=[p.endDate,...flows.map(x=>x.date)].filter(Boolean).sort().pop();
@@ -2506,7 +2510,7 @@ function cfData(p,sc=S.sched){
   for(const x of f.spec||[]){ if(x.on===false||x.cf==="none"||!x.cf) continue; const sg=x.dir==="in"?1:-1;
     const row=x.cf==="works"?"works":x.cf==="in"?"specIn":x.cf==="cost"?"cost:"+tr("სპეციალური პირობები"):x.cf==="ov"?"ov":"specOut";
     for(const [d,v] of specDays(x)) put(row,d,sg*v,x.name||"—"); }
-  return {flows,f2rows,A,CV};
+  return {flows,f2rows,A,CV,subs:subsOut};
 }
 /* special conditions on the CF: each holds a % of a chosen line's flows (or a fixed amount) during its period and gives it back
    by its release rule; shown on its own line named after the condition */
@@ -2699,6 +2703,26 @@ function renderRetIn(p){
     [["სულ","pl-c0"],td(R.reduce((a,x)=>a+x.v,0)),["",""],["",""],td(S1,"an-hl"),td(S2,"an-hl"),td(S1+S2),["",""],td(bal,"an-bal")]):h("p",{class:"muted small"},tr("ფორმა 2 ჯერ არ არის: შეავსეთ შესრულების გეგმა ფასებით."));
   const k=(l,v,c)=>h("div",{class:"cf-kpi"+(c?" "+c:"")},h("div",{class:"cd-l"},tr(l)),h("b",null,gel0(v)));
   return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms),table);
+}
+/* advances given: one block per subcontractor with an advance — its terms on the left, its payments by month on the right */
+function renderAdvOut(p){
+  const w=anNeedSched(); if(w) return w;
+  const D=cfData(p), L=D.subs.filter(x=>x.A>0.5).sort((a,b)=>a.n.localeCompare(b.n,"ka")), MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
+  if(!L.length) return h("div",{class:"empty"},h("p",{class:"muted"},tr("ქვეკონტრაქტორებზე ავანსი ჯერ არ არის: მიუთითეთ რესურსები → ქვეკონტრაქტორი → ანაზღაურება.")));
+  const td=(v,c)=>[anMoney(v),"num"+(v<-0.5?" neg":"")+(c?" "+c:"")];
+  return h("div",{class:"an-both"},L.map(x=>{ const sp=x.sp, rS=num(sp.retShort), rL=num(sp.retLong);
+    const rule=sp.mode==="f2"?tr("ფორმა 2-ზე მიბმული")+(num(sp.days)?" + "+fmtNum(num(sp.days))+" "+tr("დღე"):""):tr("შესრულებიდან")+" "+fmtNum(num(sp.days))+" "+tr("დღეში");
+    const terms=anTerms(x.n,[["გეგმიური ღირებულება",anMoney(x.TV)],["ავანსის თარიღი",fmtDate(x.advDay)],["ავანსის თანხა",anPct(sp.adv)+" — "+anMoney(x.A),"an-b an-r2"],
+      ["ავანსის გაქვითვა",anPct(sp.advFrom!=null?sp.advFrom:0)+" — "+anPct(sp.advTo!=null?sp.advTo:100)],"gap",["გადახდა",rule],"gap",["ხარისხის დაკავება",anPct(rS)+" + "+anPct(rL)]]);
+    /* payments grouped by the month they are paid */
+    const G=new Map(); for(const it of x.items){ const k=it.pd.slice(0,7), g=G.get(k)||G.set(k,{v:0,ded:0,cum:0,last:it.pd}).get(k); g.v+=it.v; g.ded+=it.ded||0; g.cum=Math.max(g.cum,it.cum); if(it.pd>g.last) g.last=it.pd; }
+    let left=x.A; const T={v:0,s:0,l:0,ded:0,pay:0};
+    const rows=[...G.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,g])=>{ const s=-g.v*rS/100, l=-g.v*rL/100, ded=-g.ded, pay=g.v+s+l+ded; left+=ded;
+      T.v+=g.v; T.s+=s; T.l+=l; T.ded+=ded; T.pay+=pay;
+      return {cells:[[MN[+k.slice(5)-1].slice(0,3)+". "+k.slice(0,4),""],td(g.v),td(g.cum),[h("span",{class:"an-pc"},fmtNum(Math.round(g.cum/x.TV*1000)/10)+"%",anRing(g.cum/x.TV)),"num"],td(s),td(l),td(ded,"an-hl"),td(pay,"f2-pay"),td(left,"an-bal")]}; });
+    const table=anTable([["გადახდის თვე"],["შესრულება"],["ჯამური შესრულება"],["შესრულება %"],["დაკავება მოკლ."],["დაკავება გრძელ."],["ავანსიდან დაკავება","an-hl"],["გადასახდელი თანხა"],["დარჩენილი ავანსი","an-bal"]],rows,
+      [["სულ","pl-c0"],td(T.v),["",""],["",""],td(T.s),td(T.l),td(T.ded,"an-hl"),td(T.pay,"f2-pay"),td(left,"an-bal")],[["შესრულების მონაცემები",4],["კალკულაცია",5]]);
+    return h("div",{class:"an-page an-side"},h("aside",{class:"an-left"},terms),table); }));
 }
 /* form 2 settlement: each interim certificate with progress, retention, advance recovery and what is paid when */
 function renderForm2(rows){
