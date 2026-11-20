@@ -2282,7 +2282,7 @@ function renderPL(p){
   if(!S.plFact||S.plFact.pid!==S.pid){ loadPlFact(S.pid); }
   const D=plData(p), view=S.plView||"plan";
   /* underline tabs with icons */
-  const sw=h("div",{class:"pt-tabs",role:"tablist","aria-label":"P&L"},[["plan","გეგმა","works"],["fact","ფაქტი","pulse"],["cmp","შედარება","cols"]].map(([k,l,ic])=>
+  const sw=h("div",{class:"pt-pill",role:"tablist","aria-label":"P&L"},[["plan","გეგმა","works"],["fact","ფაქტი","pulse"],["cmp","შედარება","cols"]].map(([k,l,ic])=>
     h("button",{type:"button",role:"tab","aria-selected":String(view===k),class:"pt-tab"+(view===k?" on":""),onclick:()=>{S.plView=k;render();}},icon(ic),h("span",null,tr(l)))));
   const note={plan:"შემოსავალი — შესრულების გეგმა × ერთ. ფასი; პირდაპირი ხარჯი — გეგმა-გრაფიკის რესურსები; დანარჩენი — „დაშვებებიდან“.",
     fact:"დადასტურებული DPR-ები: ფასიანი სამუშაოები (შემოსავალი) და ფასიანი ხარჯები, BoQ კოდის თავის მიხედვით.",
@@ -2290,15 +2290,16 @@ function renderPL(p){
   const m=view==="plan"?D.plan:D.fact;
   /* toolbar: plan / actual / comparison, the month, print and Excel */
   const per=view==="cmp"?null:perButton();
-  const head=h("div",{class:"pt-bar"},sw,view==="cmp"?h("div",{class:"pl-note muted small"},note):h("div",{class:"pt-sp"}),per,
-    view==="cmp"?null:h("span",{class:"pt-div"}),
-    view==="cmp"?null:h("button",{class:"pt-ib",type:"button",title:tr("ბეჭდვა"),"aria-label":tr("ბეჭდვა"),onclick:printPL},icon("print")),
-    view==="cmp"?null:h("button",{class:"pt-ib pt-pdf",type:"button",title:tr("PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“"),"aria-label":"PDF",onclick:printPL},icon("pdf"),h("span",null,"PDF")),
-    view==="cmp"?null:h("button",{class:"pt-dl",type:"button",title:tr("ჩამოტვირთვა (xlsx)"),onclick:()=>exportPL(p,D,m,view)},icon("down"),h("span",null,"xlsx")));
-  if(!D.periods.length) return [head,h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
+  /* controls on the right of the statement's title: period link, plan / actual / compare pill, then plain icon buttons */
+  const tools=h("div",{class:"pt-tools"},per?h("span",{class:"pt-per"},per):null,sw,
+    view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("ბეჭდვა"),"aria-label":tr("ბეჭდვა"),onclick:printPL},icon("print")),
+    view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“"),"aria-label":"PDF",onclick:printPL},icon("pdf")),
+    view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("ჩამოტვირთვა (xlsx)"),"aria-label":tr("ჩამოტვირთვა (xlsx)"),onclick:()=>exportPL(p,D,m,view)},icon("down")));
+  const head=view==="cmp"?h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("გეგმა-ფაქტის შედარება")),tools):null;
+  if(!D.periods.length) return [h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("პროექტის მოგება-ზარალი")),tools),h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
   const factLoading=!S.plFact||S.plFact.pid!==S.pid;
   if(view==="cmp") return [head,renderPLCompare(D)];
-  return [head,factLoading&&view==="fact"?h("p",{class:"muted"},"იტვირთება…"):renderPLTable(D,m,view),
+  return [factLoading&&view==="fact"?h("p",{class:"muted"},"იტვირთება…"):renderPLTable(D,m,view,tools),
     view==="fact"&&D.unpriced?h("p",{class:"muted small"},D.unpriced+" "+tr("სამუშაოს ფასი ჯერ არ აქვს და შემოსავალში არ ითვლება.")):null];
 }
 /* finance tables: every column can be dragged wider or narrower at its right edge, a double click fits it to its content;
@@ -2359,7 +2360,7 @@ function plRows(D,m,view){
 }
 const plMoney=v=>Math.abs(v)<0.5?"—":v<0?"("+fmtNum(Math.round(-v))+")":fmtNum(Math.round(v));
 const plPct=v=>v==null||!isFinite(v)?"—":fmtNum(Math.round(v*1000)/10||0)+"%";
-function renderPLTable(D,m,view){
+function renderPLTable(D,m,view,tools){
   const open=S.plOpen||(S.plOpen=new Set()), tot=a=>a.reduce((x,y)=>x+y,0);
   const idx=plIdx(D), sel=S.finPer?1:-1;
   const rows=plRows(D,m,view); let rj=0;
@@ -2381,9 +2382,9 @@ function renderPLTable(D,m,view){
     h("tbody",null,body));
   const src=view==="plan"?"გეგმა: შესრულების გეგმა × ერთ. ფასი, გეგმა-გრაფიკის რესურსები, „დაშვებები“":"ფაქტი: დადასტურებული DPR-ები (ფასიანი სამუშაოები და ხარჯები)";
   return h("article",{class:"pr-card"},
-    h("div",{class:"pr-top"},h("div",null,
+    h("div",{class:"pr-top pt-head"},h("div",null,
       h("h2",{class:"pr-title"},tr("პროექტის მოგება-ზარალი")+" ",h("span",null,"("+tr(view==="plan"?"გეგმა":"ფაქტი")+", "+tr("ლარი")+")"))),
-      h("div",{class:"pr-cur"},tr("ვალუტა")+": ",h("b",null,"GEL (₾)"))),
+      tools||h("div",{class:"pr-cur"},tr("ვალუტა")+": ",h("b",null,"GEL (₾)"))),
     h("div",{class:"pr-wrap"},finResize(table,"pr."+(idx.length>1?"all":"one"))),
 
     h("div",{class:"pr-foot"},h("span",null,h("span",{class:"pr-dot"}),src),h("span",null,tr("გენერირებულია ავტომატურად")+" · "+fmtDate(isoDay(new Date())))));

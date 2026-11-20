@@ -2967,3 +2967,22 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 @media (max-width:700px){.pt-bar{padding:6px 14px 0!important}}
 .pr-table thead th{background:#e9eef4!important;color:#1f2a37!important;border-bottom:1px solid #cfd8e3!important}
 .pr-table thead th.pr-t{background:#dde5ee!important}
+/* P&L heading: title left; period link, pill switch and plain icon buttons right */
+.pt-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.pr-top.pt-head{align-items:center}
+.pt-title{margin:0;font-size:1rem;font-weight:700}
+.pt-head:not(.pr-top){margin-bottom:12px}
+.pt-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pt-per .per-btn{border:0;background:none;padding:0 4px;height:30px;color:var(--accent);font-weight:600}
+.pt-per .per-btn .per-l{display:none}
+.pt-per .per-btn b{font-weight:600;color:var(--accent)}
+.pt-per .per-btn .ico{color:var(--accent)}
+.pt-per .per-btn:hover b{text-decoration:underline}
+.pt-pill{display:inline-flex;background:#f1f3f5;border-radius:12px;padding:3px;gap:2px}
+.pt-pill .pt-tab{border:0;border-radius:9px;padding:6px 12px;font-size:.8rem;color:#334155;background:none;margin:0}
+.pt-pill .pt-tab.on{background:#fff;color:#0f172a;font-weight:600;box-shadow:0 1px 3px rgba(15,23,42,.12);border:0}
+.pt-pill .pt-tab:hover:not(.on){color:#0f172a}
+.pt-ic{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;background:none;border-radius:8px;color:#475569;cursor:pointer}
+.pt-ic .ico{width:17px;height:17px}
+.pt-ic:hover{background:#f1f5f9;color:#0f172a}
+@media print{.pt-tools{display:none!important}}
