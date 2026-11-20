@@ -2288,6 +2288,19 @@ function openPerDialog(){
   document.body.append(ov); document.addEventListener("keydown",key); draw(); }
 /* which P&L periods fall in the chosen period */
 const plIdx=D=>D.periods.map((x,i)=>i);
+/* finance page heading controls: a small label over a pill of icon buttons (names on hover) */
+const finGrp=(l,...k)=>h("div",{class:"ptg"},h("span",{class:"ptg-l"},tr(l)),h("div",{class:"ptg-b"},...k.filter(Boolean)));
+const finIb=(ic,tip,on,fn,extra)=>h("button",{type:"button",class:"ptg-i tip"+(on?" on":""),"data-tip":tr(tip),"aria-label":tr(tip),"aria-pressed":on==null?null:String(!!on),onclick:fn},typeof ic==="string"?icon(ic):ic,extra||null);
+/* full screen: the page itself goes full screen (so redraws don't drop out of it) and the statement fills it */
+function finFull(){
+  if(!window._plFsHook){ window._plFsHook=true; document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElement&&S.plFull){ S.plFull=false; render(); } }); }
+  return h("button",{class:"ptg-i tip"+(S.plFull?" on":""),type:"button","data-tip":tr(S.plFull?"სრული ეკრანიდან გამოსვლა":"სრულ ეკრანზე"),"aria-label":tr("სრულ ეკრანზე"),onclick:()=>{
+      if(S.plFull){ S.plFull=false; if(document.fullscreenElement) document.exitFullscreen(); }
+      else { S.plFull=true; const de=document.documentElement; if(de.requestFullscreen) de.requestFullscreen().catch(()=>{}); }
+      render(); }},icon("expand")); }
+/* the shown table to Excel as it is */
+function finTableXlsx(card,name){ if(!window.XLSX){ toast("Excel-ის ბიბლიოთეკა ვერ ჩაიტვირთა"); return; } const t=card&&card.querySelector("table"); if(!t) return;
+  const wb=XLSX.utils.table_to_book(t,{raw:false}); XLSX.writeFile(wb,name+".xlsx"); }
 function renderPL(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   if(!S.plFact||S.plFact.pid!==S.pid){ loadPlFact(S.pid); }
@@ -2304,15 +2317,8 @@ function renderPL(p){
   /* controls on the right of the statement's title: period link, plan / actual / compare pill, then plain icon buttons */
   const tg=view==="cmp"?null:h("div",{class:"pt-pill pt-tv",role:"group","aria-label":tr("ხედი")},[["t","ცხრილი","table"],["g","გრაფიკი","chart"]].map(([k,l,ic])=>
     h("button",{type:"button","aria-pressed":String((S.plChart?"g":"t")===k),class:"pt-tab"+((S.plChart?"g":"t")===k?" on":""),onclick:()=>{ S.plChart=k==="g"; render(); }},icon(ic),h("span",null,tr(l)))));
-  /* full screen: the page itself goes full screen (so redraws don't drop out of it) and the statement fills it */
-  const fs=h("button",{class:"ptg-i tip"+(S.plFull?" on":""),type:"button","data-tip":tr(S.plFull?"სრული ეკრანიდან გამოსვლა":"სრულ ეკრანზე"),"aria-label":tr("სრულ ეკრანზე"),onclick:()=>{
-      if(S.plFull){ S.plFull=false; if(document.fullscreenElement) document.exitFullscreen(); }
-      else { S.plFull=true; const de=document.documentElement; if(de.requestFullscreen) de.requestFullscreen().catch(()=>{}); }
-      render(); }},icon("expand"));
-  if(!window._plFsHook){ window._plFsHook=true; document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElement&&S.plFull){ S.plFull=false; render(); } }); }
-  /* ribbon-style groups: a small label over a pill of icon buttons (names on hover) */
-  const grp=(l,...k)=>h("div",{class:"ptg"},h("span",{class:"ptg-l"},tr(l)),h("div",{class:"ptg-b"},...k.filter(Boolean)));
-  const ib=(ic,tip,on,fn,extra)=>h("button",{type:"button",class:"ptg-i tip"+(on?" on":""),"data-tip":tr(tip),"aria-label":tr(tip),"aria-pressed":on==null?null:String(!!on),onclick:fn},typeof ic==="string"?icon(ic):ic,extra||null);
+  const fs=finFull();
+  const grp=finGrp, ib=finIb;
   const VIEWS=[["plan","გეგმა","works"],["fact","ფაქტი","pulse"],["cmp","შედარება","cols"]];
   const tools=h("div",{class:"pt-tools ptg-row"},
     grp("პერიოდი",per?ib("calendar",S.finPer?fmtDate(S.finPer.from)+" – "+fmtDate(S.finPer.to):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),S.finPer?h("span",{class:"ptg-t"},perShort(S.finPer)):null):null),
@@ -2427,9 +2433,14 @@ function renderPLTable(D,m,view,tools){
 }
 /* P&L as a chart: revenue and all costs as bars per month, profit as a line; one ₾ axis; hover shows the month's figures */
 function plChart(D,m,idx){
-  const T=plTotals(D,m), rev=idx.map(i=>T.rev[i]), cost=idx.map(i=>-T.allCost[i]), net=idx.map(i=>T.net[i]);
+  const T=plTotals(D,m);
+  return barLineChart(idx.map(i=>D.periods[i].label),idx.map(i=>T.rev[i]),idx.map(i=>-T.allCost[i]),idx.map(i=>T.net[i]),["ამონაგები","ხარჯი (სულ)","პროექტის მოგება"],["ამონაგები","ხარჯი","მოგება"]);
+}
+/* two bar series (a, b) and a line (c) over labelled columns; one ₾ axis; hover shows the column's figures */
+function barLineChart(labels,rev,cost,net,names,tipN){
+  const idx=labels.map((_,i)=>i), D={periods:labels.map(l=>({label:l}))};
   const W=Math.max(560,idx.length*64+80), H=300, L=64, R=16, Tp=16, B=34, pw=W-L-R, ph=H-Tp-B;
-  let hi=Math.max(0,...rev,...cost,...net), lo=Math.min(0,...net); if(hi===lo) hi=lo+1;
+  let hi=Math.max(0,...rev,...cost,...net), lo=Math.min(0,...rev,...cost,...net); if(hi===lo) hi=lo+1;
   const step=(()=>{ const r=(hi-lo)/4, e=Math.pow(10,Math.floor(Math.log10(r))); return [1,2,2.5,5,10].map(k=>k*e).find(k=>k>=r); })();
   hi=Math.ceil(hi/step)*step; lo=Math.floor(lo/step)*step;
   const y=v=>Tp+ph*(hi-v)/(hi-lo), cw=pw/idx.length, bw=Math.min(18,cw*0.3);
@@ -2449,11 +2460,11 @@ function plChart(D,m,idx){
   /* hover: a column-wide target per month, tooltip with the three figures */
   const tip=h("div",{class:"plc-tip",hidden:true}), wrap=h("div",{class:"plc-wrap"});
   idx.forEach((i,k)=>{ const r_=el("rect",{x:L+cw*k,y:Tp,width:cw,height:ph,class:"plc-hit"});
-    r_.addEventListener("mouseenter",()=>{ tip.replaceChildren(h("b",null,D.periods[i].label),h("div",null,h("i",{class:"plc-k plc-k1"}),tr("ამონაგები")+": "+fmtNum(Math.round(rev[k]))),
-      h("div",null,h("i",{class:"plc-k plc-k2"}),tr("ხარჯი")+": "+fmtNum(Math.round(cost[k]))),h("div",null,h("i",{class:"plc-k plc-k3"}),tr("მოგება")+": "+fmtNum(Math.round(net[k]))));
+    r_.addEventListener("mouseenter",()=>{ tip.replaceChildren(h("b",null,D.periods[i].label),h("div",null,h("i",{class:"plc-k plc-k1"}),tr(tipN[0])+": "+fmtNum(Math.round(rev[k]))),
+      h("div",null,h("i",{class:"plc-k plc-k2"}),tr(tipN[1])+": "+fmtNum(Math.round(cost[k]))),h("div",null,h("i",{class:"plc-k plc-k3"}),tr(tipN[2])+": "+fmtNum(Math.round(net[k]))));
       tip.hidden=false; tip.style.left=Math.min(L+cw*k+cw/2+10,W-170)+"px"; tip.style.top="10px"; r_.classList.add("on"); });
     r_.addEventListener("mouseleave",()=>{ tip.hidden=true; r_.classList.remove("on"); }); svg.append(r_); });
-  const legend=h("div",{class:"plc-leg"},[["plc-k1","ამონაგები"],["plc-k2","ხარჯი (სულ)"],["plc-k3","პროექტის მოგება"]].map(([c,l])=>h("span",null,h("i",{class:"plc-k "+c}),tr(l))));
+  const legend=h("div",{class:"plc-leg"},[["plc-k1",names[0]],["plc-k2",names[1]],["plc-k3",names[2]]].map(([c,l])=>h("span",null,h("i",{class:"plc-k "+c}),tr(l))));
   wrap.append(svg,tip);
   return h("div",{class:"plc"},legend,h("div",{class:"plc-sc"},wrap));
 }
@@ -2653,14 +2664,21 @@ function applyRules(rules,flows,put){
 function renderCF(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   const {flows,f2rows}=cfData(p), zoom=S.cfZoom||"m", open=S.cfOpen||(S.cfOpen=new Set()), view=S.cfView||"flow";
-  const vsw=h("div",{class:"vswitch pl-sw",role:"group","aria-label":"CF"},[["flow","ფულადი ნაკადი"],["f2","ფორმა 2"]].map(([k,l])=>
-    h("button",{type:"button","aria-pressed":String(view===k),class:"vbtn vtxt"+(view===k?" on":""),onclick:()=>{S.cfView=k;render();}},l)));
-  const zsw=view==="f2"?null:h("div",{class:"vswitch pl-sw",role:"group","aria-label":"დაჯგუფება"},[["m","თვე"],["w","კვირა"],["d","დღე"]].map(([k,l])=>
-    h("button",{type:"button","aria-pressed":String(zoom===k),class:"vbtn vtxt"+(zoom===k?" on":""),onclick:()=>{S.cfZoom=k;render();}},l)));
-  const head=h("div",{class:"pl-head"},vsw,zsw,view==="f2"?null:perButton(),h("div",{class:"pl-note muted small"},"გეგმა: ჩარიცხვები შესრულების გეგმიდან, გადახდები გეგმა-გრაფიკის რესურსებიდან ანაზღაურების პირობებით, ზედნადები და პროცენტები „დაშვებებიდან“."),
-    h("button",{class:"btn sm ghost",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ დაშვებები"));
-  if(!flows.length) return [head,h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა (ფასებით) და გეგმა-გრაფიკის რესურსები."))];
-  if(view==="f2") return [head,renderForm2(f2rows)];
+  /* heading like the P&L: project, title, and the control groups on the right */
+  const proj=S.projects.get(S.pid), ZN={m:"თვე",w:"კვირა",d:"დღე"};
+  const tools=h("div",{class:"pt-tools ptg-row"},
+    view==="f2"?null:finGrp("პერიოდი",finIb("calendar",S.finPer?perShort(S.finPer):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),S.finPer?h("span",{class:"ptg-t"},perShort(S.finPer)):null)),
+    finGrp("ანგარიში",finIb("pulse","ფულადი ნაკადი",view==="flow",()=>{ S.cfView="flow"; render(); }),finIb("report","ფორმა 2",view==="f2",()=>{ S.cfView="f2"; render(); })),
+    view==="f2"?null:finGrp("დაჯგუფება",...["m","w","d"].map(k=>finIb(h("span",{class:"ptg-tx"},tr(ZN[k])),ZN[k],zoom===k,()=>{ S.cfZoom=k; render(); }))),
+    view==="f2"?null:finGrp("ხედი",finIb("table","ცხრილი",!S.cfChart,()=>{ S.cfChart=false; render(); }),finIb("chart","გრაფიკი",!!S.cfChart,()=>{ S.cfChart=true; render(); })),
+    finGrp("ექსპორტი",finIb("print","ბეჭდვა",null,printPL),finIb("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
+      finIb("down","ჩამოტვირთვა (xlsx)",null,e=>finTableXlsx(e.currentTarget.closest(".pr-card"),"CF "+(proj?(proj.shortName||proj.name):"")))),
+    finGrp("ეკრანი",finFull()));
+  const card=(...body)=>h("article",{class:"pr-card cf-card"+(S.plFull?" pr-full":"")},
+    h("div",{class:"pr-top pt-head"},h("div",null,proj?h("div",{class:"pr-proj"},proj.name||pShort(proj)):null,
+      h("h2",{class:"pr-title"},tr(view==="f2"?"ფორმა 2":"ფულადი ნაკადები")+" ",h("span",null,"("+tr("გეგმა")+", "+tr("ლარი")+")"))),tools),...body);
+  if(!flows.length) return card(h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა (ფასებით) და გეგმა-გრაფიკის რესურსები.")));
+  if(view==="f2") return card(renderForm2(f2rows));
   /* columns */
   const ds=flows.map(x=>x.date).sort(), lo=ds[0], hi=ds[ds.length-1];
   const MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
@@ -2674,7 +2692,7 @@ function renderCF(p){
   /* the chosen period: only its columns are shown; balances still run from the start */
   const PR=S.finPer, inP=k=>!PR||(zoom==="m"?k>=PR.from.slice(0,7)&&k<=PR.to.slice(0,7):zoom==="d"?k>=PR.from&&k<=PR.to:addDays(k,6)>=PR.from&&k<=PR.to);
   const vis=cols.map((k,i)=>i).filter(i=>inP(cols[i]));
-  if(!vis.length) return [head,h("div",{class:"empty"},h("p",{class:"muted"},tr("არჩეულ პერიოდში მონაცემი არ არის.")))];
+  if(!vis.length) return card(h("div",{class:"empty"},h("p",{class:"muted"},tr("არჩეულ პერიოდში მონაცემი არ არის."))));
   const rows={}, subs={};
   /* with a chosen period only its days count; what came before goes into the opening balance */
   let pre=0;
@@ -2723,9 +2741,10 @@ function renderCF(p){
     row("საწყისი ნაშთი",opening,"pl-sum cf-cum",null,opening[v0]),
     row("წმინდა ნაკადი",net,"pl-net"),
     row("საბოლოო ნაშთი",cum,"pl-sum cf-cum",null,cum[v1])];
-  return [head,kpis,h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table"},
+  if(S.cfChart) return card(barLineChart(vis.map(i=>label(cols[i])),vis.map(i=>recTot[i]),vis.map(i=>net[i]-recTot[i]),vis.map(i=>cum[i]),["სულ ჩარიცხვა","სულ გადახდა","საბოლოო ნაშთი"],["ჩარიცხვა","გადახდა","ნაშთი"]));
+  return card(fitWrap(h("div",{class:"pr-wrap cf-wrap"},finResize(h("table",{class:"pl-table cf-table"},
     h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),vis.map(i=>h("th",{class:"num"},label(cols[i]))),h("th",{class:"num pl-tot"},"სულ"))),
-    h("tbody",null,body)),"cf."+zoom))];
+    h("tbody",null,body)),"cf."+zoom))));
 }
 
 /* analysis: a balance over time from the cash flow lines — advance received (liability), advances given to subcontractors (asset),

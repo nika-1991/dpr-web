@@ -3061,3 +3061,12 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .ptg:last-child .tip::after{left:auto;right:0;transform:none}
 .bar-out.tip::after{left:auto;right:0;transform:none}
 .pr-card{padding-bottom:0!important}
+/* CF: same frame-less layout as the P&L; names column and heading row stay put */
+.cf-card .cf-wrap{border:0!important;box-shadow:none!important;border-radius:0!important;margin-top:0}
+.cf-table thead th{position:sticky!important;top:0;z-index:3;background:#e9eef4!important;color:#1f2a37!important;padding-top:6px!important;padding-bottom:6px!important}
+.cf-table thead th:first-child,.cf-table tbody th[scope=row]{position:sticky!important;left:0;z-index:2}
+.cf-table tbody th[scope=row]{background:var(--surface);box-shadow:inset -1px 0 0 #e3e8ee}
+.cf-table thead th:first-child{z-index:5}
+.cf-table tr.pl-sec th{position:static!important}
+.ptg-tx{font-size:.68rem;font-weight:600}
+.cf-card>.empty,.cf-card>.pl-wrap{margin-top:12px}
