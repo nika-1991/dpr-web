@@ -798,6 +798,7 @@ const ICONS={
   digger:'<path d="M2 18h11"/><circle cx="4.5" cy="18" r="2"/><circle cx="10.5" cy="18" r="2"/><path d="M3 15V11h6l2 4"/><path d="M9 11V8h3"/><path d="M12 8l5-4 4 5-2 2-3-2"/>',
   helmet:'<defs><mask id="hh-m"><rect width="24" height="24" fill="#fff"/><path d="M9.2 5.6c2.6 2.4 3.8 5.7 3.9 9.6" stroke="#000" stroke-width="1.7" fill="none"/></mask></defs><path mask="url(#hh-m)" fill="currentColor" stroke="none" d="M3 16C3 9.5 7 4.5 12 4.5s9 5 9 11.5z"/><path fill="currentColor" stroke="none" d="M1.5 17h19c1.5 0 2.5.6 2.5 1.6v.6H2.8a1.3 1.3 0 0 1-1.3-1.3z"/>',
   cols:'<rect x="4" y="4" width="6.5" height="16" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="16" rx="1.5"/>',
+  expand:'<path d="M14 4h6v6"/><path d="M20 4l-7 7"/><path d="M10 20H4v-6"/><path d="M4 20l7-7"/>',
   upo:'<path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/>',
   down:'<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
@@ -2291,7 +2292,11 @@ function renderPL(p){
   /* toolbar: plan / actual / comparison, the month, print and Excel */
   const per=view==="cmp"?null:perButton();
   /* controls on the right of the statement's title: period link, plan / actual / compare pill, then plain icon buttons */
-  const tools=h("div",{class:"pt-tools"},per?h("span",{class:"pt-per"},per):null,sw,
+  const tg=view==="cmp"?null:h("div",{class:"pt-pill pt-tv",role:"group","aria-label":tr("ხედი")},[["t","ცხრილი","table"],["g","გრაფიკი","chart"]].map(([k,l,ic])=>
+    h("button",{type:"button","aria-pressed":String((S.plChart?"g":"t")===k),class:"pt-tab"+((S.plChart?"g":"t")===k?" on":""),onclick:()=>{ S.plChart=k==="g"; render(); }},icon(ic),h("span",null,tr(l)))));
+  const fs=h("button",{class:"pt-ic",type:"button",title:tr("სრულ ეკრანზე"),"aria-label":tr("სრულ ეკრანზე"),onclick:e=>{ const c=e.currentTarget.closest(".pr-card")||e.currentTarget.closest(".pt-host")||document.querySelector(".pr-card");
+      if(document.fullscreenElement) document.exitFullscreen(); else if(c&&c.requestFullscreen) c.requestFullscreen(); }},icon("expand"));
+  const tools=h("div",{class:"pt-tools"},per?h("span",{class:"pt-per"},per):null,sw,tg,fs,
     view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("ბეჭდვა"),"aria-label":tr("ბეჭდვა"),onclick:printPL},icon("print")),
     view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“"),"aria-label":"PDF",onclick:printPL},icon("pdf")),
     view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("ჩამოტვირთვა (xlsx)"),"aria-label":tr("ჩამოტვირთვა (xlsx)"),onclick:()=>exportPL(p,D,m,view)},icon("down")));
@@ -2385,9 +2390,41 @@ function renderPLTable(D,m,view,tools){
     h("div",{class:"pr-top pt-head"},h("div",null,
       h("h2",{class:"pr-title"},tr("პროექტის მოგება-ზარალი")+" ",h("span",null,"("+tr(view==="plan"?"გეგმა":"ფაქტი")+", "+tr("ლარი")+")"))),
       tools||h("div",{class:"pr-cur"},tr("ვალუტა")+": ",h("b",null,"GEL (₾)"))),
-    h("div",{class:"pr-wrap"},finResize(table,"pr."+(idx.length>1?"all":"one"))),
+    S.plChart&&tools?plChart(D,m,idx):h("div",{class:"pr-wrap"},finResize(table,"pr."+(idx.length>1?"all":"one"))),
 
     h("div",{class:"pr-foot"},h("span",null,h("span",{class:"pr-dot"}),src),h("span",null,tr("გენერირებულია ავტომატურად")+" · "+fmtDate(isoDay(new Date())))));
+}
+/* P&L as a chart: revenue and all costs as bars per month, profit as a line; one ₾ axis; hover shows the month's figures */
+function plChart(D,m,idx){
+  const T=plTotals(D,m), rev=idx.map(i=>T.rev[i]), cost=idx.map(i=>-T.allCost[i]), net=idx.map(i=>T.net[i]);
+  const W=Math.max(560,idx.length*64+80), H=300, L=64, R=16, Tp=16, B=34, pw=W-L-R, ph=H-Tp-B;
+  let hi=Math.max(0,...rev,...cost,...net), lo=Math.min(0,...net); if(hi===lo) hi=lo+1;
+  const step=(()=>{ const r=(hi-lo)/4, e=Math.pow(10,Math.floor(Math.log10(r))); return [1,2,2.5,5,10].map(k=>k*e).find(k=>k>=r); })();
+  hi=Math.ceil(hi/step)*step; lo=Math.floor(lo/step)*step;
+  const y=v=>Tp+ph*(hi-v)/(hi-lo), cw=pw/idx.length, bw=Math.min(18,cw*0.3);
+  const ns="http://www.w3.org/2000/svg", el=(t,a,...k)=>{ const e=document.createElementNS(ns,t); for(const [x,v] of Object.entries(a||{})) e.setAttribute(x,v); k.forEach(c=>c&&e.append(c)); return e; };
+  const short=v=>{ const a=Math.abs(v); return (v<0?"−":"")+(a>=1e6?fmtNum(Math.round(a/1e5)/10)+" "+tr("მლნ"):a>=1e3?fmtNum(Math.round(a/1e3))+" "+tr("ათ."):fmtNum(Math.round(a))); };
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:W,height:H,class:"plc-svg",role:"img","aria-label":tr("მოგება-ზარალი გრაფიკულად")});
+  for(let v=lo; v<=hi+1e-6; v+=step){ svg.append(el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:v===0?"plc-zero":"plc-grid"}),el("text",{x:L-8,y:y(v)+4,class:"plc-ax","text-anchor":"end"},document.createTextNode(short(v)))); }
+  const bar=(x,v,cls)=>{ const y0=y(0), y1=y(v), top=Math.min(y0,y1), hgt=Math.max(1,Math.abs(y1-y0)), r=Math.min(4,hgt/2);
+    /* rounded at the data end, square at the baseline */
+    const d=v>=0?`M${x},${y0}V${top+r}Q${x},${top} ${x+r},${top}H${x+bw-r}Q${x+bw},${top} ${x+bw},${top+r}V${y0}Z`:`M${x},${y0}V${top+hgt-r}Q${x},${top+hgt} ${x+r},${top+hgt}H${x+bw-r}Q${x+bw},${top+hgt} ${x+bw},${top+hgt-r}V${y0}Z`;
+    return el("path",{d,class:cls}); };
+  idx.forEach((i,k)=>{ const cx=L+cw*k+cw/2;
+    svg.append(bar(cx-bw-1,rev[k],"plc-rev"),bar(cx+1,cost[k],"plc-cost"),el("text",{x:cx,y:H-12,class:"plc-ax","text-anchor":"middle"},document.createTextNode(D.periods[i].label))); });
+  const pts=idx.map((i,k)=>[L+cw*k+cw/2,y(net[k])]);
+  svg.append(el("path",{d:pts.map((p,k)=>(k?"L":"M")+p[0]+","+p[1]).join(""),class:"plc-net"}));
+  pts.forEach(p=>svg.append(el("circle",{cx:p[0],cy:p[1],r:4,class:"plc-dot"})));
+  /* hover: a column-wide target per month, tooltip with the three figures */
+  const tip=h("div",{class:"plc-tip",hidden:true}), wrap=h("div",{class:"plc-wrap"});
+  idx.forEach((i,k)=>{ const r_=el("rect",{x:L+cw*k,y:Tp,width:cw,height:ph,class:"plc-hit"});
+    r_.addEventListener("mouseenter",()=>{ tip.replaceChildren(h("b",null,D.periods[i].label),h("div",null,h("i",{class:"plc-k plc-k1"}),tr("ამონაგები")+": "+fmtNum(Math.round(rev[k]))),
+      h("div",null,h("i",{class:"plc-k plc-k2"}),tr("ხარჯი")+": "+fmtNum(Math.round(cost[k]))),h("div",null,h("i",{class:"plc-k plc-k3"}),tr("მოგება")+": "+fmtNum(Math.round(net[k]))));
+      tip.hidden=false; tip.style.left=Math.min(L+cw*k+cw/2+10,W-170)+"px"; tip.style.top="10px"; r_.classList.add("on"); });
+    r_.addEventListener("mouseleave",()=>{ tip.hidden=true; r_.classList.remove("on"); }); svg.append(r_); });
+  const legend=h("div",{class:"plc-leg"},[["plc-k1","ამონაგები"],["plc-k2","ხარჯი (სულ)"],["plc-k3","პროექტის მოგება"]].map(([c,l])=>h("span",null,h("i",{class:"plc-k "+c}),tr(l))));
+  wrap.append(svg,tip);
+  return h("div",{class:"plc"},legend,h("div",{class:"plc-sc"},wrap));
 }
 /* P&L to Excel: the statement as shown (chosen month or all months) */
 function exportPL(p,D,m,view){

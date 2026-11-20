@@ -2986,3 +2986,34 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .pt-ic .ico{width:17px;height:17px}
 .pt-ic:hover{background:#f1f5f9;color:#0f172a}
 @media print{.pt-tools{display:none!important}}
+/* P&L heading: smaller, tighter controls */
+.pt-tools{gap:6px}
+.pt-pill{padding:2px;border-radius:10px}
+.pt-pill .pt-tab{padding:4px 9px!important;font-size:.72rem!important;gap:5px;border-radius:8px}
+.pt-pill .pt-tab .ico{width:13px;height:13px}
+.pt-per .per-btn{font-size:.72rem;height:28px}
+.pt-ic{width:28px;height:28px}
+.pt-ic .ico{width:15px;height:15px}
+.pr-card:fullscreen{max-width:none;overflow:auto;border-radius:0;background:#fff}
+/* P&L chart */
+.plc{padding-top:14px}
+.plc-leg{display:flex;gap:16px;font-size:.74rem;color:#334155;margin:0 0 6px 64px}
+.plc-leg span{display:inline-flex;align-items:center;gap:6px}
+.plc-k{display:inline-block;width:10px;height:10px;border-radius:3px}
+.plc-k1{background:#2a78d6}.plc-k2{background:#eb6834}.plc-k3{background:#1baf7a;height:3px;border-radius:2px;width:14px}
+.plc-sc{overflow-x:auto}
+.plc-wrap{position:relative;width:max-content}
+.plc-svg{display:block}
+.plc-grid{stroke:#e5e9ef;stroke-width:1}
+.plc-zero{stroke:#94a3b8;stroke-width:1}
+.plc-ax{font-size:11px;fill:#64748b}
+.plc-rev{fill:#2a78d6}
+.plc-cost{fill:#eb6834}
+.plc-net{fill:none;stroke:#1baf7a;stroke-width:2}
+.plc-dot{fill:#1baf7a;stroke:#fff;stroke-width:2}
+.plc-hit{fill:transparent;cursor:default}
+.plc-hit.on{fill:rgba(15,23,42,.04)}
+.plc-tip{position:absolute;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 20px -8px rgba(15,23,42,.3);padding:8px 10px;font-size:.72rem;color:#1f2a37;pointer-events:none;min-width:150px}
+.plc-tip b{display:block;margin-bottom:4px}
+.plc-tip div{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .plc-rev{fill:#3987e5}:root:not([data-theme="light"]) .plc-cost{fill:#d95926}:root:not([data-theme="light"]) .plc-net{stroke:#199e70}}
