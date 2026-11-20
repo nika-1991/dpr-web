@@ -2396,10 +2396,11 @@ const plPct=v=>v==null||!isFinite(v)?"—":fmtNum(Math.round(v*1000)/10||0)+"%";
 /* the table box fills the window below its top, so the page itself does not scroll and the heading row stays visible */
 function fitWrap(w){ const fit=()=>{ if(!w.isConnected){ window.removeEventListener("resize",fit); return; }
     /* below = what follows the table inside its card (the source line), so the card ends at the window's bottom */
-    w.style.maxHeight="none"; const top=w.getBoundingClientRect().top+window.scrollY;
-    let mh=Math.max(240,window.innerHeight-top-4); w.style.maxHeight=mh+"px";
-    /* whatever still sticks out below (page padding) comes off the table */
-    const over=document.scrollingElement.scrollHeight-window.innerHeight; if(over>0&&w.scrollHeight>w.clientHeight){ mh=Math.max(240,mh-over); w.style.maxHeight=mh+"px"; } };
+    /* room from the box's top to the window's bottom; if the page then still scrolls because of the box, take that off
+       (but not when something else, like a tall side panel, makes the page long) */
+    const top=w.getBoundingClientRect().top+window.scrollY, set=v=>{ w.style.maxHeight=Math.max(240,v)+"px"; }, over=()=>document.scrollingElement.scrollHeight-window.innerHeight;
+    let mh=window.innerHeight-top-2; set(mh); const o1=over();
+    if(o1>0){ set(mh-o1); const o2=over(); if(o2>=o1-1) set(mh); } };
   requestAnimationFrame(fit); window.addEventListener("resize",fit); return w; }
 function renderPLTable(D,m,view,tools){
   const open=S.plOpen||(S.plOpen=new Set()), tot=a=>a.reduce((x,y)=>x+y,0);

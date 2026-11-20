@@ -3070,3 +3070,4 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .cf-table tr.pl-sec th{position:static!important}
 .ptg-tx{font-size:.68rem;font-weight:600}
 .cf-card>.empty,.cf-card>.pl-wrap{margin-top:12px}
+main:has(.pr-card){padding-bottom:6px!important}
