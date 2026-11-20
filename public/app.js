@@ -254,6 +254,9 @@ S.admin||S.reviewer?ti("analysis","ანალიტიკა"):null].filter(Bo
   if(S.me){
     me.append(h("button",{class:"me-btn",type:"button",title:tr("ჩემი ანგარიში")+" · "+S.me.name,"aria-label":tr("ჩემი ანგარიში"),onclick:()=>go("account")},
       h("span",{class:"avatar"},initials(S.me.name))));
+    /* sign out: icon only, at the far right */
+    me.append(h("button",{class:"bar-gear bar-out tip","data-tip":tr("გასვლა"),type:"button",title:tr("გასვლა"),"aria-label":tr("გასვლა"),onclick:async()=>{
+      if(!confirm(tr("გავიდე სისტემიდან?"))) return; flushNow(); try{ await api("POST","/logout"); }catch(e){} onLoggedOut(); }},icon("logout")));
   }
 }
 
@@ -799,6 +802,7 @@ const ICONS={
   helmet:'<defs><mask id="hh-m"><rect width="24" height="24" fill="#fff"/><path d="M9.2 5.6c2.6 2.4 3.8 5.7 3.9 9.6" stroke="#000" stroke-width="1.7" fill="none"/></mask></defs><path mask="url(#hh-m)" fill="currentColor" stroke="none" d="M3 16C3 9.5 7 4.5 12 4.5s9 5 9 11.5z"/><path fill="currentColor" stroke="none" d="M1.5 17h19c1.5 0 2.5.6 2.5 1.6v.6H2.8a1.3 1.3 0 0 1-1.3-1.3z"/>',
   cols:'<rect x="4" y="4" width="6.5" height="16" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="16" rx="1.5"/>',
   expand:'<path d="M14 4h6v6"/><path d="M20 4l-7 7"/><path d="M10 20H4v-6"/><path d="M4 20l7-7"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
   upo:'<path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/>',
   down:'<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
