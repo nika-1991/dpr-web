@@ -2255,9 +2255,15 @@ function openPerDialog(){
     else { const a=st.anchor<ym?st.anchor:ym, b=st.anchor<ym?ym:st.anchor; st.from=a+"-01"; st.to=monthEndOf(b); st.anchor=null; } draw(); };
   function draw(){ fIn.value=st.from||""; tIn.value=st.to||"";
     const inR=ym=>st.from&&st.to&&ym>=st.from.slice(0,7)&&ym<=st.to.slice(0,7);
+    const cover=ym=>{ const n=+monthEndOf(ym).slice(8), d1=st.from.slice(0,7)===ym?+st.from.slice(8):1, d2=st.to.slice(0,7)===ym?+st.to.slice(8):n;
+      return {full:d1===1&&d2===n,a:Math.round((d1-1)/n*100),b:Math.round(d2/n*100)}; };
     grid.replaceChildren(h("button",{type:"button",class:"per-nav","aria-label":tr("წინა წელი"),onclick:()=>{ st.Y--; draw(); }},"◂"),
       ...[st.Y-1,st.Y,st.Y+1].map(y=>h("div",{class:"per-year"},h("div",{class:"per-yt"},String(y)),h("div",{class:"per-ms"},
-        MN.map((m,i)=>{ const ym=y+"-"+pad(i+1); return h("button",{type:"button",class:"per-m"+(inR(ym)?" on":"")+(st.anchor===ym?" anc":""),onclick:()=>pickM(ym)},m.slice(0,3)); })))),
+        MN.map((m,i)=>{ const ym=y+"-"+pad(i+1), part=inR(ym)?cover(ym):null;
+          const el=h("button",{type:"button",class:"per-m"+(part&&part.full?" on":"")+(st.anchor===ym?" anc":""),onclick:()=>pickM(ym)},m.slice(0,3));
+          /* a month only partly inside the period is coloured only for its part */
+          if(part&&!part.full) el.style.background="linear-gradient(90deg,#fff "+part.a+"%,#b4c6dd "+part.a+"%,#b4c6dd "+part.b+"%,#fff "+part.b+"%)";
+          return el; })))),
       h("button",{type:"button",class:"per-nav","aria-label":tr("შემდეგი წელი"),onclick:()=>{ st.Y++; draw(); }},"▸")); }
   const box=h("div",{class:"per-box",role:"dialog","aria-modal":"true","aria-label":tr("პერიოდის არჩევა")},
     h("div",{class:"per-h"},h("h3",null,tr("პერიოდის არჩევა")),h("button",{type:"button",class:"per-x","aria-label":tr("დახურვა"),onclick:close},"✕")),
