@@ -3085,3 +3085,11 @@ main:has(.pr-card){padding-bottom:6px!important}
 .cf-table tbody tr.pl-net th,.cf-table tbody tr.pl-net td{font-weight:800;font-size:.86rem;padding-top:8px!important;padding-bottom:8px!important}
 .cf-table tbody tr.cf-cum th,.cf-table tbody tr.cf-cum td{font-style:italic;font-weight:600}
 .cf-table tbody tr.pl-line th,.cf-table tbody tr.pl-line td{font-size:.72rem;color:#64748b}
+/* CF: smaller type; ordinary rows packed close, totals keep their space */
+.cf-table th,.cf-table td{font-size:.72rem!important}
+.cf-table thead th{font-size:.68rem!important}
+.cf-table tbody tr:not(.pl-sum):not(.pl-net):not(.pl-sec):not(.cf-cum) th,.cf-table tbody tr:not(.pl-sum):not(.pl-net):not(.pl-sec):not(.cf-cum) td{padding-top:1px!important;padding-bottom:1px!important;line-height:1.25}
+.cf-table tbody tr.pl-sum th,.cf-table tbody tr.pl-sum td,.cf-table tbody tr.cf-cum th,.cf-table tbody tr.cf-cum td{padding-top:4px!important;padding-bottom:4px!important}
+.cf-table tbody tr.pl-net th,.cf-table tbody tr.pl-net td{font-size:.78rem!important;padding-top:6px!important;padding-bottom:6px!important}
+.cf-table tbody tr.pl-line th,.cf-table tbody tr.pl-line td{font-size:.66rem!important}
+.cf-table tbody tr.pl-sec th{padding-top:8px!important;padding-bottom:2px!important}
