@@ -3060,3 +3060,4 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .ptg-i.tip:hover::after,.ptg-i.tip:focus-visible::after,.bar-out.tip:hover::after{display:block}
 .ptg:last-child .tip::after{left:auto;right:0;transform:none}
 .bar-out.tip::after{left:auto;right:0;transform:none}
+.pr-card{padding-bottom:0!important}

@@ -2389,8 +2389,11 @@ const plMoney=v=>Math.abs(v)<0.5?"—":v<0?"("+fmtNum(Math.round(-v))+")":fmtNum
 const plPct=v=>v==null||!isFinite(v)?"—":fmtNum(Math.round(v*1000)/10||0)+"%";
 /* the table box fills the window below its top, so the page itself does not scroll and the heading row stays visible */
 function fitWrap(w){ const fit=()=>{ if(!w.isConnected){ window.removeEventListener("resize",fit); return; }
-    w.style.maxHeight="none"; const r=w.getBoundingClientRect(), top=r.top+window.scrollY, below=document.scrollingElement.scrollHeight-(r.bottom+window.scrollY);
-    w.style.maxHeight=Math.max(240,window.innerHeight-top-Math.max(below,0)-4)+"px"; };
+    /* below = what follows the table inside its card (the source line), so the card ends at the window's bottom */
+    w.style.maxHeight="none"; const top=w.getBoundingClientRect().top+window.scrollY;
+    let mh=Math.max(240,window.innerHeight-top-4); w.style.maxHeight=mh+"px";
+    /* whatever still sticks out below (page padding) comes off the table */
+    const over=document.scrollingElement.scrollHeight-window.innerHeight; if(over>0&&w.scrollHeight>w.clientHeight){ mh=Math.max(240,mh-over); w.style.maxHeight=mh+"px"; } };
   requestAnimationFrame(fit); window.addEventListener("resize",fit); return w; }
 function renderPLTable(D,m,view,tools){
   const open=S.plOpen||(S.plOpen=new Set()), tot=a=>a.reduce((x,y)=>x+y,0);
@@ -2420,7 +2423,7 @@ function renderPLTable(D,m,view,tools){
       tools||h("div",{class:"pr-cur"},tr("ვალუტა")+": ",h("b",null,"GEL (₾)"))),
     S.plChart&&tools?plChart(D,m,idx):fitWrap(h("div",{class:"pr-wrap"},finResize(table,"pr."+(idx.length>1?"all":"one")))),
 
-    h("div",{class:"pr-foot"},h("span",null,h("span",{class:"pr-dot"}),src),h("span",null,tr("გენერირებულია ავტომატურად")+" · "+fmtDate(isoDay(new Date())))));
+    null);
 }
 /* P&L as a chart: revenue and all costs as bars per month, profit as a line; one ₾ axis; hover shows the month's figures */
 function plChart(D,m,idx){
