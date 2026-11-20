@@ -2165,7 +2165,7 @@ async function loadPlFact(pid){
   catch(e){ S.plFact={pid,reports:[],err:errMsg(e)}; }
   S.plFactLoading=null; if(S.view==="project"&&S.tab==="pl"&&!typing()) render();
 }
-function plData(p,sc=S.sched,factReps){
+function plData(p,sc=S.sched,factReps,clip){
   const ex=(sc.exec||{dates:[],vals:{}}), fin=cfFin(sc), boq=p.boq||[];
   /* the plan can be moved as a whole (start delay, days); P&L is without VAT */
   const sh=Math.round(num(fin.shift)), mv=d=>sh?addDays(d,sh):d, vr=1+num(fin.vat)/100;
@@ -2196,6 +2196,9 @@ function plData(p,sc=S.sched,factReps){
   }
   const MN=LANG==="en"?MONTHS_EN:MONTHS_KA;
   periods.forEach(x=>{ x.label=MN[+x.from.slice(5,7)-1].slice(0,3)+". "+x.from.slice(0,4); x.year=x.to.slice(0,4); });
+  /* a chosen period (the P&L page): months outside it drop out, the first and last are cut to its days */
+  if(clip){ periods=periods.filter(x=>x.to>=clip.from&&x.from<=clip.to).map(x=>{ const f=x.from<clip.from?clip.from:x.from, t=x.to>clip.to?clip.to:x.to;
+    return f===x.from&&t===x.to?x:{...x,from:f,to:t,label:f.slice(8)+"–"+fmtDate(t).slice(0,5)+"."+t.slice(2,4),part:true}; }); }
   const N=periods.length, z=()=>new Array(N).fill(0);
   const pOf=d=>{ for(let i=0;i<N;i++) if(d>=periods[i].from&&d<=periods[i].to) return i; return -1; };
   const blank=()=>({rev:{},cost:{},lines:{}});
@@ -2277,11 +2280,11 @@ function openPerDialog(){
   const ov=h("div",{class:"per-ov",onclick:e=>{ if(e.target===ov) close(); }},box);
   document.body.append(ov); document.addEventListener("keydown",key); draw(); }
 /* which P&L periods fall in the chosen period */
-const plIdx=D=>{ const P=S.finPer; return D.periods.map((x,i)=>i).filter(i=>!P||(D.periods[i].to>=P.from&&D.periods[i].from<=P.to)); };
+const plIdx=D=>D.periods.map((x,i)=>i);
 function renderPL(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   if(!S.plFact||S.plFact.pid!==S.pid){ loadPlFact(S.pid); }
-  const D=plData(p), view=S.plView||"plan";
+  const D=plData(p,S.sched,undefined,S.finPer), view=S.plView||"plan";
   /* underline tabs with icons */
   const sw=h("div",{class:"pt-pill",role:"tablist","aria-label":"P&L"},[["plan","გეგმა","works"],["fact","ფაქტი","pulse"],["cmp","შედარება","cols"]].map(([k,l,ic])=>
     h("button",{type:"button",role:"tab","aria-selected":String(view===k),class:"pt-tab"+(view===k?" on":""),onclick:()=>{S.plView=k;render();}},icon(ic),h("span",null,tr(l)))));
@@ -2649,14 +2652,19 @@ function renderCF(p){
   const keyOf=d=>{ if(zoom==="m") return d.slice(0,7); if(zoom==="d") return d; const dt=new Date(d+"T00:00"), wd=(dt.getDay()+6)%7; return addDays(d,-wd); };
   const cols=[]; const seen=new Set();
   for(let d=lo; d<=hi; d=addDays(d,1)){ const k=keyOf(d); if(!seen.has(k)){ seen.add(k); cols.push(k); } }
-  const label=k=>zoom==="m"?MN[+k.slice(5)-1].slice(0,3)+". "+k.slice(2,4):k.slice(8,10)+"."+k.slice(5,7)+(zoom==="w"?"–":"");
+  const label0=k=>zoom==="m"?MN[+k.slice(5)-1].slice(0,3)+". "+k.slice(2,4):k.slice(8,10)+"."+k.slice(5,7)+(zoom==="w"?"–":"");
+  /* a month cut by the chosen period shows its days */
+  const label=k=>{ const P_=S.finPer; if(zoom==="m"&&P_){ const a=k+"-01", b=monthEndOf(k), f=P_.from>a?P_.from:a, t=P_.to<b?P_.to:b; if(f!==a||t!==b) return f.slice(8)+"–"+t.slice(8)+"."+k.slice(5,7)+"."+k.slice(2,4); } return label0(k); };
   const ci=new Map(cols.map((k,i)=>[k,i])), N=cols.length, z=()=>new Array(N).fill(0);
   /* the chosen period: only its columns are shown; balances still run from the start */
   const PR=S.finPer, inP=k=>!PR||(zoom==="m"?k>=PR.from.slice(0,7)&&k<=PR.to.slice(0,7):zoom==="d"?k>=PR.from&&k<=PR.to:addDays(k,6)>=PR.from&&k<=PR.to);
   const vis=cols.map((k,i)=>i).filter(i=>inP(cols[i]));
   if(!vis.length) return [head,h("div",{class:"empty"},h("p",{class:"muted"},tr("არჩეულ პერიოდში მონაცემი არ არის.")))];
   const rows={}, subs={};
-  for(const x of flows){ const i=ci.get(keyOf(x.date)); (rows[x.row]||(rows[x.row]=z()))[i]+=x.v;
+  /* with a chosen period only its days count; what came before goes into the opening balance */
+  let pre=0;
+  for(const x of flows){ if(PR&&(x.date<PR.from||x.date>PR.to)){ if(x.date<PR.from) pre+=x.v; continue; }
+    const i=ci.get(keyOf(x.date)); (rows[x.row]||(rows[x.row]=z()))[i]+=x.v;
     if(x.sub){ const m=subs[x.row]||(subs[x.row]=new Map()); if(!m.has(x.sub)) m.set(x.sub,z()); m.get(x.sub)[i]+=x.v; } }
   const sum=keys=>{ const t=z(); for(const k of keys) (rows[k]||[]).forEach((v,i)=>t[i]+=v); return t; };
   const costKeys=Object.keys(rows).filter(k=>k.startsWith("cost:"));
@@ -2665,7 +2673,7 @@ function renderCF(p){
   const SUBK=["subAdv","subAdvDed","subRet","subRetRel"];
   const payCost=sum([...costKeys,...SUBK]), net=sum(["advIn","works","advDed","ret","retRel","cover","specIn",...ruleKeys,...costKeys,...SUBK,"ov","vat","advVat","cont","mob","specOut"]);
   /* balances: opening (from the assumptions) + the period's flow = closing */
-  const openBal=((cfFin(S.sched).show||{}).open||{}).cf===false?0:num(cfFin(S.sched).open), cum=[], opening=[]; net.reduce((a,v,i)=>{ opening[i]=a; return (cum[i]=a+v); },openBal);
+  const openBal=((cfFin(S.sched).show||{}).open||{}).cf===false?0:num(cfFin(S.sched).open), cum=[], opening=[]; net.reduce((a,v,i)=>{ opening[i]=a; return (cum[i]=a+v); },openBal+pre);
   const tot=a=>vis.reduce((x,i)=>x+(a[i]||0),0), v0=vis[0], v1=vis[vis.length-1];
   const cell=(v,cls)=>h("td",{class:"num"+(v<0?" neg":"")+(cls?" "+cls:"")},Math.abs(v)<0.5?"—":fmtNum(Math.round(v)));
   /* noTot: a balance row; its total column shows the given value (opening = first, closing = last) */
