@@ -2942,3 +2942,23 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .per-f{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 18px 14px}
 .per-f>span{margin-right:auto}
 @media (max-width:640px){.per-grid{flex-wrap:wrap}}
+/* P&L toolbar: underline tabs, period, print / PDF / xlsx */
+.pt-bar{display:flex;align-items:center;gap:8px;padding:6px 14px 0;background:#fff;border:1px solid #e3e8ee;border-bottom:0;border-radius:12px 12px 0 0;flex-wrap:wrap}
+.pt-bar+.pr-card,.pt-bar+*{margin-top:0}
+.pt-tabs{display:flex;gap:18px;align-self:stretch}
+.pt-tab{display:inline-flex;align-items:center;gap:6px;border:0;background:none;font:inherit;font-size:.84rem;color:#64748b;padding:10px 2px 9px;border-bottom:2px solid transparent;cursor:pointer}
+.pt-tab .ico{width:15px;height:15px}
+.pt-tab:hover{color:#1f2a37}
+.pt-tab.on{color:#0f5c4f;border-bottom-color:#0f5c4f;font-weight:600}
+.pt-sp{flex:1}
+.pt-bar .pl-note{flex:1}
+.pt-bar .per-btn{height:32px;border-radius:8px}
+.pt-div{width:1px;height:24px;background:#e3e8ee;margin:0 2px}
+.pt-ib{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:32px;min-width:32px;padding:0 8px;border:1px solid #d5dce5;border-radius:8px;background:#fff;color:#334155;font:inherit;font-size:.74rem;font-weight:600;cursor:pointer}
+.pt-ib .ico{width:16px;height:16px}
+.pt-ib:hover{border-color:#94a3b8}
+.pt-pdf{color:#b91c1c}.pt-pdf .ico{color:#b91c1c}
+.pt-dl{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border:0;border-radius:8px;background:#0f4c45;color:#fff;font:inherit;font-size:.74rem;font-weight:600;cursor:pointer}
+.pt-dl .ico{width:16px;height:16px}
+.pt-dl:hover{background:#0b3c37}
+.pt-bar+.pr-card{border-top-left-radius:0;border-top-right-radius:0}

@@ -797,6 +797,7 @@ const ICONS={
   add:'<path d="M12 5v14M5 12h14"/>',
   digger:'<path d="M2 18h11"/><circle cx="4.5" cy="18" r="2"/><circle cx="10.5" cy="18" r="2"/><path d="M3 15V11h6l2 4"/><path d="M9 11V8h3"/><path d="M12 8l5-4 4 5-2 2-3-2"/>',
   helmet:'<defs><mask id="hh-m"><rect width="24" height="24" fill="#fff"/><path d="M9.2 5.6c2.6 2.4 3.8 5.7 3.9 9.6" stroke="#000" stroke-width="1.7" fill="none"/></mask></defs><path mask="url(#hh-m)" fill="currentColor" stroke="none" d="M3 16C3 9.5 7 4.5 12 4.5s9 5 9 11.5z"/><path fill="currentColor" stroke="none" d="M1.5 17h19c1.5 0 2.5.6 2.5 1.6v.6H2.8a1.3 1.3 0 0 1-1.3-1.3z"/>',
+  cols:'<rect x="4" y="4" width="6.5" height="16" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="16" rx="1.5"/>',
   upo:'<path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/>',
   down:'<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
@@ -2280,18 +2281,20 @@ function renderPL(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
   if(!S.plFact||S.plFact.pid!==S.pid){ loadPlFact(S.pid); }
   const D=plData(p), view=S.plView||"plan";
-  const sw=h("div",{class:"vswitch pl-sw",role:"group","aria-label":"P&L"},[["plan","გეგმა"],["fact","ფაქტი"],["cmp","შედარება"]].map(([k,l])=>
-    h("button",{type:"button","aria-pressed":String(view===k),class:"vbtn vtxt"+(view===k?" on":""),onclick:()=>{S.plView=k;render();}},l)));
+  /* underline tabs with icons */
+  const sw=h("div",{class:"pt-tabs",role:"tablist","aria-label":"P&L"},[["plan","გეგმა","works"],["fact","ფაქტი","pulse"],["cmp","შედარება","cols"]].map(([k,l,ic])=>
+    h("button",{type:"button",role:"tab","aria-selected":String(view===k),class:"pt-tab"+(view===k?" on":""),onclick:()=>{S.plView=k;render();}},icon(ic),h("span",null,tr(l)))));
   const note={plan:"შემოსავალი — შესრულების გეგმა × ერთ. ფასი; პირდაპირი ხარჯი — გეგმა-გრაფიკის რესურსები; დანარჩენი — „დაშვებებიდან“.",
     fact:"დადასტურებული DPR-ები: ფასიანი სამუშაოები (შემოსავალი) და ფასიანი ხარჯები, BoQ კოდის თავის მიხედვით.",
     cmp:"ფაქტი გეგმასთან შედარებით; მწვანე — გეგმაზე უკეთესი, წითელი — უარესი."}[view];
   const m=view==="plan"?D.plan:D.fact;
   /* toolbar: plan / actual / comparison, the month, print and Excel */
   const per=view==="cmp"?null:perButton();
-  const head=h("div",{class:"pl-head pr-bar"},sw,view==="cmp"?h("div",{class:"pl-note muted small"},note):h("div",{class:"pl-note"}),per,
-    view==="cmp"?null:h("button",{class:"btn sm",type:"button",onclick:printPL},icon("print"),"ბეჭდვა"),
-    view==="cmp"?null:h("button",{class:"btn sm pr-dark",type:"button",onclick:()=>exportPL(p,D,m,view)},icon("pdf"),"ექსპორტი (Excel)"),
-    h("button",{class:"btn sm ghost",type:"button",onclick:()=>{S.tab="assume";pushNav();render();}},"≈ დაშვებები"));
+  const head=h("div",{class:"pt-bar"},sw,view==="cmp"?h("div",{class:"pl-note muted small"},note):h("div",{class:"pt-sp"}),per,
+    view==="cmp"?null:h("span",{class:"pt-div"}),
+    view==="cmp"?null:h("button",{class:"pt-ib",type:"button",title:tr("ბეჭდვა"),"aria-label":tr("ბეჭდვა"),onclick:printPL},icon("print")),
+    view==="cmp"?null:h("button",{class:"pt-ib pt-pdf",type:"button",title:tr("PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“"),"aria-label":"PDF",onclick:printPL},icon("pdf"),h("span",null,"PDF")),
+    view==="cmp"?null:h("button",{class:"pt-dl",type:"button",title:tr("ჩამოტვირთვა (xlsx)"),onclick:()=>exportPL(p,D,m,view)},icon("down"),h("span",null,"xlsx")));
   if(!D.periods.length) return [head,h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
   const factLoading=!S.plFact||S.plFact.pid!==S.pid;
   if(view==="cmp") return [head,renderPLCompare(D)];
