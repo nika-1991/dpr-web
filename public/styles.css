@@ -2915,3 +2915,30 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .an-sw{align-self:flex-start;margin-bottom:-12px}
 .an-t.an-g tbody tr.an-rel td{background:#f0fdf4!important}
 .an-kv tr.an-sub th{font-size:.68rem!important;font-weight:800;color:#1f2a37;padding:2px 0!important}.an-kv tr.an-sub+tr th,.an-kv tr.an-sub+tr td{border-top:0!important}
+/* period picker (P&L, CF) */
+.per-btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid #d5dce5;border-radius:8px;background:#fff;font:inherit;font-size:.76rem;color:#334155;cursor:pointer;white-space:nowrap}
+.per-btn:hover{border-color:var(--accent)}
+.per-btn .ico{width:14px;height:14px;color:#64748b}
+.per-btn .per-l{color:#64748b}
+.per-ov{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.per-box{background:#fff;border-radius:10px;box-shadow:0 24px 60px -20px rgba(15,23,42,.5);width:min(720px,100%);display:flex;flex-direction:column}
+.per-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 6px}
+.per-h h3{margin:0;font-size:1.05rem;font-weight:600}
+.per-x{border:0;background:none;font-size:1rem;color:#64748b;cursor:pointer;width:28px;height:28px;border-radius:6px}
+.per-x:hover{background:#f1f5f9}
+.per-in{display:flex;align-items:center;gap:8px;padding:6px 18px 10px;flex-wrap:wrap}
+.per-in .inp{height:30px;width:150px;font-size:.8rem}
+.per-clr{border:0;background:none;color:#1d4ed8;text-decoration:underline;font:inherit;font-size:.8rem;cursor:pointer}
+.per-body{margin:0 18px;border:1px solid #d5dce5;border-radius:4px;padding:34px 10px}
+.per-grid{display:flex;align-items:flex-start;justify-content:center;gap:22px}
+.per-nav{border:0;background:none;color:#94a3b8;font-size:1rem;cursor:pointer;margin-top:-2px;padding:0 4px}
+.per-nav:hover{color:#334155}
+.per-yt{text-align:center;font-weight:700;font-size:.85rem;margin-bottom:10px}
+.per-ms{display:grid;grid-template-columns:repeat(3,52px);border-top:1px solid #c9d1db;border-left:1px solid #c9d1db}
+.per-m{height:34px;border:0;border-right:1px solid #c9d1db;border-bottom:1px solid #c9d1db;background:#fff;font:inherit;font-size:.74rem;color:#1f2a37;cursor:pointer}
+.per-m:hover{background:#eef3fa}
+.per-m.on{background:#b4c6dd}
+.per-m.anc{outline:2px solid #1f3b5c;outline-offset:-2px}
+.per-f{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 18px 14px}
+.per-f>span{margin-right:auto}
+@media (max-width:640px){.per-grid{flex-wrap:wrap}}
