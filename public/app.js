@@ -2294,8 +2294,12 @@ function renderPL(p){
   /* controls on the right of the statement's title: period link, plan / actual / compare pill, then plain icon buttons */
   const tg=view==="cmp"?null:h("div",{class:"pt-pill pt-tv",role:"group","aria-label":tr("ხედი")},[["t","ცხრილი","table"],["g","გრაფიკი","chart"]].map(([k,l,ic])=>
     h("button",{type:"button","aria-pressed":String((S.plChart?"g":"t")===k),class:"pt-tab"+((S.plChart?"g":"t")===k?" on":""),onclick:()=>{ S.plChart=k==="g"; render(); }},icon(ic),h("span",null,tr(l)))));
-  const fs=h("button",{class:"ptg-i tip",type:"button","data-tip":tr("სრულ ეკრანზე"),"aria-label":tr("სრულ ეკრანზე"),onclick:e=>{ const c=e.currentTarget.closest(".pr-card")||e.currentTarget.closest(".pt-host")||document.querySelector(".pr-card");
-      if(document.fullscreenElement) document.exitFullscreen(); else if(c&&c.requestFullscreen) c.requestFullscreen(); }},icon("expand"));
+  /* full screen: the page itself goes full screen (so redraws don't drop out of it) and the statement fills it */
+  const fs=h("button",{class:"ptg-i tip"+(S.plFull?" on":""),type:"button","data-tip":tr(S.plFull?"სრული ეკრანიდან გამოსვლა":"სრულ ეკრანზე"),"aria-label":tr("სრულ ეკრანზე"),onclick:()=>{
+      if(S.plFull){ S.plFull=false; if(document.fullscreenElement) document.exitFullscreen(); }
+      else { S.plFull=true; const de=document.documentElement; if(de.requestFullscreen) de.requestFullscreen().catch(()=>{}); }
+      render(); }},icon("expand"));
+  if(!window._plFsHook){ window._plFsHook=true; document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElement&&S.plFull){ S.plFull=false; render(); } }); }
   /* ribbon-style groups: a small label over a pill of icon buttons (names on hover) */
   const grp=(l,...k)=>h("div",{class:"ptg"},h("span",{class:"ptg-l"},tr(l)),h("div",{class:"ptg-b"},...k.filter(Boolean)));
   const ib=(ic,tip,on,fn,extra)=>h("button",{type:"button",class:"ptg-i tip"+(on?" on":""),"data-tip":tr(tip),"aria-label":tr(tip),"aria-pressed":on==null?null:String(!!on),onclick:fn},typeof ic==="string"?icon(ic):ic,extra||null);
@@ -2304,10 +2308,11 @@ function renderPL(p){
     grp("პერიოდი",per?ib("calendar",S.finPer?fmtDate(S.finPer.from)+" – "+fmtDate(S.finPer.to):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),S.finPer?h("span",{class:"ptg-t"},fmtDate(S.finPer.from).slice(3)+" – "+fmtDate(S.finPer.to).slice(3)):null):null),
     grp("ანგარიში",...VIEWS.map(([k,l,ic])=>ib(ic,l,view===k,()=>{ S.plView=k; render(); }))),
     view==="cmp"?null:grp("ხედი",ib("table","ცხრილი",!S.plChart,()=>{ S.plChart=false; render(); }),ib("chart","გრაფიკი",!!S.plChart,()=>{ S.plChart=true; render(); })),
-    grp("ექსპორტი",fs,
-      view==="cmp"?null:ib("print","ბეჭდვა",null,printPL),
-      view==="cmp"?null:ib("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
-      view==="cmp"?null:ib("down","ჩამოტვირთვა (xlsx)",null,()=>exportPL(p,D,m,view))));
+    view==="cmp"?null:grp("ექსპორტი",
+      ib("print","ბეჭდვა",null,printPL),
+      ib("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
+      ib("down","ჩამოტვირთვა (xlsx)",null,()=>exportPL(p,D,m,view))),
+    grp("ეკრანი",fs));
   const head=view==="cmp"?h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("გეგმა-ფაქტის შედარება")),tools):null;
   if(!D.periods.length) return [h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("პროექტის მოგება-ზარალი")),tools),h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
   const factLoading=!S.plFact||S.plFact.pid!==S.pid;
@@ -2394,8 +2399,9 @@ function renderPLTable(D,m,view,tools){
     h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"მუხლი / დასახელება"),idx.map(i=>h("th",{class:"num",title:fmtDate(D.periods[i].from)+" — "+fmtDate(D.periods[i].to)},D.periods[i].label)),h("th",{class:"num pr-t"},"სულ"))),
     h("tbody",null,body));
   const src=view==="plan"?"გეგმა: შესრულების გეგმა × ერთ. ფასი, გეგმა-გრაფიკის რესურსები, „დაშვებები“":"ფაქტი: დადასტურებული DPR-ები (ფასიანი სამუშაოები და ხარჯები)";
-  return h("article",{class:"pr-card"},
+  return h("article",{class:"pr-card"+(S.plFull?" pr-full":"")},
     h("div",{class:"pr-top pt-head"},h("div",null,
+      P()?h("div",{class:"pr-proj"},P().name||pShort(P())):null,
       h("h2",{class:"pr-title"},tr("პროექტის მოგება-ზარალი")+" ",h("span",null,"("+tr(view==="plan"?"გეგმა":"ფაქტი")+", "+tr("ლარი")+")"))),
       tools||h("div",{class:"pr-cur"},tr("ვალუტა")+": ",h("b",null,"GEL (₾)"))),
     S.plChart&&tools?plChart(D,m,idx):h("div",{class:"pr-wrap"},finResize(table,"pr."+(idx.length>1?"all":"one"))),

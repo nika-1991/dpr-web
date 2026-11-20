@@ -3028,3 +3028,7 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .ptg-i.on{background:#d9f2e3;color:#0f5c4f;box-shadow:0 1px 2px rgba(15,23,42,.1)}
 .ptg-t{font-weight:600;font-variant-numeric:tabular-nums}
 .pr-top.pt-head{align-items:flex-end}
+.pr-proj{font-size:.8rem;font-weight:600;color:#475569;margin-bottom:1px;line-height:1.2}
+.pr-card.pr-full{position:fixed;inset:0;z-index:900;max-width:none;border-radius:0;overflow:auto;margin:0}
+.pr-proj{font-size:1.3rem;font-weight:800;color:var(--ink);margin-bottom:0;line-height:1.25}
+.pr-proj{font-size:.9rem!important;font-family:var(--f-body);letter-spacing:0;font-weight:800}
