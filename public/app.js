@@ -2294,12 +2294,20 @@ function renderPL(p){
   /* controls on the right of the statement's title: period link, plan / actual / compare pill, then plain icon buttons */
   const tg=view==="cmp"?null:h("div",{class:"pt-pill pt-tv",role:"group","aria-label":tr("ხედი")},[["t","ცხრილი","table"],["g","გრაფიკი","chart"]].map(([k,l,ic])=>
     h("button",{type:"button","aria-pressed":String((S.plChart?"g":"t")===k),class:"pt-tab"+((S.plChart?"g":"t")===k?" on":""),onclick:()=>{ S.plChart=k==="g"; render(); }},icon(ic),h("span",null,tr(l)))));
-  const fs=h("button",{class:"pt-ic",type:"button",title:tr("სრულ ეკრანზე"),"aria-label":tr("სრულ ეკრანზე"),onclick:e=>{ const c=e.currentTarget.closest(".pr-card")||e.currentTarget.closest(".pt-host")||document.querySelector(".pr-card");
+  const fs=h("button",{class:"ptg-i tip",type:"button","data-tip":tr("სრულ ეკრანზე"),"aria-label":tr("სრულ ეკრანზე"),onclick:e=>{ const c=e.currentTarget.closest(".pr-card")||e.currentTarget.closest(".pt-host")||document.querySelector(".pr-card");
       if(document.fullscreenElement) document.exitFullscreen(); else if(c&&c.requestFullscreen) c.requestFullscreen(); }},icon("expand"));
-  const tools=h("div",{class:"pt-tools"},per?h("span",{class:"pt-per"},per):null,sw,tg,fs,
-    view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("ბეჭდვა"),"aria-label":tr("ბეჭდვა"),onclick:printPL},icon("print")),
-    view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“"),"aria-label":"PDF",onclick:printPL},icon("pdf")),
-    view==="cmp"?null:h("button",{class:"pt-ic",type:"button",title:tr("ჩამოტვირთვა (xlsx)"),"aria-label":tr("ჩამოტვირთვა (xlsx)"),onclick:()=>exportPL(p,D,m,view)},icon("down")));
+  /* ribbon-style groups: a small label over a pill of icon buttons (names on hover) */
+  const grp=(l,...k)=>h("div",{class:"ptg"},h("span",{class:"ptg-l"},tr(l)),h("div",{class:"ptg-b"},...k.filter(Boolean)));
+  const ib=(ic,tip,on,fn,extra)=>h("button",{type:"button",class:"ptg-i tip"+(on?" on":""),"data-tip":tr(tip),"aria-label":tr(tip),"aria-pressed":on==null?null:String(!!on),onclick:fn},typeof ic==="string"?icon(ic):ic,extra||null);
+  const VIEWS=[["plan","გეგმა","works"],["fact","ფაქტი","pulse"],["cmp","შედარება","cols"]];
+  const tools=h("div",{class:"pt-tools ptg-row"},
+    grp("პერიოდი",per?ib("calendar",S.finPer?fmtDate(S.finPer.from)+" – "+fmtDate(S.finPer.to):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),S.finPer?h("span",{class:"ptg-t"},fmtDate(S.finPer.from).slice(3)+" – "+fmtDate(S.finPer.to).slice(3)):null):null),
+    grp("ანგარიში",...VIEWS.map(([k,l,ic])=>ib(ic,l,view===k,()=>{ S.plView=k; render(); }))),
+    view==="cmp"?null:grp("ხედი",ib("table","ცხრილი",!S.plChart,()=>{ S.plChart=false; render(); }),ib("chart","გრაფიკი",!!S.plChart,()=>{ S.plChart=true; render(); })),
+    grp("ექსპორტი",fs,
+      view==="cmp"?null:ib("print","ბეჭდვა",null,printPL),
+      view==="cmp"?null:ib("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
+      view==="cmp"?null:ib("down","ჩამოტვირთვა (xlsx)",null,()=>exportPL(p,D,m,view))));
   const head=view==="cmp"?h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("გეგმა-ფაქტის შედარება")),tools):null;
   if(!D.periods.length) return [h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("პროექტის მოგება-ზარალი")),tools),h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
   const factLoading=!S.plFact||S.plFact.pid!==S.pid;
