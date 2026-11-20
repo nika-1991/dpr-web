@@ -2387,6 +2387,11 @@ function plRows(D,m,view){
 }
 const plMoney=v=>Math.abs(v)<0.5?"—":v<0?"("+fmtNum(Math.round(-v))+")":fmtNum(Math.round(v));
 const plPct=v=>v==null||!isFinite(v)?"—":fmtNum(Math.round(v*1000)/10||0)+"%";
+/* the table box fills the window below its top, so the page itself does not scroll and the heading row stays visible */
+function fitWrap(w){ const fit=()=>{ if(!w.isConnected){ window.removeEventListener("resize",fit); return; }
+    w.style.maxHeight="none"; const r=w.getBoundingClientRect(), top=r.top+window.scrollY, below=document.scrollingElement.scrollHeight-(r.bottom+window.scrollY);
+    w.style.maxHeight=Math.max(240,window.innerHeight-top-Math.max(below,0)-4)+"px"; };
+  requestAnimationFrame(fit); window.addEventListener("resize",fit); return w; }
 function renderPLTable(D,m,view,tools){
   const open=S.plOpen||(S.plOpen=new Set()), tot=a=>a.reduce((x,y)=>x+y,0);
   const idx=plIdx(D), sel=S.finPer?1:-1;
@@ -2413,7 +2418,7 @@ function renderPLTable(D,m,view,tools){
       P()?h("div",{class:"pr-proj"},P().name||pShort(P())):null,
       h("h2",{class:"pr-title"},tr("პროექტის მოგება-ზარალი")+" ",h("span",null,"("+tr(view==="plan"?"გეგმა":"ფაქტი")+", "+tr("ლარი")+")"))),
       tools||h("div",{class:"pr-cur"},tr("ვალუტა")+": ",h("b",null,"GEL (₾)"))),
-    S.plChart&&tools?plChart(D,m,idx):h("div",{class:"pr-wrap"},finResize(table,"pr."+(idx.length>1?"all":"one"))),
+    S.plChart&&tools?plChart(D,m,idx):fitWrap(h("div",{class:"pr-wrap"},finResize(table,"pr."+(idx.length>1?"all":"one")))),
 
     h("div",{class:"pr-foot"},h("span",null,h("span",{class:"pr-dot"}),src),h("span",null,tr("გენერირებულია ავტომატურად")+" · "+fmtDate(isoDay(new Date())))));
 }
