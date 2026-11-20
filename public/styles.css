@@ -3055,3 +3055,8 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .pr-wrap{max-height:calc(100vh - 200px)}
 /* finance side panel: no card frame either */
 .pside .fs-box{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important;padding-left:4px!important;padding-right:4px!important}
+/* hidden tooltips must not widen the page (they made the whole page scroll sideways) */
+.ptg-i.tip::after,.bar-out.tip::after{display:none}
+.ptg-i.tip:hover::after,.ptg-i.tip:focus-visible::after,.bar-out.tip:hover::after{display:block}
+.ptg:last-child .tip::after{left:auto;right:0;transform:none}
+.bar-out.tip::after{left:auto;right:0;transform:none}
