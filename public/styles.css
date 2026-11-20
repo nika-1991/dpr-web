@@ -3053,3 +3053,5 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .pr-card{border:0!important;box-shadow:none!important;border-radius:0!important;padding:4px 0 10px!important;max-width:none!important;background:transparent}
 .pr-card.pr-full{background:#fff;padding:18px 22px!important}
 .pr-wrap{max-height:calc(100vh - 200px)}
+/* finance side panel: no card frame either */
+.pside .fs-box{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important;padding-left:4px!important;padding-right:4px!important}
