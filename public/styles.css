@@ -3042,3 +3042,10 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .pr-net th[scope=row]{background:#effaf5!important}
 .bar-out{margin-left:2px}.bar-out:hover{color:#fecaca}
 .pr-table .pr-ratio th,.pr-table .pr-ratio td{color:#2563eb!important;font-weight:400!important;font-style:normal}
+/* P&L: lower heading row that stays on top while the rows scroll (the table scrolls inside its own box) */
+.pr-wrap{max-height:calc(100vh - 230px);overflow:auto}
+.pr-card.pr-full .pr-wrap{max-height:calc(100vh - 150px)}
+.pr-table thead th{position:sticky!important;top:0;padding-top:6px!important;padding-bottom:6px!important}
+.pr-table thead th:not(:first-child){z-index:3}
+.pr-table thead th:first-child{z-index:5}
+@media print{.pr-wrap{max-height:none!important}}
