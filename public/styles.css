@@ -3041,3 +3041,4 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .pr-table tbody th[scope=row]{box-shadow:inset -1px 0 0 #e3e8ee}
 .pr-net th[scope=row]{background:#effaf5!important}
 .bar-out{margin-left:2px}.bar-out:hover{color:#fecaca}
+.pr-table .pr-ratio th,.pr-table .pr-ratio td{color:#2563eb!important;font-weight:400!important;font-style:normal}
