@@ -2713,7 +2713,7 @@ function renderCF(p){
   /* noTot: a balance row; its total column shows the given value (opening = first, closing = last) */
   const row=(label,vals,cls,extra,noTot)=>h("tr",{class:cls||""},h("th",{scope:"row"},extra||null,label),vis.map(i=>cell(vals[i])),noTot===true?h("td",{class:"num pl-tot"},""):noTot!=null&&noTot!==false?cell(noTot,"pl-tot"):cell(tot(vals),"pl-tot"));
   const opt=(k,label,cls)=>rows[k]&&tot(rows[k].map(Math.abs))>0.5?row(label,rows[k],cls):null;
-  const sec=t=>h("tr",{class:"pl-sec"},h("th",{colspan:String(vis.length+2)},t));
+  const sec=t=>h("tr",{class:"pl-sec"},h("th",{colspan:String(vis.length+2)},h("span",{class:"sec-l"},tr(t))));
   const fold=(k,label)=>{ const L=subs[k]||new Map(), isOpen=open.has(k);
     const tg=L.size?h("button",{class:"pl-tg",type:"button","aria-expanded":String(isOpen),"aria-label":(isOpen?"აკეცვა":"გაშლა")+": "+label,onclick:()=>{ isOpen?open.delete(k):open.add(k); render(); }},isOpen?"▾":"▸"):h("span",{class:"pl-tg"});
     return [row(label,rows[k],"pl-ch",tg),...(isOpen?[...L.entries()].sort((a,b)=>tot(a[1])-tot(b[1])).map(([n,v])=>row(n,v,"pl-line")):[])]; };
