@@ -3072,3 +3072,4 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .cf-card>.empty,.cf-card>.pl-wrap{margin-top:12px}
 main:has(.pr-card){padding-bottom:6px!important}
 .cf-table tr.pl-sec th .sec-l{position:sticky;left:12px;display:inline-block}
+.cf-table tr.pl-sec th{overflow:visible!important;text-overflow:clip!important}
