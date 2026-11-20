@@ -3032,3 +3032,5 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .pr-card.pr-full{position:fixed;inset:0;z-index:900;max-width:none;border-radius:0;overflow:auto;margin:0}
 .pr-proj{font-size:1.3rem;font-weight:800;color:var(--ink);margin-bottom:0;line-height:1.25}
 .pr-proj{font-size:.9rem!important;font-family:var(--f-body);letter-spacing:0;font-weight:800}
+.pr-cmp .pl-wrap{margin-top:14px}
+.pr-cmp .pl-wrap{width:fit-content;max-width:100%}

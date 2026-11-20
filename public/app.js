@@ -2290,7 +2290,7 @@ function renderPL(p){
     cmp:"ფაქტი გეგმასთან შედარებით; მწვანე — გეგმაზე უკეთესი, წითელი — უარესი."}[view];
   const m=view==="plan"?D.plan:D.fact;
   /* toolbar: plan / actual / comparison, the month, print and Excel */
-  const per=view==="cmp"?null:perButton();
+  const per=perButton();
   /* controls on the right of the statement's title: period link, plan / actual / compare pill, then plain icon buttons */
   const tg=view==="cmp"?null:h("div",{class:"pt-pill pt-tv",role:"group","aria-label":tr("ხედი")},[["t","ცხრილი","table"],["g","გრაფიკი","chart"]].map(([k,l,ic])=>
     h("button",{type:"button","aria-pressed":String((S.plChart?"g":"t")===k),class:"pt-tab"+((S.plChart?"g":"t")===k?" on":""),onclick:()=>{ S.plChart=k==="g"; render(); }},icon(ic),h("span",null,tr(l)))));
@@ -2313,10 +2313,9 @@ function renderPL(p){
       ib("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
       ib("down","ჩამოტვირთვა (xlsx)",null,()=>exportPL(p,D,m,view))),
     grp("ეკრანი",fs));
-  const head=view==="cmp"?h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("გეგმა-ფაქტის შედარება")),tools):null;
   if(!D.periods.length) return [h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("პროექტის მოგება-ზარალი")),tools),h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
   const factLoading=!S.plFact||S.plFact.pid!==S.pid;
-  if(view==="cmp") return [head,renderPLCompare(D)];
+  if(view==="cmp") return renderPLCompare(D,tools);
   return [factLoading&&view==="fact"?h("p",{class:"muted"},"იტვირთება…"):renderPLTable(D,m,view,tools),
     view==="fact"&&D.unpriced?h("p",{class:"muted small"},D.unpriced+" "+tr("სამუშაოს ფასი ჯერ არ აქვს და შემოსავალში არ ითვლება.")):null];
 }
@@ -2462,14 +2461,13 @@ function printPL(){
   const done=()=>{ doc.remove(); window.removeEventListener("afterprint",done); }; window.addEventListener("afterprint",done);
   window.print(); setTimeout(done,1500);
 }
-function renderPLCompare(D){
+function renderPLCompare(D,tools){
+  const proj=S.projects.get(S.pid);
   /* -2 = up to today (periods that have started), -1 = all periods, otherwise one period */
-  const today=isoDay(new Date()), sel=S.plPer==null?-2:S.plPer;
+  const idx=plIdx(D);
   const P=plTotals(D,D.plan), F=plTotals(D,D.fact);
-  const at=a=>sel===-1?a.reduce((x,y)=>x+y,0):sel===-2?a.reduce((x,y,i)=>x+(D.periods[i].from<=today?y:0),0):a[sel]||0;
-  const pick=h("select",{class:"inp pl-per","aria-label":"პერიოდი",onchange:e=>{S.plPer=+e.target.value;render();}},
-    [h("option",{value:"-2"},"დღემდე"),h("option",{value:"-1"},"ყველა პერიოდი"),...D.periods.map((x,i)=>h("option",{value:String(i)},x.label))]);
-  pick.value=String(sel);
+  /* the chosen period (the period button), or every period */
+  const at=a=>idx.reduce((x,i)=>x+(a[i]||0),0);
   const f=v=>Math.abs(v)<0.005?"—":fmtNum(Math.round(v));
   const row=(label,pv,fv,cls)=>{ const d=fv-pv, good=d>0.5, bad=d<-0.5;
     return h("tr",{class:cls||""},h("th",{scope:"row"},label),h("td",{class:"num"+(pv<0?" neg":"")},f(pv)),h("td",{class:"num"+(fv<0?" neg":"")},f(fv)),
@@ -2477,7 +2475,9 @@ function renderPLCompare(D){
       h("td",{class:"num"},pv?fmtNum(Math.round(fv/pv*1000)/10||0)+"%":"—")); };
   const sec=t=>h("tr",{class:"pl-sec"},h("th",{colspan:"5"},t));
   const ch=(k,c)=>{ const pa=D.plan[k][c.key], fa=D.fact[k][c.key]; return pa||fa?row(c.name,pa?at(pa):0,fa?at(fa):0):null; };
-  return h("div",null,h("div",{class:"pl-cmp-bar"},h("label",{class:"small muted"},"პერიოდი"),pick),
+  return h("article",{class:"pr-card pr-cmp"+(S.plFull?" pr-full":"")},
+    h("div",{class:"pr-top pt-head"},h("div",null,proj?h("div",{class:"pr-proj"},proj.name||pShort(proj)):null,
+      h("h2",{class:"pr-title"},tr("გეგმა-ფაქტის შედარება")+" ",h("span",null,"("+tr("ლარი")+")"))),tools),
     h("div",{class:"pl-wrap"},finResize(h("table",{class:"pl-table pl-cmp"},
       h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"₾"),["გეგმა","ფაქტი","სხვაობა","შესრულება"].map(l=>h("th",{class:"num"},l)))),
       h("tbody",null,
