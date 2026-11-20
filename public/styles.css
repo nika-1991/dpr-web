@@ -3049,3 +3049,7 @@ form.um-add .inp{height:28px;width:180px;font-size:.76rem}
 .pr-table thead th:not(:first-child){z-index:3}
 .pr-table thead th:first-child{z-index:5}
 @media print{.pr-wrap{max-height:none!important}}
+/* P&L: no outer frame, full width */
+.pr-card{border:0!important;box-shadow:none!important;border-radius:0!important;padding:4px 0 10px!important;max-width:none!important;background:transparent}
+.pr-card.pr-full{background:#fff;padding:18px 22px!important}
+.pr-wrap{max-height:calc(100vh - 200px)}
