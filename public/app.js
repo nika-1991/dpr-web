@@ -2245,6 +2245,9 @@ function plTotals(D,m){
 }
 /* period for the finance pages (P&L, CF): {from, to} as days, or null = everything; picked in a dialog with three years of months */
 const monthEndOf=ym=>{ const [y,m]=ym.split("-").map(Number); return ym+"-"+pad(new Date(y,m,0).getDate()); };
+/* months only when the period is whole months, otherwise the exact days */
+const perShort=P=>{ const whole=P.from.slice(8)==="01"&&P.to===monthEndOf(P.to.slice(0,7));
+  return whole?fmtDate(P.from).slice(3)+" – "+fmtDate(P.to).slice(3):fmtDate(P.from)+" – "+fmtDate(P.to); };
 function perButton(){ const P=S.finPer;
   return h("button",{type:"button",class:"per-btn",title:tr("პერიოდის არჩევა"),onclick:()=>openPerDialog()},icon("calendar"),h("span",{class:"per-l"},tr("პერიოდი")+":"),
     h("b",null,P?fmtDate(P.from)+" – "+fmtDate(P.to):tr("ყველა პერიოდი"))); }
@@ -2308,7 +2311,7 @@ function renderPL(p){
   const ib=(ic,tip,on,fn,extra)=>h("button",{type:"button",class:"ptg-i tip"+(on?" on":""),"data-tip":tr(tip),"aria-label":tr(tip),"aria-pressed":on==null?null:String(!!on),onclick:fn},typeof ic==="string"?icon(ic):ic,extra||null);
   const VIEWS=[["plan","გეგმა","works"],["fact","ფაქტი","pulse"],["cmp","შედარება","cols"]];
   const tools=h("div",{class:"pt-tools ptg-row"},
-    grp("პერიოდი",per?ib("calendar",S.finPer?fmtDate(S.finPer.from)+" – "+fmtDate(S.finPer.to):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),S.finPer?h("span",{class:"ptg-t"},fmtDate(S.finPer.from).slice(3)+" – "+fmtDate(S.finPer.to).slice(3)):null):null),
+    grp("პერიოდი",per?ib("calendar",S.finPer?fmtDate(S.finPer.from)+" – "+fmtDate(S.finPer.to):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),S.finPer?h("span",{class:"ptg-t"},perShort(S.finPer)):null):null),
     grp("ანგარიში",...VIEWS.map(([k,l,ic])=>ib(ic,l,view===k,()=>{ S.plView=k; render(); }))),
     view==="cmp"?null:grp("ხედი",ib("table","ცხრილი",!S.plChart,()=>{ S.plChart=false; render(); }),ib("chart","გრაფიკი",!!S.plChart,()=>{ S.plChart=true; render(); })),
     view==="cmp"?null:grp("ექსპორტი",
