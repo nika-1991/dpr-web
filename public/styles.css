@@ -3113,3 +3113,14 @@ main:has(.pr-card){padding-bottom:6px!important}
 .co-card .pr-table tbody th[scope=row]{padding-left:14px!important}.co-note{margin:6px 0 0}
 .pr-table tr.co-sec th{position:static!important;overflow:visible!important;text-overflow:clip!important}
 .pr-table tr.co-sec th .sec-l{position:sticky;left:14px;display:inline-block}
+/* consolidation: Excel-like project filter */
+.pf-wrap{position:relative}
+.pf-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:60;background:#fff;border:1px solid #d5dce5;border-radius:8px;box-shadow:0 14px 30px -12px rgba(15,23,42,.35);padding:6px;min-width:240px;max-height:360px;overflow:auto}
+.pf-pop[hidden]{display:none}
+.pf-list{display:flex;flex-direction:column}
+.pf-row{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;font-size:.74rem;cursor:pointer;white-space:nowrap}
+.pf-row:hover{background:#f1f5f9}
+.pf-row input{width:14px;height:14px;accent-color:#0f5c4f;margin:0}
+.pf-all{border-bottom:1px solid #e3e8ee;border-radius:0;margin-bottom:4px;padding-bottom:6px;font-weight:600}
+.pf-code{font-weight:600}
+.pf-name{font-size:.68rem;overflow:hidden;text-overflow:ellipsis;max-width:220px}
