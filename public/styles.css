@@ -3111,3 +3111,5 @@ main:has(.pr-card){padding-bottom:6px!important}
 .ptg-l{padding-left:4px}
 .ptg-nolabel{justify-content:flex-end;align-self:flex-end}
 .co-card .pr-table tbody th[scope=row]{padding-left:14px!important}.co-note{margin:6px 0 0}
+.pr-table tr.co-sec th{position:static!important;overflow:visible!important;text-overflow:clip!important}
+.pr-table tr.co-sec th .sec-l{position:sticky;left:14px;display:inline-block}

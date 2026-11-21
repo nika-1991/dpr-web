@@ -3376,7 +3376,7 @@ function renderCoCF(){
   const td=(v,cls)=>h("td",{class:"num"+(v<-0.5?" neg":"")+(cls?" "+cls:"")},plMoney(v)), nC=vis.length+2;
   const body=rows.map(r=>{
     if(r.k==="gap") return h("tr",{class:"pr-gap"},h("td",{colspan:String(nC)}));
-    if(r.k==="sec") return h("tr",{class:"co-sec"},h("th",{colspan:String(nC)},tr(r.l)));
+    if(r.k==="sec") return h("tr",{class:"co-sec"},h("th",{colspan:String(nC)},h("span",{class:"sec-l"},tr(r.l))));
     const tg=r.fold?h("button",{class:"pl-tg",type:"button","aria-expanded":String(open.has(r.key)),"aria-label":(open.has(r.key)?"აკეცვა":"გაშლა")+": "+r.l,onclick:()=>{ open.has(r.key)?open.delete(r.key):open.add(r.key); render(); }},open.has(r.key)?"▾":"▸"):null;
     return h("tr",{class:"pr-"+r.k},h("th",{scope:"row"},tg,tr(r.l)),vis.map(i=>td(r.v[i])),r.bal!=null?td(r.bal,"pr-t"):r.noTot?h("td",{class:"num pr-t"}):td(totV(r.v),"pr-t")); });
   const table=h("table",{class:"pl-table pr-table co-table"},h("thead",null,h("tr",null,h("th",{class:"pl-c0"},"მუხლი"),vis.map(i=>h("th",{class:"num"},lab(M[i]))),h("th",{class:"num pr-t"},"სულ"))),h("tbody",null,body));
