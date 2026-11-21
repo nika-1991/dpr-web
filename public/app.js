@@ -3280,8 +3280,8 @@ function renderCoPL(){
       onclick:e=>{ const s=S.coSel?new Set(S.coSel):new Set(); if(!S.coSel){ s.add(p.id); } else s.has(p.id)?s.delete(p.id):s.add(p.id); S.coSel=s.size?s:null; render(); }},pShort(p)); }));
   /* heading like the project P&L: period, plan / actual, table / chart, export, full screen */
   const tools=h("div",{class:"pt-tools ptg-row"},
-    finGrp("პროექტები",coProjFilter(D.all)),
     finGrp("პერიოდი",finIb("calendar",S.finPer?perShort(S.finPer):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),h("span",{class:"ptg-t"},S.finPer?perShort(S.finPer):tr("ყველა")))),
+    finGrp("პროექტები",coProjFilter(D.all)),
     finGrp("ანგარიში",finIb("works","გეგმა",view==="plan",()=>{ S.coView="plan"; render(); }),finIb("pulse","ფაქტი",view==="fact",()=>{ S.coView="fact"; render(); })),
     finGrp("ხედი",finIb("table","ცხრილი",!S.coChart,()=>{ S.coChart=false; render(); }),finIb("chart","გრაფიკი",!!S.coChart,()=>{ S.coChart=true; render(); })),
     finGrp("ექსპორტი",finIb("print","ბეჭდვა",null,printPL),finIb("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
@@ -3349,8 +3349,8 @@ function renderCoCF(){
     all.map(p=>{ const on=!S.coSel||S.coSel.has(p.id); return h("button",{type:"button",class:"co-chip"+(S.coSel&&on?" on":"")+(p.archived?" arch":""),title:p.name,
       onclick:()=>{ const s=S.coSel?new Set(S.coSel):new Set(); if(!S.coSel) s.add(p.id); else s.has(p.id)?s.delete(p.id):s.add(p.id); S.coSel=s.size?s:null; render(); }},pShort(p)); }));
   const tools=h("div",{class:"pt-tools ptg-row"},
-    finGrp("პროექტები",coProjFilter(all)),
     finGrp("პერიოდი",finIb("calendar",S.finPer?perShort(S.finPer):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),h("span",{class:"ptg-t"},S.finPer?perShort(S.finPer):tr("ყველა")))),
+    finGrp("პროექტები",coProjFilter(all)),
     finGrp("ხედი",finIb("table","ცხრილი",!S.coCfChart,()=>{ S.coCfChart=false; render(); }),finIb("chart","გრაფიკი",!!S.coCfChart,()=>{ S.coCfChart=true; render(); })),
     finGrp("ექსპორტი",finIb("print","ბეჭდვა",null,printPL),finIb("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
       finIb("down","ჩამოტვირთვა (xlsx)",null,e=>finTableXlsx(e.currentTarget.closest(".pr-card"),"CF "+tr("კონსოლიდირებული")))),
