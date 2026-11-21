@@ -3110,3 +3110,4 @@ main:has(.pr-card){padding-bottom:6px!important}
 .ptg{align-items:flex-start}
 .ptg-l{padding-left:4px}
 .ptg-nolabel{justify-content:flex-end;align-self:flex-end}
+.co-card .pr-table tbody th[scope=row]{padding-left:14px!important}.co-note{margin:6px 0 0}
