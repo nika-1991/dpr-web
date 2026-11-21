@@ -3124,3 +3124,6 @@ main:has(.pr-card){padding-bottom:6px!important}
 .pf-all{border-bottom:1px solid #e3e8ee;border-radius:0;margin-bottom:4px;padding-bottom:6px;font-weight:600}
 .pf-code{font-weight:600}
 .pf-name{font-size:.68rem;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.pf-btn{width:78px;justify-content:flex-start}
+.pf-btn .ptg-t{flex:1;text-align:center}
+.pf-f{display:flex;justify-content:flex-end;gap:6px;border-top:1px solid #e3e8ee;margin-top:4px;padding:6px 4px 2px}

@@ -3252,18 +3252,23 @@ function renderCoSide(){
     box("ერთჯერადი",fact("აქტიური",String(ev.length)),fact("სულ თანხა",ev.length?gel0(ev.reduce((a,e)=>a+num(e.amount),0)):"—")),
     h("button",{type:"button",class:"fs-pill",onclick:()=>{ S.coTab="fixed"; render(); }},h("span",{class:"fs-pi"},"≈"),tr("ყველა დაშვება"))];
 }
-/* Excel-like project filter: a drop-down with "select all" and a box per project */
+/* Excel-like project filter: a drop-down with "select all" and a box per project; ticks are applied with the OK button */
 function coProjFilter(all){
   const sel=S.coSel, nOn=sel?all.filter(p=>sel.has(p.id)).length:all.length, isAll=!sel||nOn===all.length;
-  const set=ids=>{ S.coSel=ids.size&&ids.size<all.length?ids:ids.size?null:new Set(); S.coFiltOpen=true; render(); };
-  const allBox=h("input",{type:"checkbox",checked:isAll,onchange:e=>set(e.target.checked?new Set(all.map(p=>p.id)):new Set())});
-  allBox.indeterminate=!isAll&&nOn>0;
-  const list=h("div",{class:"pf-list"},h("label",{class:"pf-row pf-all"},allBox,h("span",null,tr("ყველას მონიშვნა"))),
-    all.map(p=>{ const on=!sel||sel.has(p.id); return h("label",{class:"pf-row",title:p.name},h("input",{type:"checkbox",checked:on,onchange:e=>{ const s=new Set(sel||all.map(x=>x.id)); e.target.checked?s.add(p.id):s.delete(p.id); set(s); }}),
-      h("span",{class:"pf-code"},pShort(p)),h("span",{class:"pf-name muted"},p.name&&p.name!==pShort(p)?p.name:"")); }));
-  const pop=h("div",{class:"pf-pop",hidden:!S.coFiltOpen},list);
-  const btn=finIb("filter",isAll?"ყველა პროექტი":nOn+" / "+all.length,isAll?null:true,e=>{ e.stopPropagation(); S.coFiltOpen=!S.coFiltOpen; pop.hidden=!S.coFiltOpen; },h("span",{class:"ptg-t"},isAll?tr("ყველა"):nOn+" / "+all.length));
-  if(!window._pfHook){ window._pfHook=true; document.addEventListener("click",e=>{ if(S.coFiltOpen&&!e.target.closest(".pf-wrap")){ S.coFiltOpen=false; document.querySelectorAll(".pf-pop").forEach(x=>x.hidden=true); } }); }
+  let draft=new Set(sel?[...sel]:all.map(p=>p.id));
+  const allBox=h("input",{type:"checkbox"}), boxes=[];
+  const sync=()=>{ const n=all.filter(p=>draft.has(p.id)).length; allBox.checked=n===all.length; allBox.indeterminate=n>0&&n<all.length; boxes.forEach(([p,b])=>{ b.checked=draft.has(p.id); }); ok.disabled=!n; };
+  allBox.addEventListener("change",()=>{ draft=allBox.checked?new Set(all.map(p=>p.id)):new Set(); sync(); });
+  const rows=all.map(p=>{ const b=h("input",{type:"checkbox",onchange:e=>{ e.target.checked?draft.add(p.id):draft.delete(p.id); sync(); }}); boxes.push([p,b]);
+    return h("label",{class:"pf-row",title:p.name},b,h("span",{class:"pf-code"},pShort(p)),h("span",{class:"pf-name muted"},p.name&&p.name!==pShort(p)?p.name:"")); });
+  const close=()=>{ pop.hidden=true; };
+  const ok=h("button",{type:"button",class:"btn primary sm",onclick:()=>{ const n=all.filter(p=>draft.has(p.id)).length; S.coSel=n===all.length?null:new Set(draft); close(); render(); }},tr("არჩევა"));
+  const pop=h("div",{class:"pf-pop",hidden:true},h("div",{class:"pf-list"},h("label",{class:"pf-row pf-all"},allBox,h("span",null,tr("ყველას მონიშვნა"))),rows),
+    h("div",{class:"pf-f"},ok,h("button",{type:"button",class:"btn sm",onclick:close},tr("გაუქმება"))));
+  const btn=finIb("filter",isAll?"ყველა პროექტი":nOn+" / "+all.length,isAll?null:true,e=>{ e.stopPropagation(); if(pop.hidden){ draft=new Set(S.coSel?[...S.coSel]:all.map(p=>p.id)); sync(); } pop.hidden=!pop.hidden; },h("span",{class:"ptg-t"},isAll?tr("ყველა"):nOn+" / "+all.length));
+  btn.classList.add("pf-btn");
+  if(!window._pfHook){ window._pfHook=true; document.addEventListener("click",e=>{ if(!e.target.closest(".pf-wrap")) document.querySelectorAll(".pf-pop").forEach(x=>x.hidden=true); }); }
+  sync();
   return h("div",{class:"pf-wrap"},btn,pop);
 }
 function renderCoPL(){
