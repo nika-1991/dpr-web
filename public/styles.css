@@ -3093,3 +3093,16 @@ main:has(.pr-card){padding-bottom:6px!important}
 .cf-table tbody tr.pl-net th,.cf-table tbody tr.pl-net td{font-size:.78rem!important;padding-top:6px!important;padding-bottom:6px!important}
 .cf-table tbody tr.pl-line th,.cf-table tbody tr.pl-line td{font-size:.66rem!important}
 .cf-table tbody tr.pl-sec th{padding-top:8px!important;padding-bottom:2px!important}
+/* P&L in the CF's type and spacing: small sans names, mono figures, no italics; ordinary rows close, totals spaced */
+.pr-table th,.pr-table td{font-size:.72rem!important;font-style:normal!important}
+.pr-table td{font-family:var(--f-mono)!important}
+.pr-table thead th{font-size:.68rem!important;font-family:var(--f-body)!important}
+.pr-table tbody th{font-family:var(--f-body)!important}
+.pr-table tbody tr.pr-item th,.pr-table tbody tr.pr-item td,.pr-table tbody tr.pr-line th,.pr-table tbody tr.pr-line td,.pr-table tbody tr.pr-ratio th,.pr-table tbody tr.pr-ratio td{padding-top:1px!important;padding-bottom:1px!important;line-height:1.25;color:#1f2a37}
+.pr-table tbody tr.pr-item td.neg,.pr-table tbody tr.pr-line td.neg{color:#b91c1c}
+.pr-table tbody tr.pr-line th,.pr-table tbody tr.pr-line td{font-size:.66rem!important;color:#64748b}
+.pr-table tbody tr.pr-line th{padding-left:30px!important}
+.pr-table tbody tr.pr-rev th,.pr-table tbody tr.pr-rev td,.pr-table tbody tr.pr-cost th,.pr-table tbody tr.pr-cost td,.pr-table tbody tr.pr-gross th,.pr-table tbody tr.pr-gross td,.pr-table tbody tr.pr-ind th,.pr-table tbody tr.pr-ind td{padding-top:4px!important;padding-bottom:4px!important;font-weight:800}
+.pr-table tbody tr.pr-net th,.pr-table tbody tr.pr-net td{font-size:.78rem!important;padding-top:6px!important;padding-bottom:6px!important}
+.pr-table tbody tr.pr-gap td{height:6px!important;padding:0!important}
+.pr-table tbody tr.pr-ratio th,.pr-table tbody tr.pr-ratio td{color:#2563eb!important}
