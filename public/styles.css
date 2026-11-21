@@ -3106,3 +3106,7 @@ main:has(.pr-card){padding-bottom:6px!important}
 .pr-table tbody tr.pr-net th,.pr-table tbody tr.pr-net td{font-size:.78rem!important;padding-top:6px!important;padding-bottom:6px!important}
 .pr-table tbody tr.pr-gap td{height:6px!important;padding:0!important}
 .pr-table tbody tr.pr-ratio th,.pr-table tbody tr.pr-ratio td{color:#2563eb!important}
+/* group labels start at the left of their pill; the full-screen button stands alone without a label */
+.ptg{align-items:flex-start}
+.ptg-l{padding-left:4px}
+.ptg-nolabel{justify-content:flex-end;align-self:flex-end}

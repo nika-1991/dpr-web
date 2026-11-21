@@ -2321,14 +2321,14 @@ function renderPL(p){
   const grp=finGrp, ib=finIb;
   const VIEWS=[["plan","გეგმა","works"],["fact","ფაქტი","pulse"],["cmp","შედარება","cols"]];
   const tools=h("div",{class:"pt-tools ptg-row"},
-    grp("პერიოდი",per?ib("calendar",S.finPer?fmtDate(S.finPer.from)+" – "+fmtDate(S.finPer.to):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),S.finPer?h("span",{class:"ptg-t"},perShort(S.finPer)):null):null),
+    grp("პერიოდი",per?ib("calendar",S.finPer?fmtDate(S.finPer.from)+" – "+fmtDate(S.finPer.to):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),h("span",{class:"ptg-t"},S.finPer?perShort(S.finPer):tr("ყველა"))):null),
     grp("ანგარიში",...VIEWS.map(([k,l,ic])=>ib(ic,l,view===k,()=>{ S.plView=k; render(); }))),
     view==="cmp"?null:grp("ხედი",ib("table","ცხრილი",!S.plChart,()=>{ S.plChart=false; render(); }),ib("chart","გრაფიკი",!!S.plChart,()=>{ S.plChart=true; render(); })),
     view==="cmp"?null:grp("ექსპორტი",
       ib("print","ბეჭდვა",null,printPL),
       ib("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
       ib("down","ჩამოტვირთვა (xlsx)",null,()=>exportPL(p,D,m,view))),
-    grp("ეკრანი",fs));
+    h("div",{class:"ptg ptg-nolabel"},h("div",{class:"ptg-b"},fs)));
   if(!D.periods.length) return [h("div",{class:"pt-head"},h("h2",{class:"pt-title"},tr("პროექტის მოგება-ზარალი")),tools),h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ მონაცემი არ არის: შეავსეთ შესრულების გეგმა და გეგმა-გრაფიკი, ან დაადასტურეთ ანგარიშები."))];
   const factLoading=!S.plFact||S.plFact.pid!==S.pid;
   if(view==="cmp") return renderPLCompare(D,tools);
@@ -2668,13 +2668,13 @@ function renderCF(p){
   /* heading like the P&L: project, title, and the control groups on the right */
   const proj=S.projects.get(S.pid), ZN={m:"თვე",w:"კვირა",d:"დღე"};
   const tools=h("div",{class:"pt-tools ptg-row"},
-    view==="f2"?null:finGrp("პერიოდი",finIb("calendar",S.finPer?perShort(S.finPer):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),S.finPer?h("span",{class:"ptg-t"},perShort(S.finPer)):null)),
+    view==="f2"?null:finGrp("პერიოდი",finIb("calendar",S.finPer?perShort(S.finPer):"ყველა პერიოდი",S.finPer?true:null,()=>openPerDialog(),h("span",{class:"ptg-t"},S.finPer?perShort(S.finPer):tr("ყველა")))),
     finGrp("ანგარიში",finIb("pulse","ფულადი ნაკადი",view==="flow",()=>{ S.cfView="flow"; render(); }),finIb("report","ფორმა 2",view==="f2",()=>{ S.cfView="f2"; render(); })),
     view==="f2"?null:finGrp("დაჯგუფება",...["m","w","d"].map(k=>finIb(h("span",{class:"ptg-tx"},tr(ZN[k])),ZN[k],zoom===k,()=>{ S.cfZoom=k; render(); }))),
     view==="f2"?null:finGrp("ხედი",finIb("table","ცხრილი",!S.cfChart,()=>{ S.cfChart=false; render(); }),finIb("chart","გრაფიკი",!!S.cfChart,()=>{ S.cfChart=true; render(); })),
     finGrp("ექსპორტი",finIb("print","ბეჭდვა",null,printPL),finIb("pdf","PDF — ბეჭდვის ფანჯარაში აირჩიეთ „Save as PDF“",null,printPL),
       finIb("down","ჩამოტვირთვა (xlsx)",null,e=>finTableXlsx(e.currentTarget.closest(".pr-card"),"CF "+(proj?(proj.shortName||proj.name):"")))),
-    finGrp("ეკრანი",finFull()));
+    h("div",{class:"ptg ptg-nolabel"},h("div",{class:"ptg-b"},finFull())));
   const card=(...body)=>h("article",{class:"pr-card cf-card"+(S.plFull?" pr-full":"")},
     h("div",{class:"pr-top pt-head"},h("div",null,proj?h("div",{class:"pr-proj"},proj.name||pShort(proj)):null,
       h("h2",{class:"pr-title"},tr(view==="f2"?"ფორმა 2":"ფულადი ნაკადები")+" ",h("span",null,"("+tr("გეგმა")+", "+tr("ლარი")+")"))),tools),...body);
