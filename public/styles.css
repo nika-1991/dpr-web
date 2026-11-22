@@ -3159,3 +3159,10 @@ main:has(.pr-card){padding-bottom:6px!important}
 .sb-wide .sb-row>.sb-f{grid-template-columns:auto 64px}
 .sb-wide .sb-row>.sb-f>span:first-child{white-space:nowrap}
 .sb-wide select.inp{min-width:170px}
+/* schedule / execution plan: full screen */
+.g-fs{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #d5dce5;border-radius:7px;background:#fff;color:#475569;cursor:pointer;margin-left:6px}
+.g-fs .ico{width:15px;height:15px}
+.g-fs:hover,.g-fs.on{border-color:var(--accent);color:var(--accent)}
+.g-fs.tip::after{display:none}.g-fs.tip:hover::after{display:block}
+.sched.g-full{position:fixed;inset:0;z-index:900;background:var(--bg,#f6f8fa);overflow:auto;padding:12px 16px;margin:0}
+.sched.g-full .gwrap{max-height:calc(100vh - 160px)!important}
