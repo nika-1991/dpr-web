@@ -3166,3 +3166,16 @@ main:has(.pr-card){padding-bottom:6px!important}
 .g-fs.tip::after{display:none}.g-fs.tip:hover::after{display:block}
 .sched.g-full{position:fixed;inset:0;z-index:900;background:var(--bg,#f6f8fa);overflow:auto;padding:12px 16px;margin:0}
 .sched.g-full .gwrap{max-height:calc(100vh - 160px)!important}
+.g-lvrow{display:inline-flex;align-items:center;gap:4px}
+.g-fsr{display:inline-flex;gap:3px;margin-left:8px}
+.g-fs{width:24px!important;height:24px!important;margin:0!important;border-radius:6px}
+.g-fs .ico{width:13px!important;height:13px!important}
+/* grid only: the top strip is hidden, the grid takes the whole screen; the two buttons float over it */
+.sched.g-only .g-head2{position:fixed;top:6px;right:14px;z-index:950;background:none;border:0;padding:0;margin:0;box-shadow:none;display:block}
+.sched.g-only .g-head2>*:not(.gh-view){display:none!important}
+.sched.g-only .g-head2 .gh-view{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+.sched.g-only .g-head2 .gh-view>*:not(.g-lvrow){display:none!important}
+.sched.g-only .g-lvrow>*:not(.g-fsr){display:none!important}
+.sched.g-only .g-fsr{background:#fff;border-radius:8px;padding:3px;box-shadow:0 4px 14px -6px rgba(15,23,42,.35)}
+.sched.g-only .gwrap{max-height:calc(100vh - 24px)!important;height:calc(100vh - 24px)}
+.sched.g-only>*:not(.g-head2):not(.gwrap):not(.g-modal){display:none}

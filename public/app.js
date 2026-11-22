@@ -1546,7 +1546,7 @@ function renderSchedule(p){
       ghLbl("chart","ჩვენება: რაოდენობა ან ღირებულება"),
       h("div",{class:"vswitch",role:"group","aria-label":"ჩვენება"},[["qty","# რაოდ."],["val","₾ ღირ."]].map(([k,l])=>
         h("button",{type:"button",class:"vbtn vtxt tip"+((S.gmode||"qty")===k?" on":""),"data-tip":tr(k==="qty"?"რაოდენობა":"ღირებულება (რაოდენობა × ერთ. ფასი)"),"aria-pressed":String((S.gmode||"qty")===k),onclick:()=>{ S.gmode=k; S.gscroll={x:wrap.scrollLeft,y:wrap.scrollTop}; render(); }},l))),
-      ghLbl("calendar","მასშტაბი: დღე, კვირა, თვე"),seg,ghLbl("layers","დაჯგუფების დონე"),outline,gFullBtn()),
+      ghLbl("calendar","მასშტაბი: დღე, კვირა, თვე"),seg,ghLbl("layers","დაჯგუფების დონე"),h("span",{class:"g-lvrow"},outline,gFullBtn())),
     h("button",{class:"gh-col gh-terms",type:"button",title:tr("ანაზღაურების პირობების შეცვლა"),onclick:()=>{ S.gview="terms"; render(); window.scrollTo(0,0); }},
       h("div",{class:"gh-term gh-thead"},h("span",{class:"gh-th1"},"რესურსები"),h("span",{class:"gh-cost"},"ღირებულება"),h("span",null,"ანაზღაურების პირობები")),
       RES_TYPES.map(([t,c])=>{
@@ -1728,7 +1728,7 @@ function renderSchedule(p){
     paint();
     if(S.gfocusNew){ S.gfocusNew=false; const n=wrap.querySelector('input[data-new="1"]'); if(n) n.focus(); } });
   const units=[["lab","შრომა"],["eq","ტექნიკა"],["mat","მასალა"],["sub","ქვეკონტრაქტორი"],["all",""]].map(([k,t])=>h("datalist",{id:"g-units-"+k},unitsFor(t).map(u=>h("option",{value:u}))));
-  return h("div",{class:"sched"+(S.gFull?" g-full":"")},top,
+  return h("div",{class:"sched"+(S.gFull?" g-full":"")+(S.gFull==="grid"?" g-only":"")},top,
     rows.length?wrap:h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე.")),units,
     h("datalist",{id:"g-subs"},projSubs(p).map(x=>h("option",{value:x.name}))),
     S.gplan?renderPlanDialog(sc,positions,from,to):null);
@@ -1787,13 +1787,14 @@ function scheduleIssues(positions,T){
 document.addEventListener("focusin",e=>{ const t=e.target; if(t&&t.matches&&t.matches(".xtable input.x-in")) t.dataset.orig=t.value; });
 /* an icon naming a row of the view controls (its meaning on hover) */
 const ghLbl=(ic,t)=>h("span",{class:"gh-ll tip","data-tip":tr(t),"aria-label":tr(t)},icon(ic));
-/* schedule / execution plan in full screen: the page goes full screen and the grid fills it (survives redraws) */
+/* schedule / execution plan in full screen, two ways: with the top strip (views, resources, checks) or the grid alone */
 function gFullBtn(){
   if(!window._gFsHook){ window._gFsHook=true; document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElement&&S.gFull){ S.gFull=false; render(); } }); }
-  return h("button",{type:"button",class:"g-fs tip"+(S.gFull?" on":""),"data-tip":tr(S.gFull?"სრული ეკრანიდან გამოსვლა":"სრულ ეკრანზე"),"aria-label":tr("სრულ ეკრანზე"),onclick:()=>{
-    if(S.gFull){ S.gFull=false; if(document.fullscreenElement) document.exitFullscreen(); }
-    else { S.gFull=true; const de=document.documentElement; if(de.requestFullscreen) de.requestFullscreen().catch(()=>{}); }
-    render(); }},icon("expand")); }
+  const go=m=>{ if(S.gFull===m){ S.gFull=false; if(document.fullscreenElement) document.exitFullscreen(); }
+    else { const was=!!S.gFull; S.gFull=m; const de=document.documentElement; if(!was&&de.requestFullscreen) de.requestFullscreen().catch(()=>{}); }
+    render(); };
+  const b=(m,ic,tip)=>h("button",{type:"button",class:"g-fs tip"+(S.gFull===m?" on":""),"data-tip":tr(S.gFull===m?"სრული ეკრანიდან გამოსვლა":tip),"aria-label":tr(tip),"aria-pressed":String(S.gFull===m),onclick:()=>go(m)},icon(ic));
+  return h("span",{class:"g-fsr"},b("all","expand","სრულ ეკრანზე — ზედა ზოლით"),b("grid","grid","სრულ ეკრანზე — მხოლოდ ცხრილი")); }
 function checksView(issues,active,pick){
   return h("div",{class:"gh-col gh-checks "+(issues.length?"gh-alert":"gh-okc")},
     h("div",{class:"gh-thead"},h("span",{class:"gh-at"},issues.length?"⚠":"✓"),"კონტროლი",active?h("button",{class:"gh-clr",type:"button",onclick:()=>pick(null)},"✕ ",h("span",null,"ფილტრის მოხსნა")):null),
@@ -2109,13 +2110,13 @@ function renderExec(p){
   /* header like the schedule's: view and levels | item counts | checks | add dates; rebuilt after each entry */
   const buildTop=()=>{ const {out,planned}=execIssues();
     return h("div",{class:"g-head2"},
-    h("div",{class:"gh-col gh-left gh-view"},ghLbl("chart","ჩვენება: რაოდენობა ან ღირებულება"),mode,ghLbl("layers","დაჯგუფების დონე"),outline,gFullBtn()),
+    h("div",{class:"gh-col gh-left gh-view"},ghLbl("chart","ჩვენება: რაოდენობა ან ღირებულება"),mode,ghLbl("layers","დაჯგუფების დონე"),h("span",{class:"g-lvrow"},outline,gFullBtn())),
     checksView(out,S.xfilter,k=>{ S.xfilter=k; redraw(); }),
     h("span",{class:"spacer"}),
     h("div",{class:"g-ctrls"},h("span",{id:"sched-status",class:"small muted"},edit?"":"მხოლოდ ნახვა"),
       edit?addBtn("btn primary"):null,edit?seriesBtn("btn primary"):null)); };
   const top=buildTop();
-  return h("div",{class:"sched"+(S.gFull?" g-full":"")},top,
+  return h("div",{class:"sched"+(S.gFull?" g-full":"")+(S.gFull==="grid"?" g-only":"")},top,
     !all.length?h("div",{class:"empty"},h("p",{class:"muted"},"ჯერ ატვირთეთ ხარჯთაღრიცხვა „ხარჯთაღრიცხვის“ ჩანართზე."))
     :null,S.xseries&&edit?seriesDlg():null,
     !all.length?null:!ex.dates.length&&!pend.n?[wrap,h("div",{class:"empty"},h("p",{class:"muted"},edit?"დაამატეთ პირველი თარიღი ღილაკით „+“.":"თარიღები ჯერ არ არის დამატებული."))]:wrap);
