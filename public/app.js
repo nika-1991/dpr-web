@@ -2611,7 +2611,7 @@ function cfData(p,sc=S.sched){
      short- and long-term retention held from every payment and returned like ours */
   const subsOut=[];
   for(const a of SA.values()){ const sp=a.sp, it=a.items.sort((x,y)=>x.d.localeCompare(y.d)); if(!it.length) continue;
-    const TV=it.reduce((s,x)=>s+x.v,0), A=TV*num(sp.adv)/100, rs=num(sp.retShort), rl=num(sp.retLong);
+    const TV=it.reduce((s,x)=>s+x.v,0), A=sp.advType==="amt"?Math.min(num(sp.advAmt),TV):TV*num(sp.adv)/100, rs=num(sp.retShort), rl=num(sp.retLong);
     const wa=(sp.advFrom!=null?num(sp.advFrom):0)/100*TV, wb=(sp.advTo!=null?num(sp.advTo):100)/100*TV;
     let cum=0, last=it[0].pd, hs=0, hl=0;
     if(A) put("subAdv",sp.advDate||it[0].d,-A,a.n);
@@ -2872,7 +2872,7 @@ function renderAdvOut(p){
     h("button",{type:"button","aria-pressed":String((byM?"m":"d")===k),class:"vbtn vtxt"+((byM?"m":"d")===k?" on":""),onclick:()=>{ S.aoView=k; render(); }},tr(l))));
   return h("div",{class:"an-both"},sw,L.map(x=>{ const sp=x.sp, rS=num(sp.retShort), rL=num(sp.retLong);
     const rule=sp.mode==="f2"?tr("ფორმა 2-ზე მიბმული")+(num(sp.days)?" + "+fmtNum(num(sp.days))+" "+tr("დღე"):""):tr("შესრულებიდან")+" "+fmtNum(num(sp.days))+" "+tr("დღეში");
-    const terms=anTerms(x.n,[["გეგმიური ღირებულება",anMoney(x.TV)],["ავანსის თარიღი",fmtDate(x.advDay)],["ავანსის თანხა",anPct(sp.adv)+" — "+anMoney(x.A),"an-b an-r2"],
+    const terms=anTerms(x.n,[["გეგმიური ღირებულება",anMoney(x.TV)],["ავანსის თარიღი",fmtDate(x.advDay)],["ავანსის თანხა",anPct(x.TV?Math.round(x.A/x.TV*1000)/10:0)+" — "+anMoney(x.A),"an-b an-r2"],
       ["ავანსის გაქვითვა",anPct(sp.advFrom!=null?sp.advFrom:0)+" — "+anPct(sp.advTo!=null?sp.advTo:100)],"gap",["გადახდა",rule],"gap",["ხარისხის დაკავება",anPct(rS)+" + "+anPct(rL)]]);
     /* one row per payment date */
     const G=new Map(); for(const it of x.items){ const k=byM?it.pd.slice(0,7):it.pd, g=G.get(k)||G.set(k,{v:0,ded:0,cum:0,last:it.pd}).get(k); g.v+=it.v; g.ded+=it.ded||0; g.cum=Math.max(g.cum,it.cum); if(it.pd>g.last) g.last=it.pd; }
@@ -3066,7 +3066,8 @@ function renderProjLists(p,TY="ტექნიკა"){
 /* the project's subcontractors: those planned in the schedule (totalled) plus those entered by hand / in the project data */
 const subPayLabel=sp=>{ if(!sp) return tr("მიუთითეთ პირობა");
   const a=[sp.mode==="f2"?tr("ფორმა 2")+(num(sp.days)?" +"+fmtNum(num(sp.days))+" "+tr("დღე"):""):"+"+fmtNum(num(sp.days))+" "+tr("დღე")];
-  if(num(sp.adv)) a.push(tr("ავანსი")+" "+fmtNum(num(sp.adv))+"%"+(sp.advFrom!=null||sp.advTo!=null?" ("+fmtNum(num(sp.advFrom))+"–"+fmtNum(sp.advTo??100)+"%)":""));
+  if(sp.advType==="amt"&&num(sp.advAmt)) a.push(tr("ავანსი")+" "+gel0(num(sp.advAmt)));
+  else if(num(sp.adv)) a.push(tr("ავანსი")+" "+fmtNum(num(sp.adv))+"%"+(sp.advFrom!=null||sp.advTo!=null?" ("+fmtNum(num(sp.advFrom))+"–"+fmtNum(sp.advTo??100)+"%)":""));
   const s1=num(sp.retShort??sp.ret), s2=num(sp.retLong); if(s1||s2) a.push(tr("დაკ.")+" "+fmtNum(s1)+(s2?"+"+fmtNum(s2):"")+"%"); return a.join(" · "); };
 function renderProjSubs(p){
   if(S.schedPid!==S.pid){ loadSchedule(S.pid); return h("div",{class:"empty"},h("p",{class:"muted"},"იტვირთება…")); }
@@ -3093,7 +3094,16 @@ function renderProjSubs(p){
       h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("გადახდა")),fld("გადახდის წესი",sl("mode","გადახდის წესი",[["days","შესრულებიდან N დღეში"],["f2","ფორმა 2-ზე მიბმული (back-to-back)"]],true)),
         fld(d.mode==="f2"?"+ დღე ჩვენი თანხის მიღების შემდეგ":"დღე შესრულებიდან",ni("days","დღეები")),
         h("small",{class:"muted sb-n"},tr(d.mode==="f2"?"გადავუხდით, როცა დამკვეთი გადაგვიხდის ამ სამუშაოს შემცველ ფორმა 2-ს.":"ყოველი დღის შესრულება გადაიხდება N დღის შემდეგ."))),
-      h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("ავანსი")),fld("ავანსი %",ni("adv","ავანსი %",{max:"100"}),x.val?tr("გეგმიური ღირებულებიდან")+" "+gel0(x.val):null),
+      h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("ავანსი")),
+        h("div",{class:"sb-pv"},h("span",null,tr("გეგმიური ღირებულება")),h("b",null,x.val?gel0(x.val):"—")),
+        /* the advance as a share of the planned value or as a fixed amount; the other is shown under it */
+        (()=>{ const isAmt=d.advType==="amt", hint=h("small",{class:"muted"}), upd=()=>{ const a=isAmt?num(d.advAmt):x.val*num(d.adv)/100;
+            hint.textContent=isAmt?(x.val&&a?fmtNum(Math.round(a/x.val*1000)/10)+"% "+tr("გეგმიური ღირებულებიდან"):""):(a?"= "+gel0(a):""); };
+          const inp=h("input",{class:"inp num",type:"number",min:"0",step:"any",value:String((isAmt?d.advAmt:d.adv)??""),"aria-label":tr(isAmt?"ავანსის თანხა":"ავანსი %"),...(isAmt?{}:{max:"100"}),
+            oninput:e=>{ if(isAmt) d.advAmt=e.target.value; else d.adv=e.target.value; upd(); }});
+          const ty=h("select",{class:"inp sb-ty","aria-label":tr("ავანსის სახე"),onchange:e=>{ d.advType=e.target.value; render(); }},h("option",{value:"pct"},"%"),h("option",{value:"amt"},"₾"));
+          ty.value=isAmt?"amt":"pct"; upd();
+          return h("label",{class:"sb-f"},h("span",null,tr("ავანსი")),h("div",{class:"sb-row"},inp,ty),hint); })(),
         fld("გაცემის თარიღი",h("input",{class:"inp",type:"date",value:d.advDate||"","aria-label":tr("ავანსის გაცემის თარიღი"),onchange:e=>{ d.advDate=e.target.value; }}),tr("ცარიელი — პირველი სამუშაოს დღე")),
         fld("ავანსის გაქვითვა",h("div",{class:"sb-row sb-pct"},ni("advFrom","გაქვითვა იწყება, %",{max:"100",placeholder:"0"}),h("span",null,"% –"),ni("advTo","გაქვითვა მთავრდება, %",{max:"100",placeholder:"100"}),h("span",null,"%")),
           tr("შესრულების რომელ %-ებს შორის; 0–100 — პროპორციულად სრულად"))),
@@ -3104,7 +3114,7 @@ function renderProjSubs(p){
         fld("გრძელვადიანის დაბრუნება",h("div",{class:"sb-row"},sl("retLongMode","გრძელვადიანის დაბრუნება",[["guar","მოკლევადიანთან ერთად (გარანტიით)"],["months","საგარანტიო პერიოდის ბოლოს"]],true),
           d.retLongMode==="months"?h("span",{class:"sb-row sb-n2"},ni("retLongMonths","თვეები"),h("span",null,tr("თვე"))):null))),
       h("div",{class:"sb-act"},h("button",{class:"btn sm primary",type:"button",onclick:()=>{ const o=v=>v===""||v==null?null:num(v);
-          const pay={mode:d.mode,days:num(d.days),adv:num(d.adv),advDate:d.advDate||"",advFrom:o(d.advFrom),advTo:o(d.advTo),retShort:num(d.retShort),retLong:num(d.retLong),
+          const pay={mode:d.mode,days:num(d.days),advType:d.advType==="amt"?"amt":"pct",advAmt:num(d.advAmt),adv:d.advType==="amt"?0:num(d.adv),advDate:d.advDate||"",advFrom:o(d.advFrom),advTo:o(d.advTo),retShort:num(d.retShort),retLong:num(d.retLong),
             retShortMode:d.retShortMode,retShortDays:num(d.retShortDays),retLongMode:d.retLongMode,retLongMonths:d.retLongMonths===""?24:num(d.retLongMonths)};
           if(pay.advFrom!=null&&pay.advTo!=null&&pay.advTo<=pay.advFrom){ toast(tr("გაქვითვის დასასრული დასაწყისზე მეტი უნდა იყოს")); return; }
           S.psDraft=null; setPay(x,pay); }},tr("შენახვა")),

@@ -3135,3 +3135,6 @@ main:has(.pr-card){padding-bottom:6px!important}
 .rt td.pg-name{max-width:360px}
 .pg-name .g-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
 .rt tr.prog td{padding-top:5px;padding-bottom:5px}
+.sb-pv{display:flex;justify-content:space-between;gap:8px;font-size:.7rem;color:#64748b;padding:2px 0 4px;border-bottom:1px dashed #e3e8ee}
+.sb-pv b{color:#1f2a37}
+.sb-row .sb-ty{flex:0 0 52px!important;padding:0 4px}

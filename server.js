@@ -433,7 +433,7 @@ const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
    an advance (% of its planned value, recovered pro rata from every payment) and a retention (% held, returned after its last payment) */
 const cleanSubPay = (v) => { const n = (x, a, b) => { const k = Number(x); return Number.isFinite(k) ? Math.max(a, Math.min(b, k)) : 0; }, d = (x) => (/^\d{4}-\d{2}-\d{2}$/.test(String(x || "")) ? String(x) : "");
   const o = (x, a, b) => (x === "" || x == null ? null : n(x, a, b));
-  return { mode: v.mode === "f2" ? "f2" : "days", days: n(v.days, 0, 365), adv: n(v.adv, 0, 100), advDate: d(v.advDate), advFrom: o(v.advFrom, 0, 100), advTo: o(v.advTo, 0, 100),
+  return { mode: v.mode === "f2" ? "f2" : "days", days: n(v.days, 0, 365), advType: v.advType === "amt" ? "amt" : "pct", advAmt: n(v.advAmt, 0, 1e12), adv: n(v.adv, 0, 100), advDate: d(v.advDate), advFrom: o(v.advFrom, 0, 100), advTo: o(v.advTo, 0, 100),
     retShort: n(v.retShort ?? v.ret, 0, 100), retLong: n(v.retLong, 0, 100), retShortMode: v.retShortMode === "days" ? "days" : "with", retShortDays: n(v.retShortDays, 0, 3650),
     retLongMode: v.retLongMode === "guar" ? "guar" : "months", retLongMonths: v.retLongMonths === "" || v.retLongMonths == null ? 24 : n(v.retLongMonths, 0, 240) }; };
 const cleanMachines = (v) => { const seen = new Set(); return (Array.isArray(v) ? v : []).map((x) => String(x ?? "").trim().slice(0, 120)).filter((x) => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase())).slice(0, 300).sort((a, b) => a.localeCompare(b, "ka")); };
