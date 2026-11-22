@@ -1293,14 +1293,19 @@ function renderProgress(p){
   const tid=uid();
   const toggle=h("label",{class:"check small",for:tid},h("input",{id:tid,type:"checkbox",checked:S.onlyApproved,onchange:e=>{S.onlyApproved=e.target.checked;render();}}),"მხოლოდ დადასტურებული ანგარიშები");
   const rows=[];
+  /* BoQ column like the execution plan: chapters and subchapters as grey bands with fold arrows, positions indented, names on one line (full text on hover) */
+  const fold=S.pgFold||(S.pgFold=new Set()); let inSub=false, chapK=null, subK=null;
+  const tg=(k,name)=>h("button",{class:"g-fold",type:"button","aria-expanded":String(!fold.has(k)),"aria-label":(fold.has(k)?tr("გაშლა"):tr("აკეცვა"))+": "+(name||""),onclick:()=>{ fold.has(k)?fold.delete(k):fold.add(k); render(); }},fold.has(k)?"▷":"◢");
+  const codeTd=(d,k,it,head)=>h("td",{class:"mono pg-code"},h("div",{class:"g-code",style:"padding-left:"+d*14+"px"},k?tg(k,it.name):h("span",{class:"g-fold-gap","aria-hidden":"true"}),h("span",{class:head?"g-chead":"g-cpos"},it.code||"")));
   for(const it of idx.values()){
-    if(it.type==="თავი"){ rows.push(h("tr",{class:"chap"},h("td",{class:"mono"},it.code),h("td",{colspan:"8"},it.name))); continue; }
-    if(it.type==="ქვეთავი"){ rows.push(h("tr",{class:"sub"},h("td",{class:"mono"},it.code),h("td",{colspan:"8"},it.name))); continue; }
+    if(it.type==="თავი"){ chapK="c"+it.code; subK=null; inSub=false; rows.push(h("tr",{class:"pg-head"},codeTd(0,chapK,it,true),h("td",{colspan:"8"},h("div",{class:"pg-hname",title:it.name||""},it.name)))); continue; }
+    if(it.type==="ქვეთავი"){ subK="s"+it.code; inSub=true; if(chapK&&fold.has(chapK)) continue; rows.push(h("tr",{class:"pg-head sub"},codeTd(1,subK,it,true),h("td",{colspan:"8"},h("div",{class:"pg-hname",title:it.name||""},it.name)))); continue; }
+    if((chapK&&fold.has(chapK))||(inSub&&subK&&fold.has(subK))) continue;
     const x=stat(it);
     const hist=x.d?x.d.days.sort((a,b)=>a[0]<b[0]?-1:1).map(([dt,q])=>fmtDate(dt,true)+": "+fmtNum(q)).join(" · "):"";
     rows.push(h("tr",{class:"prog"},
-      h("td",{class:"mono"},it.code),
-      h("td",{style:"min-width:240px"},it.name,it.additional?h("span",{class:"code-tag",style:"margin-left:6px"},"დამატ."):null,hist?h("div",{class:"hist"},hist):null),
+      codeTd(inSub?2:1,null,it,false),
+      h("td",{class:"pg-name"},h("div",{class:"g-name",title:it.name||""},it.name,it.additional?h("span",{class:"code-tag",style:"margin-left:6px"},"დამატ."):null),hist?h("div",{class:"hist"},hist):null),
       h("td",null,it.unit||""),
       h("td",{class:"num"},x.tot?fmtNum(x.tot):"—"),
       h("td",{class:"num"},fmtNum(x.q)),

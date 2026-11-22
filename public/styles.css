@@ -3127,3 +3127,11 @@ main:has(.pr-card){padding-bottom:6px!important}
 .pf-btn{width:78px;justify-content:flex-start}
 .pf-btn .ptg-t{flex:1;text-align:center}
 .pf-f{display:flex;justify-content:flex-end;gap:6px;border-top:1px solid #e3e8ee;margin-top:4px;padding:6px 4px 2px}
+/* progress: BoQ code and name styled like the execution plan */
+.rt tr.pg-head td{background:#e9ebee;font-weight:700;color:#1f2a37;padding-top:6px;padding-bottom:6px}
+.rt tr.pg-head.sub td{background:#f3f4f6}
+.rt td.pg-code{white-space:nowrap;width:1%}
+.pg-hname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:560px}
+.rt td.pg-name{max-width:360px}
+.pg-name .g-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
+.rt tr.prog td{padding-top:5px;padding-bottom:5px}
