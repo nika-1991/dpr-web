@@ -3138,3 +3138,24 @@ main:has(.pr-card){padding-bottom:6px!important}
 .sb-pv{display:flex;justify-content:space-between;gap:8px;font-size:.7rem;color:#64748b;padding:2px 0 4px;border-bottom:1px dashed #e3e8ee}
 .sb-pv b{color:#1f2a37}
 .sb-row .sb-ty{flex:0 0 52px!important;padding:0 4px}
+/* subcontractor terms: label beside the field, square fields, no spin arrows, notes on hover */
+.sb-grp{width:300px}
+.sb-grp.sb-wide{width:340px}
+.sb-f{display:grid!important;grid-template-columns:118px minmax(0,1fr);align-items:center;column-gap:8px;flex-direction:initial}
+.sb-f>span:first-child{font-size:.68rem;color:#475569;line-height:1.2}
+.sb-box .inp,.sb-box select.inp{border-radius:3px!important;height:26px!important;font-size:.74rem;box-shadow:none!important}
+.sb-box input::-webkit-outer-spin-button,.sb-box input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.sb-box input[type=number]{-moz-appearance:textfield}
+.sb-row{align-items:center}
+.sb-row .sb-ty{flex:0 0 46px!important}
+.sb-eq{font-size:.64rem;white-space:nowrap;flex:0 0 auto}
+.sb-n,.sb-f>small{display:none}
+.sb-t[title]{cursor:help;text-decoration:underline dotted #94a3b8;text-underline-offset:3px}
+.sb-f[title]>span:first-child{cursor:help;text-decoration:underline dotted #cbd5e1;text-underline-offset:3px}
+.sb-wide .sb-row>.sb-f{grid-template-columns:auto 60px}
+.sb-pct{flex-wrap:nowrap!important}.sb-pct .inp{width:52px!important;flex:0 0 52px!important}.sb-pct span{white-space:nowrap}
+.sb-grp.sb-wide{width:440px}
+.sb-wide .sb-f{grid-template-columns:120px minmax(0,1fr)}
+.sb-wide .sb-row>.sb-f{grid-template-columns:auto 64px}
+.sb-wide .sb-row>.sb-f>span:first-child{white-space:nowrap}
+.sb-wide select.inp{min-width:170px}

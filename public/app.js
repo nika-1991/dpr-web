@@ -3087,23 +3087,24 @@ function renderProjSubs(p){
   const NC=10;
   const editor=x=>{ const d=S.psDraft&&S.psDraft.n===x.n?S.psDraft:(S.psDraft={n:x.n,mode:"days",days:"",adv:"",advDate:"",advFrom:"",advTo:"",retShort:"",retLong:"",
       retShortMode:"with",retShortDays:"",retLongMode:"months",retLongMonths:24,...(x.pay||{}),...(x.pay&&x.pay.mode==="std"?{mode:"days"}:{})});
-    const fld=(l,el,hint)=>h("label",{class:"sb-f"},h("span",null,tr(l)),el,hint?h("small",{class:"muted"},hint):null);
-    const ni=(k,l,a={})=>h("input",{class:"inp num",type:"number",min:"0",step:"any",value:String(d[k]??""),"aria-label":tr(l),...a,oninput:e=>{ d[k]=e.target.value; }});
+    /* label beside its field; explanations only on hover */
+    const fld=(l,el,hint)=>h("label",{class:"sb-f",title:hint||null},h("span",null,tr(l)),el);
+    const ni=(k,l,a={})=>h("input",{class:"inp num",type:"text",inputmode:"decimal",value:String(d[k]??""),"aria-label":tr(l),...a,oninput:e=>{ d[k]=e.target.value; }});
     const sl=(k,l,opts,re)=>{ const el=h("select",{class:"inp","aria-label":tr(l),onchange:e=>{ d[k]=e.target.value; if(re) render(); }},opts.map(([v,t])=>h("option",{value:v},tr(t)))); el.value=d[k]; return el; };
     const box=h("div",{class:"sb-box"},
-      h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("გადახდა")),fld("გადახდის წესი",sl("mode","გადახდის წესი",[["days","შესრულებიდან N დღეში"],["f2","ფორმა 2-ზე მიბმული (back-to-back)"]],true)),
+      h("div",{class:"sb-grp"},h("div",{class:"sb-t",title:tr(d.mode==="f2"?"გადავუხდით, როცა დამკვეთი გადაგვიხდის ამ სამუშაოს შემცველ ფორმა 2-ს.":"ყოველი დღის შესრულება გადაიხდება N დღის შემდეგ.")},tr("გადახდა")),fld("გადახდის წესი",sl("mode","გადახდის წესი",[["days","შესრულებიდან N დღეში"],["f2","ფორმა 2-ზე მიბმული (back-to-back)"]],true)),
         fld(d.mode==="f2"?"+ დღე ჩვენი თანხის მიღების შემდეგ":"დღე შესრულებიდან",ni("days","დღეები")),
-        h("small",{class:"muted sb-n"},tr(d.mode==="f2"?"გადავუხდით, როცა დამკვეთი გადაგვიხდის ამ სამუშაოს შემცველ ფორმა 2-ს.":"ყოველი დღის შესრულება გადაიხდება N დღის შემდეგ."))),
+        ),
       h("div",{class:"sb-grp"},h("div",{class:"sb-t"},tr("ავანსი")),
         h("div",{class:"sb-pv"},h("span",null,tr("გეგმიური ღირებულება")),h("b",null,x.val?gel0(x.val):"—")),
         /* the advance as a share of the planned value or as a fixed amount; the other is shown under it */
-        (()=>{ const isAmt=d.advType==="amt", hint=h("small",{class:"muted"}), upd=()=>{ const a=isAmt?num(d.advAmt):x.val*num(d.adv)/100;
-            hint.textContent=isAmt?(x.val&&a?fmtNum(Math.round(a/x.val*1000)/10)+"% "+tr("გეგმიური ღირებულებიდან"):""):(a?"= "+gel0(a):""); };
-          const inp=h("input",{class:"inp num",type:"number",min:"0",step:"any",value:String((isAmt?d.advAmt:d.adv)??""),"aria-label":tr(isAmt?"ავანსის თანხა":"ავანსი %"),...(isAmt?{}:{max:"100"}),
+        (()=>{ const isAmt=d.advType==="amt", hint=h("small",{class:"muted sb-eq"}), upd=()=>{ const a=isAmt?num(d.advAmt):x.val*num(d.adv)/100;
+            hint.textContent=isAmt?(x.val&&a?"= "+fmtNum(Math.round(a/x.val*1000)/10)+"%":""):(a?"= "+gel0(a):""); };
+          const inp=h("input",{class:"inp num",type:"text",inputmode:"decimal",value:String((isAmt?d.advAmt:d.adv)??""),"aria-label":tr(isAmt?"ავანსის თანხა":"ავანსი %"),
             oninput:e=>{ if(isAmt) d.advAmt=e.target.value; else d.adv=e.target.value; upd(); }});
           const ty=h("select",{class:"inp sb-ty","aria-label":tr("ავანსის სახე"),onchange:e=>{ d.advType=e.target.value; render(); }},h("option",{value:"pct"},"%"),h("option",{value:"amt"},"₾"));
           ty.value=isAmt?"amt":"pct"; upd();
-          return h("label",{class:"sb-f"},h("span",null,tr("ავანსი")),h("div",{class:"sb-row"},inp,ty),hint); })(),
+          return h("label",{class:"sb-f"},h("span",null,tr("ავანსი")),h("div",{class:"sb-row"},ty,inp,hint)); })(),
         fld("გაცემის თარიღი",h("input",{class:"inp",type:"date",value:d.advDate||"","aria-label":tr("ავანსის გაცემის თარიღი"),onchange:e=>{ d.advDate=e.target.value; }}),tr("ცარიელი — პირველი სამუშაოს დღე")),
         fld("ავანსის გაქვითვა",h("div",{class:"sb-row sb-pct"},ni("advFrom","გაქვითვა იწყება, %",{max:"100",placeholder:"0"}),h("span",null,"% –"),ni("advTo","გაქვითვა მთავრდება, %",{max:"100",placeholder:"100"}),h("span",null,"%")),
           tr("შესრულების რომელ %-ებს შორის; 0–100 — პროპორციულად სრულად"))),
