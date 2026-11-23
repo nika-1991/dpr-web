@@ -1662,7 +1662,7 @@ function renderSchedule(p){
       codeCell(r,null),
       h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
         resTypePick(r.x.type,c,edit,ri,t=>{ r.x.type=t; changed(); }),
-        inp(r.x.name,v=>{ const t=r.x.type, nv=String(v||"").trim(), known=!nv||resBase(t,r.x).some(o=>o.toLowerCase()===nv.toLowerCase()); r.x.name=v; changed(); if(!known&&edit) offerRes(t,nv); },{class:"g-in g-rn",placeholder:"დასახელება არაა","data-rtype":r.x.type,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
+        inp(r.x.name,v=>{ const t=r.x.type, nv=String(v||"").trim(), known=!nv||resBase(t,r.x).some(o=>o.toLowerCase()===nv.toLowerCase()); r.x.name=v; changed(); if(!known&&edit) offerRes(t,nv); },{class:"g-in g-rn rt-"+c,placeholder:"დასახელება არაა","data-rtype":r.x.type,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
         edit?h("button",{class:"g-del",type:"button",tabindex:"-1","aria-label":"რესურსის წაშლა",title:"წაშლა",onclick:()=>{ r.sr.res.splice(r.sr.res.indexOf(r.x),1); changed(); }},"✕"):null)),
       ...["vat","pit"].map((k,j)=>h("td",{class:"g-fz f"+(2+j)+" g-tax"},h("input",{type:"checkbox",checked:taxOf(r.x,k),disabled:!edit,"aria-label":(k==="vat"?"დღგ":"საშ.")+": "+(r.x.name||""),
         onchange:e=>{ r.x[k]=e.target.checked; saveSchedule(); }}))),
