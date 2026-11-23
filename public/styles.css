@@ -3224,3 +3224,6 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable .g-head.sub td,.gtable .g-head.sub td.g-fz{background:#dbe0e6!important}
 .gtable .g-pos td,.gtable .g-pos td.g-fz{background:#e6e9ed!important}
 .gtable .g-head:not(.sub) td,.gtable .g-head:not(.sub) td.g-fz{background:#bcc4cd!important}
+/* weekends marked only in the date heading, not in the grid */
+.gtable td.gc.we,.gtable .g-head td.gc.we,.gtable .g-pos td.gc.we,.gtable .g-res td.gc.we{background-image:none!important}
+.gtable tr:not(.g-head):not(.g-pos):not(.g-res) td.gc.we{background:var(--surface)!important}
