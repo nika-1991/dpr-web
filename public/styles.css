@@ -3246,3 +3246,8 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable td.g-tax input[type=checkbox]{accent-color:#86cfb4}
 /* a clear divider between the fixed left columns and the date grid */
 .gtable:not(.xtable) .f7,.xtable .f5{border-right:2px solid #64748b!important;box-shadow:3px 0 6px -3px rgba(15,23,42,.25)}
+/* VAT / income-tax checkboxes: light green with a white tick */
+.gtable td.g-tax input[type=checkbox]{-webkit-appearance:none;appearance:none;width:14px;height:14px;margin:0;border:1.5px solid #a8b3bf;border-radius:3px;background:#fff;vertical-align:middle;cursor:pointer}
+.gtable td.g-tax input[type=checkbox]:checked{background:#5dbf98 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat;border-color:#5dbf98}
+.gtable td.g-tax input[type=checkbox]:disabled{cursor:default;opacity:.8}
+.gtable td.g-tax input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}

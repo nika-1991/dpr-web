@@ -763,6 +763,23 @@ function projMachines0(){ const p=P(), set=new Map(), add=v=>{ v=String(v||"").t
   return sortKa([...set.values()]); }
 /* a typed machine not yet in the list: ask, and on yes add it so it can be picked next time */
 /* a machine typed in a daily report that isn't in the project's list: ask, and on yes add it to the project's list */
+/* the project's names for a resource type: its saved list plus names already used in the schedule (except the row being edited) */
+function resBase(type,skip){ const p=P(), m=new Map(), add=v=>{ v=String(v||"").trim(); if(v&&!m.has(v.toLowerCase())) m.set(v.toLowerCase(),v); };
+  if(type==="ტექნიკა") ((p&&p.machines)||[]).forEach(add);
+  else if(type==="ქვეკონტრაქტორი") projSubs(p).forEach(x=>add(x.name));
+  else (((p&&p.resLists)||{})[type]||[]).forEach(add);
+  if(S.sched&&S.schedPid===S.pid) for(const r of Object.values(S.sched.rows||{})) for(const x of r.res||[]) if(x!==skip&&x.type===type) add(x.name);
+  return [...m.values()]; }
+/* a name that is in no list yet: ask, then add it to the project's list for that type */
+async function offerRes(type,v){ if(!v) return;
+  if(!confirm(tr("ასეთი რესურსი ბაზაში არაა. დავამატო ბაზაში?")+"\n„"+v+"“ — "+tr(type))) return;
+  const p=P(); if(!p) return;
+  try{
+    if(type==="ტექნიკა"){ const r=await api("POST","/projects/"+encodeURIComponent(S.pid)+"/machines",{value:v}); p.machines=r.machines; }
+    else if(type==="ქვეკონტრაქტორი"){ const subs=[...projSubs(p).map(x=>({id:x.id&&!String(x.id).startsWith("o")?x.id:Math.random().toString(36).slice(2,8),name:x.name,contact:x.contact||"",...(x.pay?{pay:x.pay}:{})})),{id:Math.random().toString(36).slice(2,8),name:v,contact:""}];
+      await saveProject(S.pid,{subs,participants:{...(p.participants||{}),subcontractors:subs.map(x=>x.name+(x.contact?" — "+x.contact:"")).join("; ")}}); }
+    else { const L={...(p.resLists||{})}; L[type]=[...(L[type]||[]),v]; await saveProject(S.pid,{resLists:L}); }
+    toast(tr("ბაზას დაემატა")); }catch(e){ toast(errMsg(e)); } }
 async function offerMachine(v){ v=String(v||"").trim(); if(!v||projMachines().some(o=>o.toLowerCase()===v.toLowerCase())) return;
   if(!confirm(tr("ნამდვილად გსურთ სიაში დამატება?")+"\n„"+v+"“")) return;
   try{ const r=await api("POST","/projects/"+encodeURIComponent(S.pid)+"/machines",{value:v}); const p=P(); if(p) p.machines=r.machines; toast(tr("პროექტის სიას დაემატა")); }catch(e){ toast(errMsg(e)); } }
@@ -1535,7 +1552,11 @@ function renderSchedule(p){
   const rebuild=()=>{ S.gscroll={x:wrap.scrollLeft,y:wrap.scrollTop}; render(); };
   const changed=()=>{ saveSchedule(); setTimeout(()=>{ const a=document.activeElement, key=a&&a.dataset?a.dataset.f:null; rebuild();
     if(key){ const n=document.querySelector('[data-f="'+key+'"]'); if(n) n.focus(); } },0); };
-  const inp=(val,on,attrs={})=>{ const el=h("input",{class:"g-in",value:val??"",disabled:!edit,onchange:e=>on(e.target.value),...attrs}); if(attrs["data-mach"]&&edit) suggest(el,projMachines); return el; };
+  const inp=(val,on,attrs={})=>{ const el=h("input",{class:"g-in",value:val??"",disabled:!edit,onchange:e=>on(e.target.value),...attrs});
+    if(attrs["data-mach"]&&edit) suggest(el,projMachines);
+    /* resource names: suggestions from the project's list for that type */
+    if(attrs["data-rtype"]&&edit){ const t=attrs["data-rtype"]; suggest(el,()=>resBase(t).sort((a,b)=>a.localeCompare(b,"ka"))); }
+    return el; };
   const numOrNull=v=>v.trim()===""?null:num(v);
 
   /* top: title and counts, period, zoom, today, plan */
@@ -1641,7 +1662,7 @@ function renderSchedule(p){
       codeCell(r,null),
       h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
         resTypePick(r.x.type,c,edit,ri,t=>{ r.x.type=t; changed(); }),
-        inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა",list:r.x.type==="ქვეკონტრაქტორი"?"g-subs":null,"data-mach":r.x.type==="ტექნიკა"?"1":null,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
+        inp(r.x.name,v=>{ const t=r.x.type, nv=String(v||"").trim(), known=!nv||resBase(t,r.x).some(o=>o.toLowerCase()===nv.toLowerCase()); r.x.name=v; changed(); if(!known&&edit) offerRes(t,nv); },{class:"g-in g-rn",placeholder:"დასახელება არაა","data-rtype":r.x.type,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
         edit?h("button",{class:"g-del",type:"button",tabindex:"-1","aria-label":"რესურსის წაშლა",title:"წაშლა",onclick:()=>{ r.sr.res.splice(r.sr.res.indexOf(r.x),1); changed(); }},"✕"):null)),
       ...["vat","pit"].map((k,j)=>h("td",{class:"g-fz f"+(2+j)+" g-tax"},h("input",{type:"checkbox",checked:taxOf(r.x,k),disabled:!edit,"aria-label":(k==="vat"?"დღგ":"საშ.")+": "+(r.x.name||""),
         onchange:e=>{ r.x[k]=e.target.checked; saveSchedule(); }}))),

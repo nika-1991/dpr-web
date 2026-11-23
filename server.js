@@ -426,7 +426,7 @@ api.get("/projects", auth, (req, res) => {
   const rows = db.prepare("SELECT id,data FROM projects").all().map((r) => withId(r.id, JSON.parse(r.data)));
   res.json(rows.filter((p) => canSee(p, req.user)).map((p) => ({ ...p, stats: projectStats(p, p.id) })));
 });
-const PROJECT_FIELDS = ["name", "shortName", "contractDate", "contractEnd", "startDate", "endDate", "contractValue", "advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover", "advanceDate", "retShortMode", "retShortDays", "retLongMode", "retLongMonths", "machines", "subs", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
+const PROJECT_FIELDS = ["name", "shortName", "contractDate", "contractEnd", "startDate", "endDate", "contractValue", "advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover", "advanceDate", "retShortMode", "retShortDays", "retLongMode", "retLongMonths", "machines", "resLists", "subs", "client", "location", "companyCode", "projectCode", "accountingCode", "participants", "boq", "memberIds", "members", "archived", "hse", "dprStart"];
 /* HSE items every new report starts with; each project can edit its own copy */
 const DEFAULT_HSE = require("./scripts/seed_proj.json").hse;
 /* a subcontractor's payment terms: when its works are paid (schedule terms / N days after the works / back-to-back with our form 2),
@@ -457,6 +457,8 @@ function cleanProject(body, base) {
   p.dprStart = Math.max(1, parseInt(p.dprStart, 10) || 1);
   for (const k of ["advancePct", "advFrom", "advTo", "retShort", "retLong", "cashCover"]) { const n = parseFloat(String(p[k] ?? "").replace(",", ".")); p[k] = isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * 100) / 100)) : null; }
   if (p.machines !== undefined) p.machines = cleanMachines(p.machines);
+  /* the project's own lists of labour and material names (machinery and subcontractors have theirs) */
+  if (p.resLists !== undefined) { const o = {}, v = p.resLists && typeof p.resLists === "object" ? p.resLists : {}; for (const k of ["შრომა", "მასალა"]) if (Array.isArray(v[k])) o[k] = cleanMachines(v[k]); p.resLists = o; }
   p.subs = (Array.isArray(p.subs) ? p.subs : []).slice(0, 100).map((x) => ({ id: String(x?.id ?? "").slice(0, 20) || newId(6), name: String(x?.name ?? "").trim().slice(0, 300), contact: String(x?.contact ?? "").trim().slice(0, 300), ...(x?.pay && typeof x.pay === "object" ? { pay: cleanSubPay(x.pay) } : {}) })).filter((x) => x.name);
   p.retShortMode = p.retShortMode === "days" ? "days" : "with";
   p.retLongMode = p.retLongMode === "guar" ? "guar" : "months";
