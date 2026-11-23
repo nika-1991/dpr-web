@@ -1585,8 +1585,9 @@ function renderSchedule(p){
   const lbl=ds=>ds.length?ddmm(ds[0])+" – "+ddmm(ds[ds.length-1]):"";
   const gridCells=(r,ri)=>{
     if(r.kind==="head"){
-      const ds=r.kids.flatMap(posDays).sort(), a=ds[0], b=ds[ds.length-1];
-      const on=cols.map(c=>!!a&&c.to>=a&&c.from<=b), last=on.lastIndexOf(true);
+      /* a chapter shows a black line only on the days something under it is planned */
+      const set=new Set(r.kids.flatMap(posDays));
+      const on=cols.map(c=>c.days.some(d=>set.has(d))), last=on.lastIndexOf(true);
       return cols.map((c,ci)=>h("td",{class:"gc gh"+gx(c)},
         on[ci]?h("div",{class:"gb sum"+(!on[ci-1]?" rs":"")+(!on[ci+1]?" re":"")}):null));
     }

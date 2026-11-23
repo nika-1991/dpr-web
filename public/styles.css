@@ -3227,3 +3227,4 @@ main:has(.pr-card){padding-bottom:6px!important}
 /* weekends marked only in the date heading, not in the grid */
 .gtable td.gc.we,.gtable .g-head td.gc.we,.gtable .g-pos td.gc.we,.gtable .g-res td.gc.we{background-image:none!important}
 .gtable tr:not(.g-head):not(.g-pos):not(.g-res) td.gc.we{background:var(--surface)!important}
+.gtable .g-head .gb.sum{background:#111827!important}
