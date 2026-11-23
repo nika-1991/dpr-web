@@ -3277,3 +3277,7 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable .g-res .gb.eq{background:#fdf4cf!important;border-color:#f1d77d!important;color:#9a5b06!important}
 .gtable .g-res .gb.mat{background:#e1f2fb!important;border-color:#a9d9f0!important;color:#1f74ad!important}
 .gtable .g-res .gb.subc{background:#fde6f0!important;border-color:#f5b6d1!important;color:#c0266b!important}
+/* position and chapter lines run on unbroken across days; only their ends are rounded */
+.gtable .g-pos .gb,.gtable .gp .gb,.gtable .g-head .gb{border-radius:0!important;left:-1px!important;right:-1px!important}
+.gtable .g-pos .gb.rs,.gtable .gp .gb.rs,.gtable .g-head .gb.rs{border-top-left-radius:3px!important;border-bottom-left-radius:3px!important;left:2px!important}
+.gtable .g-pos .gb.re,.gtable .gp .gb.re,.gtable .g-head .gb.re{border-top-right-radius:3px!important;border-bottom-right-radius:3px!important;right:2px!important}
