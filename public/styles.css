@@ -3209,3 +3209,4 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gh-term .gh-cost{font-family:var(--f-body)!important;font-variant-numeric:tabular-nums;font-size:.7rem!important;font-weight:700!important;color:#0f172a!important;letter-spacing:0}
 .gh-term .gh-cost.nil{font-weight:400!important;color:#94a3b8!important}
 .gh-term .gh-tv{font-size:.66rem!important}
+.g-rn::placeholder,.gtable .g-rn::placeholder{color:#1f2a37!important;opacity:1!important}.gtable .g-res .g-chip{font-weight:400!important;color:#1f2a37!important}
