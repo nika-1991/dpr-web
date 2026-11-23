@@ -3261,3 +3261,8 @@ main:has(.pr-card){padding-bottom:6px!important}
 /* no today line down the grid (today stays marked in the date heading) */
 .gtable td.gc.td{box-shadow:none!important;border-left-color:var(--g-line)!important}
 .gtable td.gc.td::before,.gtable td.gc.td::after{display:none!important}
+/* execution plan: compact entry cells and heading */
+.xtable td.x-c,.xtable td.x-sum,.xtable td.f4{padding-top:0!important;padding-bottom:0!important}
+.xtable input.g-in,.xtable input.x-in{height:18px!important;min-height:0!important;font-size:.7rem!important;padding-top:0!important;padding-bottom:0!important;line-height:18px}
+.xtable .x-cnt{min-height:0!important;padding:0 4px!important;line-height:1.2}
+.xtable thead th{padding-top:3px!important;padding-bottom:3px!important;line-height:1.15}
