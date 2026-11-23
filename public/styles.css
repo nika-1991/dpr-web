@@ -3212,3 +3212,8 @@ main:has(.pr-card){padding-bottom:6px!important}
 .g-rn::placeholder,.gtable .g-rn::placeholder{color:#1f2a37!important;opacity:1!important}.gtable .g-res .g-chip{font-weight:400!important;color:#1f2a37!important}
 .gtable .g-pos .gb,.gtable .gp .gb{height:6px!important;border-radius:3px!important;font-size:0!important}.gtable .g-res .gb{height:16px!important;border-radius:3px!important}
 .gtable .g-head .gb{height:6px!important;border-radius:3px!important;font-size:0!important}
+/* schedule: chapter and position rows a shade darker so white resource rows stand out */
+.gtable .g-head td,.gtable .g-head td.g-fz{background:#dfe3e8!important}
+.gtable .g-head.sub td,.gtable .g-head.sub td.g-fz{background:#e8ebef!important}
+.gtable .g-pos td,.gtable .g-pos td.g-fz{background:#f1f3f6!important}
+.gtable .g-res td,.gtable .g-res td.g-fz{background:#fff!important}
