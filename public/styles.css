@@ -3204,3 +3204,4 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable .g-res .gb{height:12px}
 .gtable thead th{font-size:.66rem!important}
 .gtable .g-fold,.gtable .g-add{transform:scale(.9)}
+.g-rn,.gtable .g-rn{color:#1f2a37!important}.g-rn::placeholder,.gtable .g-rn::placeholder{color:#94a3b8!important;font-style:normal!important;opacity:1!important}
