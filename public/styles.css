@@ -3242,3 +3242,5 @@ main:has(.pr-card){padding-bottom:6px!important}
 .g-topt:hover,.g-topt:focus{background:#eef2f6;outline:none}
 .g-topt.on{background:#e6f4ef;font-weight:600}
 .g-topt .ico{width:13px;height:13px}
+/* VAT / income-tax checkboxes in a lighter green */
+.gtable td.g-tax input[type=checkbox]{accent-color:#86cfb4}
