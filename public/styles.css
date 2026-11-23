@@ -3268,3 +3268,6 @@ main:has(.pr-card){padding-bottom:6px!important}
 .xtable thead th{padding-top:3px!important;padding-bottom:3px!important;line-height:1.15}
 /* resource type and name: grey, not coloured, not black */
 .gtable .g-res .g-tpick.lab,.gtable .g-res .g-tpick.eq,.gtable .g-res .g-tpick.mat,.gtable .g-res .g-tpick.subc,.gtable .g-rn.rt-lab,.gtable .g-rn.rt-eq,.gtable .g-rn.rt-mat,.gtable .g-rn.rt-subc{color:#64748b!important}
+/* tax checkboxes: smaller, darker green */
+.gtable td.g-tax input[type=checkbox]{width:11px!important;height:11px!important;border-width:1px!important;border-radius:2px!important}
+.gtable td.g-tax input[type=checkbox]:checked{background-color:#2f8f6a!important;border-color:#2f8f6a!important;background-size:9px!important}
