@@ -3271,3 +3271,9 @@ main:has(.pr-card){padding-bottom:6px!important}
 /* tax checkboxes: smaller, darker green */
 .gtable td.g-tax input[type=checkbox]{width:11px!important;height:11px!important;border-width:1px!important;border-radius:2px!important}
 .gtable td.g-tax input[type=checkbox]:checked{background-color:#2f8f6a!important;border-color:#2f8f6a!important;background-size:9px!important}
+/* resource bars as soft tiles: pale fill, thin border, coloured figure, small gap between days */
+.gtable .g-res .gb{height:16px!important;left:2px!important;right:2px!important;border-radius:4px!important;font-size:.62rem!important;font-weight:700!important;border:1px solid transparent}
+.gtable .g-res .gb.lab{background:#ecebfd!important;border-color:#c9c4f5!important;color:#5b4bd1!important}
+.gtable .g-res .gb.eq{background:#fdf4cf!important;border-color:#f1d77d!important;color:#9a5b06!important}
+.gtable .g-res .gb.mat{background:#e1f2fb!important;border-color:#a9d9f0!important;color:#1f74ad!important}
+.gtable .g-res .gb.subc{background:#fde6f0!important;border-color:#f5b6d1!important;color:#c0266b!important}
