@@ -3230,3 +3230,5 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable .g-head .gb.sum{background:#111827!important}
 .gtable:not(.xtable){--w2:30px;--w3:30px}.gtable:not(.xtable) .f2,.gtable:not(.xtable) .f3{padding:0!important;text-align:center}.gtable:not(.xtable) thead th.f2,.gtable:not(.xtable) thead th.f3{font-size:.6rem!important}
 .xtable td.x-add,.xtable .g-head td.x-add,.xtable .g-pos td.x-add,.xtable .g-res td.x-add{background:transparent!important;border:0!important}
+/* missing resource name: faint small red hint */
+.g-rn::placeholder,.gtable .g-rn::placeholder{color:#e11d48!important;opacity:.55!important;font-size:.62rem!important;font-style:normal!important}
