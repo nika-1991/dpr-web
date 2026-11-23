@@ -3228,4 +3228,5 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable td.gc.we,.gtable .g-head td.gc.we,.gtable .g-pos td.gc.we,.gtable .g-res td.gc.we{background-image:none!important}
 .gtable tr:not(.g-head):not(.g-pos):not(.g-res) td.gc.we{background:var(--surface)!important}
 .gtable .g-head .gb.sum{background:#111827!important}
-.gtable{--w2:30px!important;--w3:30px!important}.gtable .f2,.gtable .f3{padding:0!important;text-align:center}.gtable thead th.f2,.gtable thead th.f3{font-size:.6rem!important}
+.gtable:not(.xtable){--w2:30px;--w3:30px}.gtable:not(.xtable) .f2,.gtable:not(.xtable) .f3{padding:0!important;text-align:center}.gtable:not(.xtable) thead th.f2,.gtable:not(.xtable) thead th.f3{font-size:.6rem!important}
+.xtable td.x-add,.xtable .g-head td.x-add,.xtable .g-pos td.x-add,.xtable .g-res td.x-add{background:transparent!important;border:0!important}
