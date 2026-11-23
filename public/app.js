@@ -1564,7 +1564,7 @@ function renderSchedule(p){
 
   /* header: months (years in month view) above, days / weeks / months below */
   const grp=[]; for(const c of cols){ const k=zoom==="month"?c.from.slice(0,4):c.from.slice(0,7); const l=grp[grp.length-1]; if(l&&l.k===k) l.n++; else grp.push({k,n:1}); }
-  const fz=["BoQ","დასახელება","დღგ","საშ.","რაოდენობა","განზ.","ერთ. ფასი","ვადა"];
+  const fz=["BoQ","დასახელება","დღგ","საშ.","რაოდ.","განზ.","ერთ. ფასი","ვადა"];
   /* each date column is as wide as its longest number (and never narrower than the header) */
   const base=dayMode?36:zoom==="week"?60:84;
   /* quantities or values (quantity × the resource's unit price) in the day cells */

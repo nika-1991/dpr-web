@@ -3190,3 +3190,17 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gb.eq{background:color-mix(in srgb,var(--g-eq) 38%,#fff)!important;color:#5a2a06!important}
 .gb.mat{background:color-mix(in srgb,var(--g-mat) 38%,#fff)!important;color:#173a7a!important}
 .gb.subc{background:color-mix(in srgb,var(--g-subc) 38%,#fff)!important;color:#6b0f3a!important}
+/* schedule / execution plan: compact rows and type */
+.gtable{font-size:.72rem!important}
+.gtable thead tr:first-child th{height:22px!important}
+.gtable thead tr:nth-child(2) th{top:22px!important;height:28px!important}
+.gtable .g-pos td,.xtable .g-pos td{height:22px!important}
+.gtable .g-res td{height:20px!important}
+.gtable .g-head td,.xtable .g-head td{height:23px!important}
+.gtable .g-pos td.f0{font-size:.72rem!important}
+.gtable .g-in,.gtable select.g-chip{height:18px!important;font-size:.7rem!important;line-height:18px}
+.gtable .g-tico .ico{width:12px;height:12px}
+.gtable .gb{height:16px}
+.gtable .g-res .gb{height:12px}
+.gtable thead th{font-size:.66rem!important}
+.gtable .g-fold,.gtable .g-add{transform:scale(.9)}
