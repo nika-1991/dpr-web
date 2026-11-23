@@ -1602,7 +1602,7 @@ function renderSchedule(p){
       return h("td",{class:"gc gp"+gx(cl)},
         on[ci]?h("div",{class:"gb "+c+(!on[ci-1]?" rs":"")+(!on[ci+1]?" re":"")}):null,
         r.kind==="pos"&&ci===last+1&&last>=0?h("span",{class:"g-lbl"},lbl(posDays(r))):null,
-        r.kind==="pos"&&last<0&&ci===0&&edit?h("button",{class:"g-planbtn",type:"button",onclick:()=>{ S.gplan={code:r.code}; render(); }},"+ დაგეგმვა"):null); });
+        null); });
   };
   /* outline tree like Excel / MS Project: each level is indented; ◢ open group, ▷ folded group */
   const IND=14;
