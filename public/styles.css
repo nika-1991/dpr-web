@@ -3179,3 +3179,14 @@ main:has(.pr-card){padding-bottom:6px!important}
 .sched.g-only .g-fsr{background:#fff;border-radius:8px;padding:3px;box-shadow:0 4px 14px -6px rgba(15,23,42,.35)}
 .sched.g-only .gwrap{max-height:calc(100vh - 24px)!important;height:calc(100vh - 24px)}
 .sched.g-only>*:not(.g-head2):not(.gwrap):not(.g-modal){display:none}
+/* resource types: plain text with a coloured icon in front (no coloured pills); softer bars in the grid */
+.gh-pill.lab,.gh-pill.eq,.gh-pill.mat,.gh-pill.subc,.gh-pill{background:none!important;color:#1f2a37!important;padding:0!important;display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.g-chip.lab,.g-chip.eq,.g-chip.mat,.g-chip.subc{background:none!important;color:#334155!important;padding:0 2px!important}
+.g-tico{display:inline-flex;flex:none}
+.g-tico .ico{width:14px;height:14px}
+.g-tico.lab{color:var(--g-lab)}.g-tico.eq{color:var(--g-eq)}.g-tico.mat{color:var(--g-mat)}.g-tico.subc{color:var(--g-subc)}
+.g-resname{align-items:center}
+.gb.lab{background:color-mix(in srgb,var(--g-lab) 38%,#fff)!important;color:#3b2a63!important}
+.gb.eq{background:color-mix(in srgb,var(--g-eq) 38%,#fff)!important;color:#5a2a06!important}
+.gb.mat{background:color-mix(in srgb,var(--g-mat) 38%,#fff)!important;color:#173a7a!important}
+.gb.subc{background:color-mix(in srgb,var(--g-subc) 38%,#fff)!important;color:#6b0f3a!important}

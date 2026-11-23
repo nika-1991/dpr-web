@@ -1415,6 +1415,7 @@ function renderBoqImport(p){
    a number typed in a day cell is the quantity planned for that day; filled cells are coloured, which draws the timeline.
    The grid works like a spreadsheet: arrows/Tab/Enter move, typing edits, Delete clears, Shift/drag selects a range, Ctrl+C/Ctrl+V copy and paste. */
 const RES_TYPES=[["შრომა","lab"],["ტექნიკა","eq"],["მასალა","mat"],["ქვეკონტრაქტორი","subc"]];
+const RES_ICON={"შრომა":"helmet","ტექნიკა":"digger","მასალა":"materials","ქვეკონტრაქტორი":"brief"};
 /* taxes on a resource: VAT (დღგ) or income tax (საშ.); labour carries income tax by default, everything else VAT */
 const taxDef=t=>({vat:t!=="შრომა",pit:t==="შრომა"});
 const taxOf=(x,k)=>typeof x[k]==="boolean"?x[k]:taxDef(x.type)[k];
@@ -1553,7 +1554,7 @@ function renderSchedule(p){
         /* cost of this resource type (qty × unit price) and how many of its resources still have no price */
         const list=positions.flatMap(r=>r.sr.res.filter(x=>x.type===t));
         const cost=list.reduce((a,x)=>a+resQty(x)*num(x.price),0), miss=list.filter(x=>!num(x.price)).length;
-        return h("div",{class:"gh-term"},h("i",{class:"g-sw "+c}),h("span",{class:"gh-tn gh-pill "+c,title:tr(t)},tr(t==="ქვეკონტრაქტორი"?"ქვეკონტ.":t)+" ("+list.length+")"),
+        return h("div",{class:"gh-term"},h("span",{class:"gh-tn gh-pill "+c,title:tr(t)},h("span",{class:"g-tico "+c,"aria-hidden":"true"},icon(RES_ICON[t])),tr(t==="ქვეკონტრაქტორი"?"ქვეკონტ.":t)+" ("+list.length+")"),
         h("span",{class:"gh-cost"+(cost?"":" nil")},cost?gel(cost):"—",
           miss?h("span",{class:"gh-warn tip","data-tip":miss+" "+tr("რესურსზე ფასი შევსებული არაა"),"aria-label":miss+" "+tr("რესურსზე ფასი შევსებული არაა")},"!"):null),
         h("span",{class:"gh-tv"},partsLabel(T.types[t])+(Object.keys(T.items[t]||{}).length?" (+"+Object.keys(T.items[t]).length+" "+tr("ცალკე")+")":""))); })),
@@ -1638,6 +1639,7 @@ function renderSchedule(p){
     return h("tr",{class:"g-res"},
       codeCell(r,null),
       h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
+        h("span",{class:"g-tico "+c,"aria-hidden":"true"},icon(RES_ICON[r.x.type]||"materials")),
         h("select",{class:"g-chip "+c,disabled:!edit,"aria-label":"რესურსის ტიპი","data-f":ri+":t",onchange:e=>{ r.x.type=e.target.value; changed(); }},
           RES_TYPES.map(([t])=>{ const o=h("option",{value:t},t); if(t===r.x.type) o.selected=true; return o; })),
         inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა",list:r.x.type==="ქვეკონტრაქტორი"?"g-subs":null,"data-mach":r.x.type==="ტექნიკა"?"1":null,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
