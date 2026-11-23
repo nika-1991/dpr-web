@@ -3258,3 +3258,6 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable .g-res .g-tpick.subc,.gtable .g-rn.rt-subc{color:var(--g-subc)!important}
 /* resource rows: one small, even font for type and name */
 .gtable .g-res .g-tpick,.gtable .g-res .g-tpick .g-tname,.gtable .g-res .g-rn,.gtable .g-res .g-in{font-size:.66rem!important;font-weight:400!important;font-family:var(--f-body)!important}
+/* no today line down the grid (today stays marked in the date heading) */
+.gtable td.gc.td{box-shadow:none!important;border-left-color:var(--g-line)!important}
+.gtable td.gc.td::before,.gtable td.gc.td::after{display:none!important}

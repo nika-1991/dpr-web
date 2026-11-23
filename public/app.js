@@ -1622,7 +1622,6 @@ function renderSchedule(p){
     return cols.map((cl,ci)=>{
       return h("td",{class:"gc gp"+gx(cl)},
         on[ci]?h("div",{class:"gb "+c+(!on[ci-1]?" rs":"")+(!on[ci+1]?" re":"")}):null,
-        r.kind==="pos"&&ci===last+1&&last>=0?h("span",{class:"g-lbl"},lbl(posDays(r))):null,
         null); });
   };
   /* outline tree like Excel / MS Project: each level is indented; ◢ open group, ▷ folded group */
