@@ -3217,3 +3217,5 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable .g-head.sub td,.gtable .g-head.sub td.g-fz{background:#e8ebef!important}
 .gtable .g-pos td,.gtable .g-pos td.g-fz{background:#f1f3f6!important}
 .gtable .g-res td,.gtable .g-res td.g-fz{background:#fff!important}
+/* keep weekends visible on the darker rows (a shade over the row colour) */
+.gtable .g-head td.gc.we,.gtable .g-pos td.gc.we,.gtable .g-res td.gc.we{background-image:linear-gradient(rgba(71,85,105,.09),rgba(71,85,105,.09))!important}
