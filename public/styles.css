@@ -3244,3 +3244,5 @@ main:has(.pr-card){padding-bottom:6px!important}
 .g-topt .ico{width:13px;height:13px}
 /* VAT / income-tax checkboxes in a lighter green */
 .gtable td.g-tax input[type=checkbox]{accent-color:#86cfb4}
+/* a clear divider between the fixed left columns and the date grid */
+.gtable:not(.xtable) .f7,.xtable .f5{border-right:2px solid #64748b!important;box-shadow:3px 0 6px -3px rgba(15,23,42,.25)}
