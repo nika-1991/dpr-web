@@ -3219,3 +3219,7 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable .g-res td,.gtable .g-res td.g-fz{background:#fff!important}
 /* keep weekends visible on the darker rows (a shade over the row colour) */
 .gtable .g-head td.gc.we,.gtable .g-pos td.gc.we,.gtable .g-res td.gc.we{background-image:linear-gradient(rgba(71,85,105,.09),rgba(71,85,105,.09))!important}
+/* darker chapter / position rows */
+.gtable .g-head td,.gtable .g-head td.g-fz{background:#cfd5dc!important}
+.gtable .g-head.sub td,.gtable .g-head.sub td.g-fz{background:#dbe0e6!important}
+.gtable .g-pos td,.gtable .g-pos td.g-fz{background:#e6e9ed!important}
