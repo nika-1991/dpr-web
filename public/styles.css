@@ -3223,3 +3223,4 @@ main:has(.pr-card){padding-bottom:6px!important}
 .gtable .g-head td,.gtable .g-head td.g-fz{background:#cfd5dc!important}
 .gtable .g-head.sub td,.gtable .g-head.sub td.g-fz{background:#dbe0e6!important}
 .gtable .g-pos td,.gtable .g-pos td.g-fz{background:#e6e9ed!important}
+.gtable .g-head:not(.sub) td,.gtable .g-head:not(.sub) td.g-fz{background:#bcc4cd!important}
