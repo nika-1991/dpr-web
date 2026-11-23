@@ -1640,9 +1640,7 @@ function renderSchedule(p){
     return h("tr",{class:"g-res"},
       codeCell(r,null),
       h("td",{class:"g-fz f1"},h("div",{class:"g-resname"},
-        h("span",{class:"g-tico "+c,"aria-hidden":"true"},icon(RES_ICON[r.x.type]||"materials")),
-        h("select",{class:"g-chip "+c,disabled:!edit,"aria-label":"რესურსის ტიპი","data-f":ri+":t",onchange:e=>{ r.x.type=e.target.value; changed(); }},
-          RES_TYPES.map(([t])=>{ const o=h("option",{value:t},t); if(t===r.x.type) o.selected=true; return o; })),
+        resTypePick(r.x.type,c,edit,ri,t=>{ r.x.type=t; changed(); }),
         inp(r.x.name,v=>{ r.x.name=v; changed(); },{class:"g-in g-rn",placeholder:"დასახელება არაა",list:r.x.type==="ქვეკონტრაქტორი"?"g-subs":null,"data-mach":r.x.type==="ტექნიკა"?"1":null,"aria-label":"რესურსის დასახელება","data-f":ri+":n","data-new":isNew?"1":null}),
         edit?h("button",{class:"g-del",type:"button",tabindex:"-1","aria-label":"რესურსის წაშლა",title:"წაშლა",onclick:()=>{ r.sr.res.splice(r.sr.res.indexOf(r.x),1); changed(); }},"✕"):null)),
       ...["vat","pit"].map((k,j)=>h("td",{class:"g-fz f"+(2+j)+" g-tax"},h("input",{type:"checkbox",checked:taxOf(r.x,k),disabled:!edit,"aria-label":(k==="vat"?"დღგ":"საშ.")+": "+(r.x.name||""),
@@ -1791,6 +1789,20 @@ document.addEventListener("focusin",e=>{ const t=e.target; if(t&&t.matches&&t.ma
 /* an icon naming a row of the view controls (its meaning on hover) */
 const ghLbl=(ic,t)=>h("span",{class:"gh-ll tip","data-tip":tr(t),"aria-label":tr(t)},icon(ic));
 /* schedule / execution plan in full screen, two ways: with the top strip (views, resources, checks) or the grid alone */
+/* resource type picker: icon + name; a small square menu instead of the browser's drop-down */
+function resTypePick(cur,c,edit,ri,on){
+  const lab=h("button",{type:"button",class:"g-tpick "+c,disabled:!edit,"aria-label":tr("რესურსის ტიპი")+": "+tr(cur),"aria-haspopup":"listbox","data-f":ri+":t",
+    onclick:e=>{ e.stopPropagation(); document.querySelectorAll(".g-tmenu").forEach(x=>x.remove());
+      const r=lab.getBoundingClientRect(), m=h("div",{class:"g-tmenu",role:"listbox",style:"left:"+Math.round(r.left)+"px;top:"+Math.round(r.bottom+2)+"px"},
+        RES_TYPES.map(([t,cc])=>h("button",{type:"button",role:"option","aria-selected":String(t===cur),class:"g-topt"+(t===cur?" on":""),onclick:ev=>{ ev.stopPropagation(); m.remove(); if(t!==cur) on(t); }},
+          h("span",{class:"g-tico "+cc},icon(RES_ICON[t])),h("span",null,tr(t)))));
+      document.body.append(m);
+      const off=ev=>{ if(!m.contains(ev.target)){ m.remove(); document.removeEventListener("mousedown",off,true); document.removeEventListener("keydown",esc,true); } };
+      const esc=ev=>{ if(ev.key==="Escape"){ m.remove(); document.removeEventListener("mousedown",off,true); document.removeEventListener("keydown",esc,true); lab.focus(); } };
+      setTimeout(()=>{ document.addEventListener("mousedown",off,true); document.addEventListener("keydown",esc,true); },0);
+      const first=m.querySelector(".g-topt.on")||m.querySelector(".g-topt"); if(first) first.focus(); }},
+    h("span",{class:"g-tico "+c,"aria-hidden":"true"},icon(RES_ICON[cur]||"materials")),h("span",{class:"g-tname"},tr(cur)));
+  return lab; }
 function gFullBtn(){
   if(!window._gFsHook){ window._gFsHook=true; document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElement&&S.gFull){ S.gFull=false; render(); } }); }
   const go=m=>{ if(S.gFull===m){ S.gFull=false; if(document.fullscreenElement) document.exitFullscreen(); }
